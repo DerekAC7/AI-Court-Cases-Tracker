@@ -3,7 +3,7 @@ name: track-cases
 on:
   workflow_dispatch:
   schedule:
-    - cron: "17 */6 * * *"  # every 6 hours at :17 past
+    - cron: "17 */6 * * *"
 
 permissions:
   contents: write
@@ -29,6 +29,16 @@ jobs:
         run: |
           set -x
           python -u case_tracker.py
+
+      - name: Show docs dir
+        run: |
+          echo "::group::docs listing"
+          ls -lah docs || true
+          echo "::endgroup::"
+          echo "::group::preview cases.json head"
+          head -c 2000 docs/cases.json || true
+          echo
+          echo "::endgroup::"
 
       - name: Commit website changes (docs/)
         run: |
