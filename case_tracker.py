@@ -46,7 +46,6 @@ def fetch(url, params=None):
             time.sleep(wait)
             continue
         if r.status_code == 401:
-            # Fail fast with a clear message
             body = (r.text or "")[:300]
             print(f"[http] 401 Unauthorized. Body: {body}", flush=True)
             raise RuntimeError("CourtListener 401 Unauthorized. Ensure CL_API_TOKEN repo secret is set and valid.")
@@ -117,7 +116,6 @@ def music_publisher_takeaway(t):
     return ""
 
 def infer_headline_phrase(t):
-    """Return the “… rules AI training fair use.” style fragment when we can."""
     tl = (t or "").lower()
     if "fair use" in tl and ("summary judgment" in tl or "judgment" in tl or "granted" in tl):
         return "rules AI training fair use"
@@ -139,9 +137,8 @@ def docket_entries(docket_id, limit=DOCKET_ENTRIES_PER_CASE):
     return data.get("results", [])
 
 def is_ai_ip_related(caption, entries_text):
-    t = (caption + " " + entries_text).lower()
-    return (any(a.lower() in t for a in AI_TERMS)
-            and any(ip.lower() in t for ip in IP_TERMS))
+    # CourtListener search already includes AI+IP terms via COMBOS; don't over-filter here.
+    return True
 
 def search_block(search_str):
     print(f"[search] start: '{search_str}'", flush=True)
@@ -163,7 +160,7 @@ def gather_from_dockets():
     seen_ids = set()
     cases_collected = 0
 
-    # Build a modest set of high-signal combos
+    # High-signal combos (you can expand later)
     COMBOS = [
         "training AND copyright",
         "dataset AND copyright",
@@ -195,7 +192,6 @@ def gather_from_dockets():
                 entries = docket_entries(docket_id)
                 text_blob = " ".join([clean(e.get("description") or e.get("entry_text") or "") for e in entries])
 
-                # Keep only cases with AI + IP signals
                 if not is_ai_ip_related(caption, text_blob):
                     continue
 
@@ -216,6 +212,8 @@ def gather_from_dockets():
                 top = [e for e in entries if clean(e.get("description",""))][:3]
                 summary = ("On the docket: " + " ".join([clean(e["description"]) for e in top])) if top else "Docket retrieved from CourtListener/RECAP."
                 takeaway = music_publisher_takeaway(text_blob)
+
+                print(f"[tracker]  + add: {headline}", flush=True)
 
                 items.append({
                     "title": caption,
