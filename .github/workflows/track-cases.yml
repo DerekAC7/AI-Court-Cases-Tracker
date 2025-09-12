@@ -28,7 +28,6 @@ jobs:
 
       - name: Run tracker
         env:
-          # CourtListener API token – add this in repo Settings → Secrets and variables → Actions
           CL_API_TOKEN: ${{ secrets.CL_API_TOKEN }}
         run: |
           python case_tracker.py
@@ -44,4 +43,3 @@ jobs:
           else
             echo "No changes in docs/ to commit."
           fi
-
