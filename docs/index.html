@@ -27,7 +27,7 @@
 </head>
 <body>
   <h1>AI Court Cases Tracker</h1>
-  <div class="sub">De-duplicated case summaries from federal dockets (CourtListener/RECAP). Updates via GitHub Actions.</div>
+  <div class="sub">De-duplicated case summaries across McKool Smith, BakerHostetler, WIRED, and Mishcon trackers. Updates via GitHub Actions.</div>
   <div class="toolbar">
     <input id="q" type="search" placeholder="Filter by case, outcome, status, source…" aria-label="Filter"/>
     <select id="status" aria-label="Filter by status">
@@ -63,7 +63,7 @@ async function load() {
     const sortSel = document.getElementById('sort');
     const statusSel = document.getElementById('status');
 
-    function render(filter='', sortBy='date', statusFilter='') {
+    function render(filter='', sortBy='title', statusFilter='') {
       const f = filter.toLowerCase();
       let items = data.filter(c => {
         const hay = (c.headline + ' ' + (c.outcome||'') + ' ' + (c.source||'') + ' ' + (c.summary||'') + ' ' + (c.status||'')).toLowerCase();
