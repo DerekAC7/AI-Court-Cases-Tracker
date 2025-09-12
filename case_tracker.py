@@ -1,4 +1,5 @@
 import os, re, json, time, requests
+from urllib.parse import urlparse
 
 # ---------- CONFIG ----------
 DOCS_DIR = "docs"
@@ -25,6 +26,18 @@ DOCKET_ENTRIES_PER_CASE = 8      # recent docket entries to scan per case
 MAX_CASES_TOTAL = 250            # hard cap to keep runs bounded
 
 CL_API_TOKEN = os.getenv("CL_API_TOKEN")
+
+# Map CL court slugs to short names used in headlines
+COURT_MAP = {
+    # District courts (common)
+    "cand": "N.D. Cal", "cacd": "C.D. Cal", "casd": "S.D. Cal", "caed": "E.D. Cal",
+    "nysd": "S.D.N.Y.", "nyed": "E.D.N.Y.", "nysu": "Sup. Ct. N.Y.",
+    "mad": "D. Mass", "ded": "D. Del", "ilnd": "N.D. Ill", "txnd": "N.D. Tex",
+    "waed": "E.D. Wash", "wawd": "W.D. Wash", "vawd": "W.D. Va", "vaed": "E.D. Va",
+    "flsd": "S.D. Fla", "flnd": "N.D. Fla", "gand": "N.D. Ga", "dcd": "D.D.C.",
+    # Circuits (examples)
+    "ca9": "9th Cir.", "ca2": "2d Cir.", "cadc": "D.C. Cir.",
+}
 
 # ---------- HTTP ----------
 def http_headers():
@@ -58,20 +71,32 @@ def fetch(url, params=None):
         return r.json()
     raise RuntimeError("HTTP retries exhausted")
 
-# ---------- TEXT UTILS ----------
+# ---------- TEXT & FIELD UTILS ----------
 def clean(s: str) -> str:
     return re.sub(r"\s+", " ", (s or "").strip())
 
-def court_short(name):
-    if not name: return ""
-    x = name
-    x = x.replace("United States District Court for the ","").replace("United States District Court, ","")
-    x = x.replace("Northern District of California","N.D. Cal")
-    x = x.replace("Southern District of New York","S.D.N.Y.")
-    x = x.replace("Central District of California","C.D. Cal")
-    x = x.replace("District of Delaware","D. Del")
-    x = x.replace("District of Massachusetts","D. Mass")
-    return x
+def get_caption(d):
+    # CourtListener dockets use case_name (sometimes caseName). 'caption' is not reliable.
+    return clean(d.get("case_name") or d.get("caseName") or d.get("caption") or "")
+
+def get_court_slug(d):
+    # Prefer 'court_id' if present; else parse from 'court' URL like /api/rest/v4/courts/cand/
+    slug = d.get("court_id")
+    if slug: 
+        return slug
+    court = d.get("court")
+    if court:
+        try:
+            path = urlparse(court).path.strip("/").split("/")
+            if path and path[-1]:
+                return path[-1].lower()
+        except Exception:
+            pass
+    return None
+
+def court_short_from_slug(slug):
+    if not slug: return ""
+    return COURT_MAP.get(slug.lower(), slug.upper())
 
 def status_from_text(t):
     t = (t or "").lower()
@@ -137,7 +162,7 @@ def docket_entries(docket_id, limit=DOCKET_ENTRIES_PER_CASE):
     return data.get("results", [])
 
 def is_ai_ip_related(caption, entries_text):
-    # CourtListener search already includes AI+IP terms via COMBOS; don't over-filter here.
+    # CourtListener query already requires AI+IP; be permissive here.
     return True
 
 def search_block(search_str):
@@ -160,7 +185,7 @@ def gather_from_dockets():
     seen_ids = set()
     cases_collected = 0
 
-    # High-signal combos (you can expand later)
+    # High-signal combos (expand later if desired)
     COMBOS = [
         "training AND copyright",
         "dataset AND copyright",
@@ -185,8 +210,10 @@ def gather_from_dockets():
                 if not docket_id or docket_id in seen_ids:
                     continue
 
-                caption = clean(d.get("caption") or "")
+                caption = get_caption(d)
                 if not caption:
+                    # Log once in a while for diagnostics
+                    # print(f"[tracker]  skip: empty caption on docket {docket_id}", flush=True)
                     continue
 
                 entries = docket_entries(docket_id)
@@ -200,12 +227,15 @@ def gather_from_dockets():
 
                 status  = status_from_text(text_blob) if entries else "Open/Active"
                 outcome = outcome_short(text_blob)
-                court   = court_short(d.get("court","") or d.get("court_name",""))
+
+                court_slug = get_court_slug(d)
+                court_short = court_short_from_slug(court_slug)
+
                 phrase  = infer_headline_phrase(text_blob)
-                if court and phrase:
-                    headline = f"{caption} – {court} {phrase}."
-                elif court:
-                    headline = f"{caption} – {court}."
+                if court_short and phrase:
+                    headline = f"{caption} – {court_short} {phrase}."
+                elif court_short:
+                    headline = f"{caption} – {court_short}."
                 else:
                     headline = caption
 
