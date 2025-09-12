@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-AI Court Cases Tracker - parse four public trackers (no CourtListener)
+AI Court Cases Tracker — parse four public trackers (no CourtListener)
 Sources:
-  - McKool Smith
+  - McKool Smith (cross-referenced to include ALL case captions found on their tracker page)
   - BakerHostetler
   - WIRED
   - Mishcon de Reya
@@ -12,9 +12,9 @@ Hard rules:
   - Only real captions "X v Y" (skip headings like "Case Updates", "Background", directories, ABC lists).
   - Require AI/IP context near the caption or a known AI litigant name.
   - Compress huge party lists to "Lead et al. v Lead et al."
-  - Bold **Summaries:** + **Key takeaway:**
+  - Bold <b>Summaries:</b> + <b>Key takeaway:</b> (HTML, not Markdown).
   - Exact narratives for Bartz and Kadrey (match user's template).
-  - De-duplicate across sources and prefer cleaner sources.
+  - De-duplicate across sources and prefer cleaner sources/longer summaries.
 """
 
 import os, re, time, json, html
@@ -31,7 +31,7 @@ SOURCES = [
     {"name": "Mishcon de Reya LLP", "url": "https://www.mishcon.com/generative-ai-intellectual-property-cases-and-policy-tracker"},
 ]
 
-HEADERS = {"User-Agent": "AI-Cases-Tracker/6.0 (+GitHub Actions)"}
+HEADERS = {"User-Agent": "AI-Cases-Tracker/7.0 (+GitHub Actions)"}
 
 SOURCE_PREFERENCE = ["Mishcon de Reya LLP", "BakerHostetler", "McKool Smith", "WIRED"]
 
@@ -145,7 +145,8 @@ async function load() {
         const headline = (c.headline || c.title || 'Case');
         const src = c.source || '';
         const cref = c.case_ref ? `<span class="ref">Case ref: ${c.case_ref}</span>` : '';
-        const ktInline = (c.takeaway && c.takeaway.length)
+        const hasEmbeddedKT = (c.summary||"").toLowerCase().includes("<b>key takeaway:</b>");
+        const ktInline = (!hasEmbeddedKT && c.takeaway)
           ? `<div class="summary"><b>Key takeaway:</b> ${c.takeaway}</div>`
           : '';
 
@@ -215,10 +216,6 @@ def soup_sections(html_text: str, base_url: str):
 
     container = soup.find("main") or soup.find("article") or soup.find("body") or soup
 
-    # Some sources provide discrete cards. Prefer those when available.
-    cards = container.select("section, .card, .c-article-body__item, .m-card, article section")
-    # We will still rely on headers for safety. Cards may not map 1-to-1 to cases.
-
     headers = container.find_all(re.compile(r"^h[1-4]$"))
     if not headers:
         # Fallback: treat the whole page as one section
@@ -250,7 +247,6 @@ def soup_sections(html_text: str, base_url: str):
                 nxt_level = int(sib.name[1])
                 if nxt_level <= level:
                     break
-            # Accumulate visible text
             if hasattr(sib, "get_text"):
                 buff.append(sib.get_text(" ", strip=True))
             sib = getattr(sib, "next_sibling", None)
@@ -341,24 +337,38 @@ def headline_for(caption: str, ctx: str) -> str:
     return caption
 
 def explicit_template_or_short(caption: str, ctx: str) -> str:
+    # Hard-coded, HTML-renderable templates for the two “must-have” decisions
     if re.search(r"\bBartz\b", caption) and "Anthropic" in caption:
-        return ("**Summaries:** **" + caption + " - N.D. Cal rules AI training fair use.** "
-                "On June 23, Judge Alsup granted partial summary judgment to Anthropic, ruling that "
-                "1) training Claude on plaintiffs’ books was “exceedingly transformative” and fair use, and "
-                "2) digitizing purchased physical books for Anthropic’s central library was also fair use. "
-                "But the court declined to extend the fair use ruling to Anthropic downloading over 7 million pirated books for its central library, "
-                "saying that such piracy is “inherently, irredeemably infringing” regardless of whether the copies are later put to a fair use. "
-                "This issue will proceed to trial.\n\n"
-                "**Key takeaway:** Even where training is fair use, developers may still face significant liability for downloading pirated content.")
+        return (
+            "<b>Summaries:</b> "
+            f"<b>{caption} - N.D. Cal rules AI training fair use.</b> "
+            "On June 23, Judge Alsup granted partial summary judgment to Anthropic, ruling that "
+            "1) training Claude on plaintiffs’ books was “exceedingly transformative” and fair use, and "
+            "2) digitizing purchased physical books for Anthropic’s central library was also fair use. "
+            "But the court declined to extend the fair use ruling to Anthropic downloading over 7 million pirated books for its central library, "
+            "saying that such piracy is “inherently, irredeemably infringing” regardless of whether the copies are later put to a fair use. "
+            "This issue will proceed to trial.<br><br>"
+            "<b>Key takeaway:</b> Even where training is fair use, developers may still face significant liability for downloading pirated content."
+        )
+
     if re.search(r"\bKadrey\b", caption) and "Meta" in caption:
-        return ("**Summaries:** **" + caption + " - N.D. Cal rules AI training fair use.** "
-                "On June 25, Judge Chhabria granted summary judgment on fair use for AI training to Meta finding that "
-                "1) using plaintiffs’ books to train Meta’s LLM was highly transformative, and "
-                "2) plaintiffs are not entitled to the market for licensing for AI training. "
-                "But Judge Chhabria noted that his decision was limited to the specific record of the case, and that in many circumstances training would not be fair use. "
-                "He indicated that the order likely would have been different if plaintiffs had pled harm to the market for their original works, and even criticized Judge Alsup’s Bartz order for brushing aside market harm concerns.\n\n"
-                "**Key takeaway:** Future pleadings may be more successful if they focus on harm to the market for the original works and not only on the harm to the market for training licenses.")
-    return f"**Summaries:** {smart_sentence(ctx)}"
+        return (
+            "<b>Summaries:</b> "
+            f"<b>{caption} - N.D. Cal rules AI training fair use.</b> "
+            "On June 25, Judge Chhabria granted summary judgment on fair use for AI training to Meta finding that "
+            "1) using plaintiffs’ books to train Meta’s LLM was highly transformative, and "
+            "2) plaintiffs are not entitled to the market for licensing for AI training. "
+            "But Judge Chhabria noted that his decision was limited to the specific record of the case, and that in many circumstances training would not be fair use. "
+            "He indicated that the order likely would have been different if plaintiffs had pled harm to the market for their original works, and even criticized Judge Alsup’s Bartz order for brushing aside market harm concerns.<br><br>"
+            "<b>Key takeaway:</b> Future pleadings may be more successful if they focus on harm to the market for the original works and not only on the harm to the market for training licenses."
+        )
+
+    sent = smart_sentence(ctx).strip()
+    if not sent:
+        sent = "Summary not available from the source excerpt; details pending."
+
+    # Escape plain text sentence; we deliberately keep <b> tags unescaped.
+    return f"<b>Summaries:</b> {html.escape(sent)}"
 
 def choose_takeaway(status: str, ctx: str, already_has_takeaway: bool) -> str:
     if already_has_takeaway: return ""
@@ -392,7 +402,7 @@ def dedupe(items):
     return list(best.values())
 
 # ---------------
-# Section-based extraction
+# Section-based extraction (generic)
 # ---------------
 
 def extract_from_html(src_name: str, url: str):
@@ -404,55 +414,194 @@ def extract_from_html(src_name: str, url: str):
         if not title and not block:
             continue
 
-        # Quick skip of junk sections
         if looks_like_junk(title, block):
             continue
 
-        # Try to locate a case caption either in header or early in the block
-        caption_match = CAPTION_PAT.search(title) or CAPTION_PAT.search(block[:400])
-        if not caption_match:
-            # If the title names a known party pair like "NYT vs OpenAI" without a literal v., try normalizing
-            # But keep it strict to reduce false positives: skip if no v.
+        # Find ALL captions within this section (some sections list multiple cases)
+        captions = set()
+        for m in CAPTION_PAT.finditer(title + " " + block[:1000]):
+            captions.add(m.group(0).strip())
+
+        if not captions:
             continue
 
-        raw_caption = caption_match.group(0).strip()
-        caption = compress_caption(raw_caption)
+        for raw_caption in captions:
+            caption = compress_caption(raw_caption)
 
-        # AI context requirement: within section text
-        has_ai_ctx = bool(AI_CONTEXT_PAT.search(block)) or any(p.lower() in (title + " " + block).lower() for p in AI_IP_PARTIES)
-        if not has_ai_ctx:
+            has_ai_ctx = bool(AI_CONTEXT_PAT.search(block)) or any(
+                p.lower() in (title + " " + block).lower() for p in AI_IP_PARTIES
+            )
+            if not has_ai_ctx:
+                continue
+
+            # Case reference
+            case_ref = ""
+            cr = CASE_NO_PAT.search(block)
+            if cr:
+                case_ref = cr.group(0).strip()
+
+            status, outcome = infer_status_outcome(block)
+            headline = headline_for(caption, block)
+            summary_html = explicit_template_or_short(caption, block).strip()
+
+            takeaway = ""
+            if "<b>Key takeaway:</b>" not in summary_html:
+                t_guess = choose_takeaway(status, block, already_has_takeaway=False)
+                takeaway = t_guess
+
+            if summary_html.lower() in ("<b>summaries:</b>", "<b>summaries:</b> "):
+                summary_html = "<b>Summaries:</b> Summary not available from the source excerpt; details pending."
+
+            items.append({
+                "title": caption,
+                "headline": headline,
+                "summary": summary_html,   # HTML
+                "takeaway": takeaway,
+                "status": status,
+                "outcome": outcome,
+                "source": src_name,
+                "url": sec_url or url,
+                "case_ref": case_ref,
+                "date": ""
+            })
+    return items
+
+# ---------------
+# McKool cross-reference to ensure ALL cases present
+# ---------------
+
+def cross_reference_mckool(items):
+    """
+    Fetch the McKool Smith tracker and ensure every 'X v Y' caption on that page
+    appears in the final list at least once with a local summary from its section.
+    """
+    try:
+        url = next((s["url"] for s in SOURCES if s["name"] == "McKool Smith"), None)
+        if not url:
+            return 0
+
+        html_text = fetch(url)
+        sections = soup_sections(html_text, url)
+
+        # Build a map: caption -> best candidate item constructed from its section
+        candidates = {}
+        for (title, block, sec_url) in sections:
+            if looks_like_junk(title, block):
+                continue
+
+            # Gather all captions in this section
+            for m in CAPTION_PAT.finditer(title + " " + block[:2000]):
+                raw_caption = m.group(0).strip()
+                caption = compress_caption(raw_caption)
+
+                # Light context gate: keep only plausible AI/IP mentions
+                if not (AI_CONTEXT_PAT.search(block) or any(p.lower() in (title + " " + block).lower() for p in AI_IP_PARTIES)):
+                    continue
+
+                status, outcome = infer_status_outcome(block)
+                headline = headline_for(caption, block)
+                summary_html = explicit_template_or_short(caption, block).strip()
+                takeaway = ""
+                if "<b>Key takeaway:</b>" not in summary_html:
+                    takeaway = choose_takeaway(status, block, already_has_takeaway=False)
+
+                case_ref = ""
+                cr = CASE_NO_PAT.search(block)
+                if cr:
+                    case_ref = cr.group(0).strip()
+
+                cand = {
+                    "title": caption,
+                    "headline": headline,
+                    "summary": summary_html,
+                    "takeaway": takeaway,
+                    "status": status,
+                    "outcome": outcome,
+                    "source": "McKool Smith",
+                    "url": sec_url or url,
+                    "case_ref": case_ref,
+                    "date": ""
+                }
+                # Prefer longer summaries
+                key = re.sub(r"[^a-z0-9]+"," ", caption.lower()).strip()
+                if key not in candidates or len(summary_html) > len(candidates[key]["summary"]):
+                    candidates[key] = cand
+
+        # Merge any missing captions into items
+        have = {re.sub(r"[^a-z0-9]+"," ", it["title"].lower()).strip() for it in items}
+        added = 0
+        for key, cand in candidates.items():
+            if key not in have:
+                items.append(cand)
+                added += 1
+        return added
+    except Exception as e:
+        print(f"[xref] ERROR cross-referencing McKool Smith: {e}", flush=True)
+        return 0
+
+# ---------------
+# Must-have seeds (Bartz + Kadrey) in exact template
+# ---------------
+
+SEED_CASES = [
+    {
+        "needle": re.compile(r"\bBartz\b.*\bAnthropic\b", re.I),
+        "title": "Bartz v Anthropic",
+        "headline": "Bartz v Anthropic - N.D. Cal rules AI training fair use.",
+        "summary": (
+            "<b>Summaries:</b> <b>Bartz v Anthropic - N.D. Cal rules AI training fair use.</b> "
+            "On June 23, Judge Alsup granted partial summary judgment to Anthropic, ruling that "
+            "1) training Claude on plaintiffs’ books was “exceedingly transformative” and fair use, and "
+            "2) digitizing purchased physical books for Anthropic’s central library was also fair use. "
+            "But the court declined to extend the fair use ruling to Anthropic downloading over 7 million pirated books for its central library, "
+            "saying that such piracy is “inherently, irredeemably infringing” regardless of whether the copies are later put to a fair use. "
+            "This issue will proceed to trial.<br><br>"
+            "<b>Key takeaway:</b> Even where training is fair use, developers may still face significant liability for downloading pirated content."
+        ),
+        "status": "Judgment",
+        "outcome": "Summary Judgment",
+    },
+    {
+        "needle": re.compile(r"\bKadrey\b.*\bMeta\b", re.I),
+        "title": "Kadrey et al. v Meta",
+        "headline": "Kadrey et al. v Meta - N.D. Cal rules AI training fair use.",
+        "summary": (
+            "<b>Summaries:</b> <b>Kadrey et al. v Meta - N.D. Cal rules AI training fair use.</b> "
+            "On June 25, Judge Chhabria granted summary judgment on fair use for AI training to Meta finding that "
+            "1) using plaintiffs’ books to train Meta’s LLM was highly transformative, and "
+            "2) plaintiffs are not entitled to the market for licensing for AI training. "
+            "But Judge Chhabria noted that his decision was limited to the specific record of the case, and that in many circumstances training would not be fair use. "
+            "He indicated that the order likely would have been different if plaintiffs had pled harm to the market for their original works, and even criticized Judge Alsup’s Bartz order for brushing aside market harm concerns.<br><br>"
+            "<b>Key takeaway:</b> Future pleadings may be more successful if they focus on harm to the market for the original works and not only on the harm to the market for training licenses."
+        ),
+        "status": "Judgment",
+        "outcome": "Summary Judgment",
+    },
+]
+
+def ensure_seed_cases(items):
+    titles = {re.sub(r"[^a-z0-9]+"," ", it["title"].lower()).strip() for it in items}
+    added = 0
+    for seed in SEED_CASES:
+        norm = re.sub(r"[^a-z0-9]+"," ", seed["title"].lower()).strip()
+        if norm in titles:
             continue
-
-        # Case reference
-        case_ref = ""
-        cr = CASE_NO_PAT.search(block)
-        if cr:
-            case_ref = cr.group(0).strip()
-
-        # Build a concise local summary from the section block
-        status, outcome = infer_status_outcome(block)
-        headline = headline_for(caption, block)
-
-        summary = explicit_template_or_short(caption, block)
-
-        takeaway = ""
-        if "**Key takeaway:**" not in summary:
-            takeaway = choose_takeaway(status, block, already_has_takeaway=False)
-
+        if any(seed["needle"].search(it["title"]) for it in items):
+            continue
         items.append({
-            "title": caption,
-            "headline": headline,
-            "summary": summary,
-            "takeaway": takeaway,
-            "status": status,
-            "outcome": outcome,
-            "source": src_name,
-            "url": sec_url or url,
-            "case_ref": case_ref,
+            "title": seed["title"],
+            "headline": seed["headline"],
+            "summary": seed["summary"],
+            "takeaway": "",  # already embedded in summary
+            "status": seed["status"],
+            "outcome": seed["outcome"],
+            "source": "Seeded",
+            "url": "",
+            "case_ref": "",
             "date": ""
         })
-
-    return items
+        added += 1
+    return added
 
 # -----------------------
 # Output and runner
@@ -478,9 +627,19 @@ def run():
         print(f"[scrape]   extracted: {len(items)}", flush=True)
         all_items.extend(items)
 
-    items = dedupe(all_items)
-    items.sort(key=lambda x: x["title"].lower())
+    # Cross-reference McKool Smith: ensure ALL case captions present from their tracker page
+    print("[xref] ensuring all McKool Smith cases are included", flush=True)
+    added_xref = cross_reference_mckool(all_items)
+    print(f"[xref] added from McKool page: {added_xref}", flush=True)
 
+    # De-duplicate and seed must-have decisions
+    items = dedupe(all_items)
+    seeded = ensure_seed_cases(items)
+    if seeded:
+        print(f"[seed] added {seeded} must-have case(s)", flush=True)
+
+    # Sort and write
+    items.sort(key=lambda x: x["title"].lower())
     ensure_docs()
     with open(JSON_PATH, "w", encoding="utf-8") as f:
         json.dump(items, f, ensure_ascii=False, indent=2)
