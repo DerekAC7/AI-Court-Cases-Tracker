@@ -22,6 +22,7 @@ Usage:
 import os, re, time, json, html
 import requests
 from bs4 import BeautifulSoup
+from urllib.parse import urljoin
 
 # -----------------------
 # Config
@@ -37,7 +38,7 @@ SOURCES = [
     {"name": "Mishcon de Reya LLP", "url": "https://www.mishcon.com/generative-ai-intellectual-property-cases-and-policy-tracker"},
 ]
 
-HEADERS = {"User-Agent": "AI-Cases-Tracker/9.0 (+GitHub Actions)"}
+HEADERS = {"User-Agent": "AI-Cases-Tracker/9.1 (+GitHub Actions)"}
 
 # Prefer McKool text first (it’s the curated weekly digest),
 # then Mishcon, then Baker, then WIRED.
@@ -320,7 +321,7 @@ def choose_takeaway(status: str, ctx: str, already_has_takeaway: bool) -> str:
     if "judgment" in s and "fair use" in t and ("pirated" in t or "torrent" in t or "shadow library" in t):
         return "Even if training is fair use, acquisition via piracy/torrents can still create liability."
     if "judgment" in s and "fair use" in t and "market" in t:
-        return "Courts weigh harm to the market for original works over a separate market for training licenses."
+        return "Courts weigh harm to the market for original works over a separate training license market."
     if "injunction" in s:
         return "Injunctions can constrain model distribution or retraining—leverage for ingestion guardrails."
     if "dismissed" in s:
@@ -348,41 +349,40 @@ def dedupe(items):
 # -----------------------
 
 MCKOOL_INDEX = "https://www.mckoolsmith.com/newsroom-ailitigation"
+MCKOOL_BASE  = "https://www.mckoolsmith.com/"
 
 def mckool_find_latest_url(index_html: str) -> str:
     """
     Find the latest 'newsroom-ailitigation-<N>' by choosing the MAX N on the index.
-    Falls back to the first match, then to the index itself.
+    Normalize with urljoin to fix relative URLs like 'newsroom-ailitigation-35'.
     """
     soup = BeautifulSoup(index_html, "html.parser")
     best_href, best_n = None, -1
     for a in soup.find_all("a", href=True):
-        href = a["href"]
-        m = re.search(r"(?:^|/)newsroom-ailitigation-(\d+)(?:/)?$", href)
+        href = a["href"].strip()
+        # normalize to absolute first so regex is consistent
+        abs_href = urljoin(MCKOOL_BASE, href)
+        m = re.search(r"/newsroom-ailitigation-(\d+)(?:/)?$", abs_href)
         if not m:
             continue
         n = int(m.group(1))
         if n > best_n:
             best_n = n
-            best_href = href
+            best_href = abs_href
     if best_href:
-        if best_href.startswith("/"):
-            best_href = "https://www.mckoolsmith.com" + best_href
         return best_href
 
-    # Fallback: if we didn’t find a numbered page, try any ailitigation link
+    # Fallback: any ailitigation link (normalize)
     for a in soup.find_all("a", href=True):
         if "newsroom-ailitigation" in a["href"]:
-            href = a["href"]
-            if href.startswith("/"):
-                href = "https://www.mckoolsmith.com" + href
-            return href
+            return urljoin(MCKOOL_BASE, a["href"].strip())
 
     return MCKOOL_INDEX
 
 def mckool_parse_latest() -> list:
     idx = fetch(MCKOOL_INDEX)
     latest_url = mckool_find_latest_url(idx)
+    print(f"[McKool] latest URL picked: {latest_url}", flush=True)
     article_html = fetch(latest_url)
 
     soup = BeautifulSoup(article_html, "html.parser")
