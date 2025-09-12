@@ -22,11 +22,12 @@
   .footer{display:flex; justify-content:flex-end}
   .linkbtn{display:inline-block; padding:8px 10px; border-radius:10px; border:1px solid var(--line); background:#fff; font-size:13px; text-decoration:none}
   .linkbtn:hover{text-decoration:underline}
+  .takeaway strong{font-weight:700}
 </style>
 </head>
 <body>
   <h1>AI Court Cases Tracker</h1>
-  <div class="sub">Case summaries across federal dockets (CourtListener/RECAP). Updates via GitHub Actions.</div>
+  <div class="sub">De-duplicated case summaries from federal dockets (CourtListener/RECAP). Updates via GitHub Actions.</div>
   <div class="toolbar">
     <input id="q" type="search" placeholder="Filter by case, outcome, status, source…" aria-label="Filter"/>
     <select id="status" aria-label="Filter by status">
@@ -42,72 +43,90 @@
       <option>Stayed/Remand</option>
     </select>
     <select id="sort" aria-label="Sort">
+      <option value="date">Sort: Date</option>
       <option value="title">Sort: Title</option>
       <option value="status">Sort: Status</option>
       <option value="source">Sort: Source</option>
-      <option value="date">Sort: Date</option>
     </select>
   </div>
   <div id="list" class="grid"></div>
 
 <script>
 async function load() {
-  const res = await fetch('cases.json', {cache:'no-store'});
-  const data = await res.json();
+  try {
+    const res = await fetch('cases.json', {cache:'no-store'});
+    if (!res.ok) throw new Error('Failed to load cases.json: ' + res.status);
+    const data = await res.json();
 
-  const list = document.getElementById('list');
-  const q = document.getElementById('q');
-  const sortSel = document.getElementById('sort');
-  const statusSel = document.getElementById('status');
+    const list = document.getElementById('list');
+    const q = document.getElementById('q');
+    const sortSel = document.getElementById('sort');
+    const statusSel = document.getElementById('status');
 
-  function render(filter='', sortBy='title', statusFilter='') {
-    const f = filter.toLowerCase();
-    let items = data.filter(c => {
-      const hay = (c.title + ' ' + (c.outcome||'') + ' ' + (c.source||'') + ' ' + (c.summary||'') + ' ' + (c.status||'')).toLowerCase();
-      const passText = !f || hay.includes(f);
-      const passStatus = !statusFilter || (c.status||'').toLowerCase() === statusFilter.toLowerCase();
-      return passText && passStatus;
-    });
+    function render(filter='', sortBy='date', statusFilter='') {
+      const f = filter.toLowerCase();
+      let items = data.filter(c => {
+        const hay = (c.headline + ' ' + (c.outcome||'') + ' ' + (c.source||'') + ' ' + (c.summary||'') + ' ' + (c.status||'')).toLowerCase();
+        const passText = !f || hay.includes(f);
+        const passStatus = !statusFilter || (c.status||'').toLowerCase() === statusFilter.toLowerCase();
+        return passText && passStatus;
+      });
 
-    items.sort((a,b)=>{
-      const ax=(a[sortBy]||'').toString().toLowerCase();
-      const bx=(b[sortBy]||'').toString().toLowerCase();
-      return ax.localeCompare(bx);
-    });
+      items.sort((a,b)=>{
+        if (sortBy === 'date') {
+          const ax = a.date ? Date.parse(a.date) : 0;
+          const bx = b.date ? Date.parse(b.date) : 0;
+          return (bx - ax); // newest first
+        } else {
+          const ax=(a[sortBy]||'').toString().toLowerCase();
+          const bx=(b[sortBy]||'').toString().toLowerCase();
+          return ax.localeCompare(bx);
+        }
+      });
 
-    list.innerHTML = '';
-    items.forEach(c=>{
-      const url = c.url || '#';
-      const outcome = c.outcome || 'Update';
-      const status  = c.status || 'Open/Active';
-      const headline = (c.headline || c.title);
-      const src = c.source || '';
-      const date = c.date ? new Date(c.date).toLocaleDateString() : '';
-      const takeaway = c.takeaway ? `<div class="summary"><strong>Key takeaway:</strong> ${c.takeaway}</div>` : '';
+      list.innerHTML = '';
+      items.forEach(c=>{
+        const url = c.url || '#';
+        const status  = c.status || 'Open/Active';
+        const headline = (c.headline || c.title || 'Case');
+        const src = c.source || '';
+        const date = c.date ? new Date(c.date).toLocaleDateString() : '';
+        const takeaway = (c.takeaway && c.takeaway.length)
+          ? `<div class="summary takeaway"><strong>Key takeaway:</strong> ${c.takeaway}</div>`
+          : '';
 
-      const card = document.createElement('div');
-      card.className = 'card';
-      card.innerHTML = `
-        <div class="title">${headline}</div>
-        <div class="meta">
-          <span class="pill">${status}</span>
-          <span>${src}</span>
-          <span>${date}</span>
-        </div>
-        <div class="summary">${c.summary || 'No summary available.'}</div>
-        ${takeaway}
-        <div class="footer">
-          <a class="linkbtn" href="${url}" target="_blank" rel="noopener">View source →</a>
-        </div>
-      `;
-      list.appendChild(card);
-    });
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+          <div class="title">${headline}</div>
+          <div class="meta">
+            <span class="pill">${status}</span>
+            <span>${src}</span>
+            <span>${date}</span>
+          </div>
+          <div class="summary">${c.summary || 'No summary available.'}</div>
+          ${takeaway}
+          <div class="footer">
+            <a class="linkbtn" href="${url}" target="_blank" rel="noopener">View source →</a>
+          </div>
+        `;
+        list.appendChild(card);
+      });
+
+      if (items.length === 0) {
+        list.innerHTML = '<div class="card"><div class="title">No cases found</div><div class="summary">Try clearing filters or check back later.</div></div>';
+      }
+    }
+
+    q.addEventListener('input', (e)=>render(e.target.value, sortSel.value, statusSel.value));
+    sortSel.addEventListener('change', ()=>render(q.value, sortSel.value, statusSel.value));
+    statusSel.addEventListener('change', ()=>render(q.value, sortSel.value, statusSel.value));
+    render();
+  } catch (e) {
+    const list = document.getElementById('list');
+    list.innerHTML = '<div class="card"><div class="title">Site is initializing</div><div class="summary">Could not load cases.json. If this is a fresh deploy, wait for the workflow to push docs/cases.json.</div></div>';
+    console.error(e);
   }
-
-  q.addEventListener('input', (e)=>render(e.target.value, sortSel.value, statusSel.value));
-  sortSel.addEventListener('change', ()=>render(q.value, sortSel.value, statusSel.value));
-  statusSel.addEventListener('change', ()=>render(q.value, sortSel.value, statusSel.value));
-  render();
 }
 load();
 </script>
