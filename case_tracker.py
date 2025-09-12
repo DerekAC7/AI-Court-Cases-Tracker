@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-AI Court Cases Tracker — parse four public trackers (no CourtListener)
+AI Court Cases Tracker - parse four public trackers (no CourtListener)
 Sources:
   - McKool Smith
   - BakerHostetler
@@ -31,7 +31,7 @@ SOURCES = [
     {"name": "Mishcon de Reya LLP", "url": "https://www.mishcon.com/generative-ai-intellectual-property-cases-and-policy-tracker"},
 ]
 
-HEADERS = {"User-Agent": "AI-Cases-Tracker/5.0 (+GitHub Actions)"}
+HEADERS = {"User-Agent": "AI-Cases-Tracker/6.0 (+GitHub Actions)"}
 
 SOURCE_PREFERENCE = ["Mishcon de Reya LLP", "BakerHostetler", "McKool Smith", "WIRED"]
 
@@ -56,216 +56,6 @@ JUNK_HEADINGS_PAT = re.compile(
     r"blockchain, crypto and digital assets|mishcon purpose|philanthropic strategy|supply chain advice)\b",
     re.I
 )
-
-def fetch(url: str) -> str:
-    for i in range(4):
-        r = requests.get(url, headers=HEADERS, timeout=45)
-        if r.status_code == 200:
-            return r.text
-        if r.status_code in (429, 503):
-            time.sleep(2 + 2*i); continue
-        r.raise_for_status()
-    raise RuntimeError(f"Failed to fetch {url}")
-
-def soup_text(html_text: str) -> str:
-    soup = BeautifulSoup(html_text, "html.parser")
-    for bad in soup(["script","style","noscript","svg","nav","header","footer","form","aside"]):
-        bad.decompose()
-    txt = soup.get_text(" ", strip=True)
-    txt = html.unescape(txt)
-    txt = re.sub(r"(?<![A-Za-z])tiffs\b", "plaintiffs", txt, flags=re.I)  # fix clipped 'plaintiffs'
-    txt = re.sub(r"\s+", " ", txt).strip()
-    return txt
-
-def window(text: str, start: int, end: int, radius: int = 520) -> str:
-    a = max(0, start - radius); b = min(len(text), end + radius)
-    seg = text[a:b]
-    parts = re.split(r"(?<=[.!?])\s+", seg)
-    if len(parts) > 2:
-        seg = " ".join(parts[1:-1])
-    else:
-        seg = " ".join(parts)
-    return seg.strip()
-
-def looks_like_junk(title: str, ctx: str) -> bool:
-    if JUNK_HEADINGS_PAT.match(title.strip()):
-        return True
-    low = ctx.lower()
-    if "our professionals" in low: return True
-    if re.search(r"\bA B C D E F G\b", ctx): return True
-    if "background" in title.lower(): return True
-    if "case updates" in title.lower(): return True
-    return False
-
-def compress_caption(caption: str) -> str:
-    cap = re.sub(r"\(\d+\)\s*", "", caption)
-    m = re.search(r"\s+v\.?\s+", cap)
-    if not m: return cap.strip()
-    left, right = cap[:m.start()], cap[m.end():]
-    def first_party(side: str) -> str:
-        parts = re.split(r"\s*,\s*| & | and |;|\s{2,}", side)
-        lead = parts[0].strip() if parts and parts[0] else side.strip()
-        return re.sub(r"[,;]+$", "", lead)
-    def many(side: str) -> bool:
-        return bool(re.search(r"\bet\.?\s*al\.?|,|\band\b|&", side, re.I)) or len(side) > 60
-    L = first_party(left) + (" et al." if many(left) else "")
-    R = first_party(right) + (" et al." if many(right) else "")
-    L = re.sub(r"(et al\.)\s*et al\.$", r"\1", L, flags=re.I)
-    R = re.sub(r"(et al\.)\s*et al\.$", r"\1", R, flags=re.I)
-    return f"{L} v {R}"
-
-def smart_sentence(ctx: str) -> str:
-    sents = re.split(r"(?<=[.!?])\s+", ctx)
-    prefs = (" sued ", " files ", " filed ", " alleges ", " rules ", " granted ", " dismissed ", " injunction ")
-    for s in sents:
-        ss = " " + s.lower() + " "
-        if any(p in ss for p in prefs) and 44 <= len(s) <= 360:
-            return s.strip()
-    for s in sents:
-        if 44 <= len(s) <= 360:
-            return s.strip()
-    return sents[0].strip() if sents else ctx[:240].strip()
-
-def infer_status_outcome(text: str):
-    t = text.lower()
-    if "class certification" in t or "class certified" in t:
-        return ("Class certified", "Class Certification")
-    if "summary judgment" in t or ("fair use" in t and "judgment" in t):
-        return ("Judgment", "Summary Judgment")
-    if "injunction" in t:
-        return ("Injunction", "Injunction")
-    if "dismiss" in t or "dismissed" in t:
-        return ("Dismissed", "Dismissal")
-    if "settle" in t or "settlement" in t:
-        return ("Settled", "Settlement")
-    if "complaint filed" in t or "new case" in t or "filed on" in t:
-        return ("Recently filed", "Update")
-    return ("Open/Active", "Update")
-
-def headline_for(caption: str, ctx: str) -> str:
-    t = ctx.lower()
-    if "fair use" in t and ("judgment" in t or "summary judgment" in t):
-        return f"{caption} – rules AI training fair use."
-    if "class certification" in t or "class certified" in t:
-        return f"{caption} – certifies class in AI/IP case."
-    if "injunction" in t:
-        return f"{caption} – injunction regarding AI use."
-    if "dismiss" in t:
-        return f"{caption} – dismisses AI/IP claims."
-    if "settle" in t:
-        return f"{caption} – settlement."
-    return caption
-
-def explicit_template_or_short(caption: str, ctx: str) -> str:
-    if re.search(r"\bBartz\b", caption) and "Anthropic" in caption:
-        return ("**Summaries:** **" + caption + " – N.D. Cal rules AI training fair use.** "
-                "On June 23, Judge Alsup granted partial summary judgment to Anthropic, ruling that "
-                "1) training Claude on plaintiffs’ books was “exceedingly transformative” and fair use, and "
-                "2) digitizing purchased physical books for Anthropic’s central library was also fair use. "
-                "But the court declined to extend the fair use ruling to Anthropic downloading over 7 million pirated books for its central library, "
-                "saying that such piracy is “inherently, irredeemably infringing” regardless of whether the copies are later put to a fair use. "
-                "This issue will proceed to trial.\n\n"
-                "**Key takeaway:** Even where training is fair use, developers may still face significant liability for downloading pirated content.")
-    if re.search(r"\bKadrey\b", caption) and "Meta" in caption:
-        return ("**Summaries:** **" + caption + " – N.D. Cal rules AI training fair use.** "
-                "On June 25, Judge Chhabria granted summary judgment on fair use for AI training to Meta finding that "
-                "1) using plaintiffs’ books to train Meta’s LLM was highly transformative, and "
-                "2) plaintiffs are not entitled to the market for licensing for AI training. "
-                "But Judge Chhabria noted that his decision was limited to the specific record of the case, and that in many circumstances training would not be fair use. "
-                "He indicated that the order likely would have been different if plaintiffs had pled harm to the market for their original works, and even criticized Judge Alsup’s Bartz order for brushing aside market harm concerns.\n\n"
-                "**Key takeaway:** Future pleadings may be more successful if they focus on harm to the market for the original works and not only on the harm to the market for training licenses.")
-    return f"**Summaries:** {smart_sentence(ctx)}"
-
-def choose_takeaway(status: str, ctx: str, already_has_takeaway: bool) -> str:
-    if already_has_takeaway: return ""
-    t = ctx.lower(); s = status.lower()
-    if "judgment" in s and "fair use" in t and ("pirated" in t or "shadow library" in t or "torrent" in t):
-        return "Even if training is fair use, acquisition of pirated datasets can still create liability."
-    if "judgment" in s and "fair use" in t and "market" in t:
-        return "Courts weigh harm to the market for original works more than a separate ‘training license’ market."
-    if "injunction" in s:
-        return "Injunctions can constrain model distribution or retraining—leverage for ingestion guardrails."
-    if "dismissed" in s:
-        return "Complaints that don’t connect copying to cognizable market harm risk dismissal."
-    if "settled" in s:
-        return "Settlements set practical value ranges even without merits rulings."
-    return ""
-
-def prefer_source(a, b):
-    pa = SOURCE_PREFERENCE.index(a["source"]) if a["source"] in SOURCE_PREFERENCE else 99
-    pb = SOURCE_PREFERENCE.index(b["source"]) if b["source"] in SOURCE_PREFERENCE else 99
-    if pa != pb: return pa < pb
-    return len(a.get("summary","")) > len(b.get("summary",""))
-
-def dedupe(items):
-    norm = lambda s: re.sub(r"[^a-z0-9]+", " ", (s or "").lower()).strip()
-    best = {}
-    for it in items:
-        k = norm(it["title"])
-        if not k: continue
-        if k not in best or prefer_source(it, best[k]):
-            best[k] = it
-    return list(best.values())
-
-def extract_from_html(src_name: str, url: str):
-    html_text = fetch(url)
-    text = soup_text(html_text)
-
-    # Strong pre-filters: drop obvious non-case blocks from the page-level text windows
-    text = re.sub(r"\b(?:Case Updates|Current Edition|Our Professionals)\b.*?$", "", text, flags=re.I)
-
-    items = []
-    for m in CAPTION_PAT.finditer(text):
-        raw_caption = m.group(0).strip()
-        if looks_like_junk(raw_caption, raw_caption):  # caption itself contains junk keyword
-            continue
-
-        ctx = window(text, m.start(), m.end(), radius=520)
-
-        # Skip if the immediate window looks like a newsletter header / background blurb
-        if re.search(r"\b(Background|Case Updates|Current Edition|Our Professionals)\b", ctx, re.I):
-            continue
-        if len(ctx) < 60:   # super short fragments are often menu/footer scraps
-            continue
-
-        # demand an AI/IP signal or recognized party
-        if not AI_CONTEXT_PAT.search(ctx):
-            if not any(p.lower() in raw_caption.lower() for p in AI_IP_PARTIES):
-                continue
-
-        compressed = compress_caption(raw_caption)
-
-        # Case reference (optional)
-        case_ref = ""
-        cr = CASE_NO_PAT.search(ctx)
-        if cr:
-            case_ref = cr.group(0).strip()
-
-        status, outcome = infer_status_outcome(ctx)
-        headline = headline_for(compressed, ctx)
-
-        # Skip generic “Background” or “Case Updates” titles (or anything carrying “Background”)
-        if looks_like_junk(headline, ctx):
-            continue
-
-        summary = explicit_template_or_short(compressed, ctx)
-        takeaway = ""
-        if "**Key takeaway:**" not in summary:
-            takeaway = choose_takeaway(status, ctx, already_has_takeaway=False)
-
-        items.append({
-            "title": compressed,
-            "headline": headline,
-            "summary": summary,
-            "takeaway": takeaway,
-            "status": status,
-            "outcome": outcome,
-            "source": src_name,
-            "url": url,
-            "case_ref": case_ref,
-            "date": ""
-        })
-    return items
 
 INDEX_HTML = """<!doctype html>
 <html lang="en">
@@ -398,6 +188,275 @@ load();
 </body>
 </html>
 """
+
+# -----------------------
+# HTTP fetch and parsing
+# -----------------------
+
+def fetch(url: str) -> str:
+    for i in range(4):
+        r = requests.get(url, headers=HEADERS, timeout=45)
+        if r.status_code == 200:
+            return r.text
+        if r.status_code in (429, 503):
+            time.sleep(2 + 2*i); continue
+        r.raise_for_status()
+    raise RuntimeError(f"Failed to fetch {url}")
+
+def soup_sections(html_text: str, base_url: str):
+    """
+    Yield structured sections: (title_text, section_text, section_url)
+    Section = header (h1-h4) + following siblings until the next header of same or greater level.
+    """
+    soup = BeautifulSoup(html_text, "html.parser")
+
+    for bad in soup(["script","style","noscript","svg","nav","header","footer","form","aside"]):
+        bad.decompose()
+
+    container = soup.find("main") or soup.find("article") or soup.find("body") or soup
+
+    # Some sources provide discrete cards. Prefer those when available.
+    cards = container.select("section, .card, .c-article-body__item, .m-card, article section")
+    # We will still rely on headers for safety. Cards may not map 1-to-1 to cases.
+
+    headers = container.find_all(re.compile(r"^h[1-4]$"))
+    if not headers:
+        # Fallback: treat the whole page as one section
+        txt = container.get_text(" ", strip=True)
+        return [("Page", re.sub(r"\s+", " ", html.unescape(txt)), base_url)]
+
+    sections = []
+    for i, h in enumerate(headers):
+        title = h.get_text(" ", strip=True)
+        # Build anchor or fragment if present
+        frag = ""
+        if h.has_attr("id"):
+            frag = "#" + h["id"].strip()
+        else:
+            aid = h.find("a", attrs={"id": True})
+            aname = h.find("a", attrs={"name": True})
+            if aid and aid.get("id"):
+                frag = "#" + aid["id"].strip()
+            elif aname and aname.get("name"):
+                frag = "#" + aname["name"].strip()
+
+        # Collect siblings until the next header of same or higher level
+        level = int(h.name[1])
+        buff = []
+        sib = h.next_sibling
+        while sib:
+            # Stop if next header of same or higher level
+            if getattr(sib, "name", None) and re.match(r"^h[1-4]$", sib.name):
+                nxt_level = int(sib.name[1])
+                if nxt_level <= level:
+                    break
+            # Accumulate visible text
+            if hasattr(sib, "get_text"):
+                buff.append(sib.get_text(" ", strip=True))
+            sib = getattr(sib, "next_sibling", None)
+
+        raw = " ".join(buff)
+        raw = html.unescape(raw)
+        raw = re.sub(r"\s+", " ", raw).strip()
+        sections.append((title, raw, base_url + frag))
+    return sections
+
+# ---------------
+# Heuristics
+# ---------------
+
+def looks_like_junk(title: str, ctx: str) -> bool:
+    if JUNK_HEADINGS_PAT.match(title.strip()):
+        return True
+    low = (title + " " + ctx).lower()
+    if "our professionals" in low:
+        return True
+    if re.search(r"\bA B C D E F G\b", title):
+        return True
+    if "background" in title.lower():
+        return True
+    if "case updates" in title.lower():
+        return True
+    return False
+
+def compress_caption(caption: str) -> str:
+    cap = re.sub(r"\(\d+\)\s*", "", caption)
+    m = re.search(r"\s+v\.?\s+", cap)
+    if not m: return cap.strip()
+    left, right = cap[:m.start()], cap[m.end():]
+    def first_party(side: str) -> str:
+        parts = re.split(r"\s*,\s*| & | and |;|\s{2,}", side)
+        lead = parts[0].strip() if parts and parts[0] else side.strip()
+        return re.sub(r"[,;]+$", "", lead)
+    def many(side: str) -> bool:
+        return bool(re.search(r"\bet\.?\s*al\.?|,|\band\b|&", side, re.I)) or len(side) > 60
+    L = first_party(left) + (" et al." if many(left) else "")
+    R = first_party(right) + (" et al." if many(right) else "")
+    L = re.sub(r"(et al\.)\s*et al\.$", r"\1", L, flags=re.I)
+    R = re.sub(r"(et al\.)\s*et al\.$", r"\1", R, flags=re.I)
+    return f"{L} v {R}"
+
+def smart_sentence(ctx: str) -> str:
+    sents = re.split(r"(?<=[.!?])\s+", ctx)
+    prefs = (" sued ", " files ", " filed ", " alleges ", " rules ", " granted ", " dismissed ", " injunction ", "certif")
+    for s in sents:
+        ss = " " + s.lower() + " "
+        if any(p in ss for p in prefs) and 44 <= len(s) <= 360:
+            return s.strip()
+    for s in sents:
+        if 44 <= len(s) <= 360:
+            return s.strip()
+    return sents[0].strip() if sents else ctx[:240].strip()
+
+def infer_status_outcome(text: str):
+    t = text.lower()
+    if "class certification" in t or "class certified" in t or "certify the class" in t:
+        return ("Class certified", "Class Certification")
+    if "summary judgment" in t or ("fair use" in t and "judgment" in t):
+        return ("Judgment", "Summary Judgment")
+    if "preliminary injunction" in t or "permanent injunction" in t or ("injunction" in t and "granted" in t):
+        return ("Injunction", "Injunction")
+    if "dismissed with prejudice" in t:
+        return ("Dismissed", "Dismissal with prejudice")
+    if "dismissed" in t or "motion to dismiss granted" in t:
+        return ("Dismissed", "Dismissal")
+    if "settled" in t or "settlement" in t:
+        return ("Settled", "Settlement")
+    if "complaint filed" in t or "new case" in t or "filed on" in t:
+        return ("Recently filed", "Update")
+    return ("Open/Active", "Update")
+
+def headline_for(caption: str, ctx: str) -> str:
+    t = ctx.lower()
+    if "fair use" in t and ("judgment" in t or "summary judgment" in t):
+        return f"{caption} - rules AI training fair use."
+    if "class certification" in t or "class certified" in t:
+        return f"{caption} - certifies class in AI/IP case."
+    if "injunction" in t:
+        return f"{caption} - injunction regarding AI use."
+    if "dismiss" in t:
+        return f"{caption} - dismisses AI/IP claims."
+    if "settle" in t:
+        return f"{caption} - settlement."
+    return caption
+
+def explicit_template_or_short(caption: str, ctx: str) -> str:
+    if re.search(r"\bBartz\b", caption) and "Anthropic" in caption:
+        return ("**Summaries:** **" + caption + " - N.D. Cal rules AI training fair use.** "
+                "On June 23, Judge Alsup granted partial summary judgment to Anthropic, ruling that "
+                "1) training Claude on plaintiffs’ books was “exceedingly transformative” and fair use, and "
+                "2) digitizing purchased physical books for Anthropic’s central library was also fair use. "
+                "But the court declined to extend the fair use ruling to Anthropic downloading over 7 million pirated books for its central library, "
+                "saying that such piracy is “inherently, irredeemably infringing” regardless of whether the copies are later put to a fair use. "
+                "This issue will proceed to trial.\n\n"
+                "**Key takeaway:** Even where training is fair use, developers may still face significant liability for downloading pirated content.")
+    if re.search(r"\bKadrey\b", caption) and "Meta" in caption:
+        return ("**Summaries:** **" + caption + " - N.D. Cal rules AI training fair use.** "
+                "On June 25, Judge Chhabria granted summary judgment on fair use for AI training to Meta finding that "
+                "1) using plaintiffs’ books to train Meta’s LLM was highly transformative, and "
+                "2) plaintiffs are not entitled to the market for licensing for AI training. "
+                "But Judge Chhabria noted that his decision was limited to the specific record of the case, and that in many circumstances training would not be fair use. "
+                "He indicated that the order likely would have been different if plaintiffs had pled harm to the market for their original works, and even criticized Judge Alsup’s Bartz order for brushing aside market harm concerns.\n\n"
+                "**Key takeaway:** Future pleadings may be more successful if they focus on harm to the market for the original works and not only on the harm to the market for training licenses.")
+    return f"**Summaries:** {smart_sentence(ctx)}"
+
+def choose_takeaway(status: str, ctx: str, already_has_takeaway: bool) -> str:
+    if already_has_takeaway: return ""
+    t = ctx.lower(); s = status.lower()
+    if "judgment" in s and "fair use" in t and ("pirated" in t or "shadow library" in t or "torrent" in t):
+        return "Even if training is fair use, acquisition of pirated datasets can still create liability."
+    if "judgment" in s and "fair use" in t and "market" in t:
+        return "Courts weigh harm to the market for original works more than a separate training license market."
+    if "injunction" in s:
+        return "Injunctions can constrain model distribution or retraining, creating leverage for ingestion guardrails."
+    if "dismissed" in s:
+        return "Complaints that do not connect copying to cognizable market harm risk dismissal."
+    if "settled" in s:
+        return "Settlements set practical value ranges even without merits rulings."
+    return ""
+
+def prefer_source(a, b):
+    pa = SOURCE_PREFERENCE.index(a["source"]) if a["source"] in SOURCE_PREFERENCE else 99
+    pb = SOURCE_PREFERENCE.index(b["source"]) if b["source"] in SOURCE_PREFERENCE else 99
+    if pa != pb: return pa < pb
+    return len(a.get("summary","")) > len(b.get("summary",""))
+
+def dedupe(items):
+    norm = lambda s: re.sub(r"[^a-z0-9]+", " ", (s or "").lower()).strip()
+    best = {}
+    for it in items:
+        k = norm(it["title"])
+        if not k: continue
+        if k not in best or prefer_source(it, best[k]):
+            best[k] = it
+    return list(best.values())
+
+# ---------------
+# Section-based extraction
+# ---------------
+
+def extract_from_html(src_name: str, url: str):
+    html_text = fetch(url)
+    sections = soup_sections(html_text, url)
+
+    items = []
+    for (title, block, sec_url) in sections:
+        if not title and not block:
+            continue
+
+        # Quick skip of junk sections
+        if looks_like_junk(title, block):
+            continue
+
+        # Try to locate a case caption either in header or early in the block
+        caption_match = CAPTION_PAT.search(title) or CAPTION_PAT.search(block[:400])
+        if not caption_match:
+            # If the title names a known party pair like "NYT vs OpenAI" without a literal v., try normalizing
+            # But keep it strict to reduce false positives: skip if no v.
+            continue
+
+        raw_caption = caption_match.group(0).strip()
+        caption = compress_caption(raw_caption)
+
+        # AI context requirement: within section text
+        has_ai_ctx = bool(AI_CONTEXT_PAT.search(block)) or any(p.lower() in (title + " " + block).lower() for p in AI_IP_PARTIES)
+        if not has_ai_ctx:
+            continue
+
+        # Case reference
+        case_ref = ""
+        cr = CASE_NO_PAT.search(block)
+        if cr:
+            case_ref = cr.group(0).strip()
+
+        # Build a concise local summary from the section block
+        status, outcome = infer_status_outcome(block)
+        headline = headline_for(caption, block)
+
+        summary = explicit_template_or_short(caption, block)
+
+        takeaway = ""
+        if "**Key takeaway:**" not in summary:
+            takeaway = choose_takeaway(status, block, already_has_takeaway=False)
+
+        items.append({
+            "title": caption,
+            "headline": headline,
+            "summary": summary,
+            "takeaway": takeaway,
+            "status": status,
+            "outcome": outcome,
+            "source": src_name,
+            "url": sec_url or url,
+            "case_ref": case_ref,
+            "date": ""
+        })
+
+    return items
+
+# -----------------------
+# Output and runner
+# -----------------------
 
 def ensure_docs():
     os.makedirs(DOCS_DIR, exist_ok=True)
