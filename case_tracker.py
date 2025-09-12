@@ -5,7 +5,7 @@ AI Court Cases Tracker — pulls latest McKool Smith weekly edition and 3 other 
 merges & de-dupes, and writes docs/index.html + docs/cases.json for GitHub Pages.
 
 Sources:
-  - McKool Smith (ALWAYS fetch the latest edition; parse numbered items)
+  - McKool Smith (ALWAYS fetch the latest edition; parse numbered case blocks)
   - BakerHostetler
   - WIRED
   - Mishcon de Reya
@@ -13,6 +13,10 @@ Sources:
 Output:
   - docs/index.html (UI)
   - docs/cases.json (data)
+
+Usage:
+  pip install requests beautifulsoup4
+  python case_tracker.py
 """
 
 import os, re, time, json, html
@@ -33,9 +37,11 @@ SOURCES = [
     {"name": "Mishcon de Reya LLP", "url": "https://www.mishcon.com/generative-ai-intellectual-property-cases-and-policy-tracker"},
 ]
 
-HEADERS = {"User-Agent": "AI-Cases-Tracker/8.0 (+GitHub Actions)"}
+HEADERS = {"User-Agent": "AI-Cases-Tracker/9.0 (+GitHub Actions)"}
 
-SOURCE_PREFERENCE = ["McKool Smith", "Mishcon de Reya LLP", "BakerHostetler", "McKool Smith", "WIRED"]
+# Prefer McKool text first (it’s the curated weekly digest),
+# then Mishcon, then Baker, then WIRED.
+SOURCE_PREFERENCE = ["McKool Smith", "Mishcon de Reya LLP", "BakerHostetler", "WIRED"]
 
 AI_IP_PARTIES = [
     "OpenAI","Anthropic","Meta","Google","Alphabet","Midjourney","Stability AI","Suno","Udio",
@@ -43,14 +49,14 @@ AI_IP_PARTIES = [
     "Universal","UMG","Warner","Sony","Authors Guild","New York Times","Reddit","Databricks",
     "LAION","GitHub","Microsoft","Bloomberg","IGN","Ziff Davis","Everyday Health","Dow Jones",
     "NY Post","Center for Investigative Reporting","Canadian Broadcasting Corporation","Radio-Canada",
-    "Warner Bros. Discovery","Uncharted Labs"
+    "Warner Bros. Discovery","Uncharted Labs","Paramount","Sony"
 ]
 
 CAPTION_PAT = re.compile(r"\b([A-Z][A-Za-z0-9\.\-’'& ]{1,90})\s+v\.?\s+([A-Z][A-Za-z0-9\.\-’'& ]{1,90})\b")
 CASE_NO_PAT = re.compile(r"\b(\d{1,2}:\d{2}-cv-\d{4,6}[A-Za-z\-]*|No\.\s?[A-Za-z0-9\-\.:]+|Case\s?(?:No\.|#)\s?[A-Za-z0-9\-:]+|Claim\s?No\.\s?[A-Za-z0-9\-]+)\b", re.I)
 AI_CONTEXT_PAT = re.compile(
     r"\b(ai|artificial intelligence|gen(?:erative)? ai|llm|model|training|dataset|copyright|dmca|"
-    r"right of publicity|digital replica|scrap(?:e|ing)|music|recordings?|publisher|labels?|lyrics|headnotes|r.a.g|rag)\b",
+    r"right of publicity|digital replica|scrap(?:e|ing)|music|recordings?|publisher|labels?|lyrics|headnotes|r\.?a\.?g|rag)\b",
     re.I,
 )
 JUNK_HEADINGS_PAT = re.compile(
@@ -280,7 +286,7 @@ def infer_status_outcome(text: str):
         return ("Dismissed", "Dismissal with prejudice")
     if "dismissed" in t or "motion to dismiss granted" in t:
         return ("Dismissed", "Dismissal")
-    if "settlement" in t or "settled" in t or "$" in t and "settle" in t:
+    if "settlement" in t or "settled" in t or ("$" in t and "settle" in t):
         return ("Settled", "Settlement")
     if "complaint filed" in t or "new case" in t or "filed on" in t or "new case alert" in t:
         return ("Recently filed", "Update")
@@ -297,8 +303,7 @@ def headline_for(caption: str, ctx: str) -> str:
     if "dismiss" in t:
         return f"{caption} - dismisses AI/IP claims."
     if "settle" in t or "settlement" in t:
-        # include $$ if mentioned
-        m = re.search(r"\$\s?([0-9][\d\.,]+)\s*(billion|million|bn|m)?", ctx, re.I)
+        m = re.search(r"\$\s?([0-9][\d\.,]+)\s*(billion|million|bn|m)?", ctx or "", re.I)
         if m:
             amt = m.group(0)
             return f"{caption} - settlement ({amt})."
@@ -345,99 +350,130 @@ def dedupe(items):
 MCKOOL_INDEX = "https://www.mckoolsmith.com/newsroom-ailitigation"
 
 def mckool_find_latest_url(index_html: str) -> str:
+    """
+    Find the latest 'newsroom-ailitigation-<N>' by choosing the MAX N on the index.
+    Falls back to the first match, then to the index itself.
+    """
     soup = BeautifulSoup(index_html, "html.parser")
-    # Look for links like /newsroom-ailitigation-35
-    best = None
+    best_href, best_n = None, -1
     for a in soup.find_all("a", href=True):
         href = a["href"]
-        if "newsroom-ailitigation-" in href:
-            # normalize
+        m = re.search(r"(?:^|/)newsroom-ailitigation-(\d+)(?:/)?$", href)
+        if not m:
+            continue
+        n = int(m.group(1))
+        if n > best_n:
+            best_n = n
+            best_href = href
+    if best_href:
+        if best_href.startswith("/"):
+            best_href = "https://www.mckoolsmith.com" + best_href
+        return best_href
+
+    # Fallback: if we didn’t find a numbered page, try any ailitigation link
+    for a in soup.find_all("a", href=True):
+        if "newsroom-ailitigation" in a["href"]:
+            href = a["href"]
             if href.startswith("/"):
                 href = "https://www.mckoolsmith.com" + href
-            best = href
-            break
-    # if not found, fall back to index itself
-    return best or MCKOOL_INDEX
+            return href
+
+    return MCKOOL_INDEX
 
 def mckool_parse_latest() -> list:
     idx = fetch(MCKOOL_INDEX)
     latest_url = mckool_find_latest_url(idx)
     article_html = fetch(latest_url)
 
-    # Extract the article body text preserving simple breaks
     soup = BeautifulSoup(article_html, "html.parser")
     main = soup.find("main") or soup.find("article") or soup
-    text = main.get_text("\n", strip=True)
-    text = html.unescape(text)
 
-    # The latest page uses numbered sections:
-    # "1. Bartz v. Anthropic\nCurrent Status: ...\nBackground: ...\n"
-    # Split on numbers at start of line
-    blocks = re.split(r"(?m)^\s*(\d+)\.\s+", text)
-    # blocks => ["pre", "1", "Bartz v. Anthropic\nCurrent Status:...", "2", "Warner ...", ...]
+    def text_of(node):
+        return html.unescape(node.get_text("\n", strip=True))
+
+    # Prefer numbered headings (e.g., "1. Bartz v. Anthropic")
+    sections = []
+    headings = main.find_all(re.compile(r"^h[1-6]$"))
+    for h in headings:
+        title = text_of(h)
+        m = re.match(r"^\s*(\d+)\.\s*(.+)$", title)
+        if not m:
+            continue
+        num = m.group(1)
+        caption_line = m.group(2).strip()
+        block_parts = []
+        sib = h.next_sibling
+        while sib:
+            if getattr(sib, "name", None) and re.match(r"^h[1-6]$", sib.name):
+                t2 = text_of(sib)
+                if re.match(r"^\s*\d+\.\s+", t2):
+                    break
+            if hasattr(sib, "get_text"):
+                block_parts.append(text_of(sib))
+            sib = getattr(sib, "next_sibling", None)
+        block_text = "\n".join([p for p in block_parts if p]).strip()
+        sections.append((num, caption_line, block_text))
+
+    # Fallback: line-based split on "N. "
+    if not sections:
+        text = text_of(main)
+        raw_blocks = re.split(r"(?m)^\s*(\d+)\.\s+", text)
+        for i in range(1, len(raw_blocks), 2):
+            num = raw_blocks[i]
+            body = raw_blocks[i+1]
+            if not body:
+                continue
+            lines = body.split("\n")
+            caption_line = lines[0].strip()
+            block_text = "\n".join(lines[1:]).strip()
+            sections.append((num, caption_line, block_text))
+
+    print(f"[McKool] section count: {len(sections)}  url={latest_url}", flush=True)
+
     items = []
-    for i in range(1, len(blocks), 2):
-        num = blocks[i]
-        body = blocks[i+1]
-        if not body: continue
+    for (num, caption_line, block_text) in sections:
+        raw_caption = caption_line
+        raw_caption = re.sub(r"\s+v\.\s+", " v ", raw_caption)
+        raw_caption = re.sub(r"\s+v\s+", " v ", raw_caption)
 
-        # First line up to newline is usually the caption
-        lines = body.split("\n")
-        raw_caption = lines[0].strip()
-        # ensure "v." pattern; sometimes the page may write "v." or "v"
-        if " v" not in raw_caption:
-            # some headings like "SDNY Multi-District Litigation" — keep as title but skip strict v. filter
-            caption = raw_caption
-        else:
-            # normalize to "X v Y"
-            raw_caption = re.sub(r"\s+v\s+", " v ", raw_caption)
-            raw_caption = re.sub(r"\s+v\.\s+", " v ", raw_caption)
-            m = CAPTION_PAT.search(raw_caption)
-            caption = compress_caption(m.group(0)) if m else raw_caption.strip()
+        mcap = CAPTION_PAT.search(raw_caption)
+        caption = compress_caption(mcap.group(0)) if mcap else raw_caption.strip()
+        caption = re.sub(r"\s*\bbackground\b\s*$", "", caption, flags=re.I)
 
-        # Pull Status and Background segments in this block
-        block_text = body
-        # Capture "Current Status:" and "Background:" (case-insensitive)
-        m_status = re.search(r"(?is)current status:\s*(.+?)(?:\n[A-Z][^\n]+:|\Z)", block_text)
-        m_bg     = re.search(r"(?is)background:\s*(.+?)(?:\n[A-Z][^\n]+:|\Z)", block_text)
+        # Extract labeled segments
+        status_match = re.search(r"(?is)\bCurrent Status:\s*(.+?)(?:\n[A-Z][A-Za-z ]{2,20}:\s*|\Z)", block_text)
+        background_match = re.search(r"(?is)\bBackground:\s*(.+?)(?:\n[A-Z][A-Za-z ]{2,20}:\s*|\Z)", block_text)
+        status_text = (status_match.group(1).strip() if status_match else "")
+        background_text = (background_match.group(1).strip() if background_match else "")
 
-        status_text = (m_status.group(1).strip() if m_status else "").replace("\n", " ")
-        background_text = (m_bg.group(1).strip() if m_bg else "").replace("\n", " ")
+        # Lead sentence(s)
+        lead = status_text or background_text or smart_sentence(block_text)
 
-        # Build summary
-        if status_text:
-            lead = status_text
-        elif background_text:
-            lead = smart_sentence(background_text)
-        else:
-            # fallback: first 2-3 sentences from whole block
-            lead = smart_sentence(block_text)
-
-        # Infer status/outcome from status_text + background_text
+        # Infer status/outcome/headline/takeaway
         status, outcome = infer_status_outcome(status_text + " " + background_text)
-
-        # Headline & takeaway
         headline = headline_for(caption, status_text + " " + background_text)
-        takeaway = choose_takeaway(status, status_text + " " + background_text, already_has_takeaway=False)
+        takeaway_guess = choose_takeaway(status, status_text + " " + background_text, already_has_takeaway=False)
 
-        # Build HTML summary per your template
         summary_html = f"<b>Summaries:</b> <b>{html.escape(caption)}</b> — {html.escape(lead)}"
-        if takeaway:
-            summary_html += "<br><br><b>Key takeaway:</b> " + html.escape(takeaway)
+        if takeaway_guess:
+            summary_html += "<br><br><b>Key takeaway:</b> " + html.escape(takeaway_guess)
 
+        frag = f"#sec-{num}"
         items.append({
             "title": caption,
             "headline": headline,
             "summary": summary_html,
-            "takeaway": "",  # embedded
+            "takeaway": "",
             "status": status,
             "outcome": outcome,
             "source": "McKool Smith",
-            "url": latest_url + f"#sec-{num}",
+            "url": latest_url + frag,
             "case_ref": "",
-            "date": ""  # page contains date but page-level; omit
+            "date": ""
         })
 
+    print(f"[McKool] built {len(items)} items", flush=True)
+    # Do NOT filter McKool items by AI context — the page is curated.
     return items
 
 # -----------------------
@@ -491,6 +527,7 @@ def extract_from_html(src_name: str, url: str):
             continue
         for raw_caption in captions:
             caption = compress_caption(raw_caption)
+            # For non-McKool sources, require AI/IP context or known parties
             has_ai_ctx = bool(AI_CONTEXT_PAT.search(block)) or any(
                 p.lower() in (title + " " + block).lower() for p in AI_IP_PARTIES
             )
@@ -592,7 +629,7 @@ def run():
     # 1) McKool Smith — authoritative weekly digest
     try:
         mk = mckool_parse_latest()
-        print(f"[McKool] extracted: {len(mk)} items", flush=True)
+        print(f"[McKool] extracted: {len(mk)} items (first: {mk[0]['title'] if mk else '—'})", flush=True)
         all_items.extend(mk)
     except Exception as e:
         print(f"[McKool] ERROR: {e}", flush=True)
