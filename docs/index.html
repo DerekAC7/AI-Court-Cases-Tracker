@@ -19,17 +19,18 @@
   .meta{font-size:12px; color:var(--muted); display:flex; gap:8px; align-items:center; flex-wrap:wrap}
   .pill{background:var(--pill); color:#fff; border-radius:999px; padding:3px 8px; font-size:11px; font-weight:700}
   .pill2{background:var(--pill2); color:#fff; border-radius:999px; padding:3px 8px; font-size:11px; font-weight:700}
-  .summary{font-size:14px; line-height:1.45}
+  .summary{font-size:14px; line-height:1.5}
+  .summary b{font-weight:800}
   .footer{display:flex; justify-content:space-between; align-items:center}
   .linkbtn{display:inline-block; padding:8px 10px; border-radius:10px; border:1px solid var(--line); background:#fff; font-size:13px; text-decoration:none}
   .linkbtn:hover{text-decoration:underline}
-  .takeaway strong{font-weight:800}
   .ref{font-size:12px; color:var(--muted)}
 </style>
 </head>
 <body>
   <h1>AI Court Cases Tracker</h1>
-  <div class="sub">De-duplicated case summaries across McKool Smith, BakerHostetler, WIRED, and Mishcon. Filter by status; rulings include music-publisher-focused key takeaways.</div>
+  <div class="sub">De-duplicated case summaries across McKool Smith, BakerHostetler, WIRED, and Mishcon. No CourtListener. Rulings show a bold <b>Key takeaway</b>.</div>
+
   <div class="toolbar">
     <input id="q" type="search" placeholder="Filter by case, outcome, status, source…" aria-label="Filter"/>
     <select id="status" aria-label="Filter by status">
@@ -41,16 +42,14 @@
       <option>Injunction</option>
       <option>Settled</option>
       <option>Class certified</option>
-      <option>MDL/Transfer</option>
-      <option>Stayed/Remand</option>
     </select>
     <select id="sort" aria-label="Sort">
       <option value="title">Sort: Title</option>
-      <option value="date">Sort: Date</option>
       <option value="status">Sort: Status</option>
       <option value="source">Sort: Source</option>
     </select>
   </div>
+
   <div id="list" class="grid"></div>
 
 <script>
@@ -75,15 +74,9 @@ async function load() {
       });
 
       items.sort((a,b)=>{
-        if (sortBy === 'date') {
-          const ax = a.date ? Date.parse(a.date) : 0;
-          const bx = b.date ? Date.parse(b.date) : 0;
-          return (bx - ax);
-        } else {
-          const ax=(a[sortBy]||'').toString().toLowerCase();
-          const bx=(b[sortBy]||'').toString().toLowerCase();
-          return ax.localeCompare(bx);
-        }
+        const ax=(a[sortBy]||'').toString().toLowerCase();
+        const bx=(b[sortBy]||'').toString().toLowerCase();
+        return ax.localeCompare(bx);
       });
 
       list.innerHTML = '';
@@ -92,12 +85,10 @@ async function load() {
         const status  = c.status || 'Open/Active';
         const headline = (c.headline || c.title || 'Case');
         const src = c.source || '';
-        const date = c.date ? new Date(c.date).toLocaleDateString() : '';
         const cref = c.case_ref ? `<span class="ref">Case ref: ${c.case_ref}</span>` : '';
-        const takeaway = (c.takeaway && c.takeaway.length)
-          ? `<div class="summary takeaway"><strong>Key takeaway:</strong> ${c.takeaway}</div>`
+        const ktInline = (c.takeaway && c.takeaway.length)
+          ? `<div class="summary"><b>Key takeaway:</b> ${c.takeaway}</div>`
           : '';
-        const outcomePill = c.outcome && c.outcome !== 'Update' ? `<span class="pill2">${c.outcome}</span>` : '';
 
         const card = document.createElement('div');
         card.className = 'card';
@@ -105,13 +96,12 @@ async function load() {
           <div class="title">${headline}</div>
           <div class="meta">
             <span class="pill">${status}</span>
-            ${outcomePill}
+            ${c.outcome && c.outcome !== 'Update' ? `<span class="pill2">${c.outcome}</span>` : ''}
             <span>${src}</span>
-            <span>${date}</span>
             ${cref}
           </div>
-          <div class="summary">${c.summary || 'No summary available.'}</div>
-          ${takeaway}
+          <div class="summary">${c.summary || '<b>Summaries:</b> No summary available.'}</div>
+          ${ktInline}
           <div class="footer">
             <span></span>
             <a class="linkbtn" href="${url}" target="_blank" rel="noopener">View source →</a>
