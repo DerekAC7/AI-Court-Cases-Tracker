@@ -1,421 +1,182 @@
-import os
-import re
-import json
-import hashlib
-import requests
-from bs4 import BeautifulSoup
-from urllib.parse import urljoin, urlparse
+import os, re, json, hashlib, requests
+from datetime import datetime, timedelta
+from urllib.parse import urlencode
 
-# ========= CONFIG =========
+# ====== CONFIG ======
 REPO_OWNER = "DerekAC7"
 REPO_NAME  = "AI-Court-Cases-Tracker"
-TOKEN = os.getenv("PERSONAL_ACCESS_TOKEN")  # mapped from secrets.PAT_TOKEN in the workflow
-COMMON_LABELS = ["AI Training", "Court Case"]
-SOURCE_LABEL_PREFIX = "Source: "
-TIMEOUT = 30
+TOKEN = os.getenv("PERSONAL_ACCESS_TOKEN")  # mapped from secrets.PAT_TOKEN
 DOCS_DIR = "docs"
 JSON_PATH = f"{DOCS_DIR}/cases.json"
-# =========================
+TIMEOUT = 40
 
-API_BASE = f"https://api.github.com/repos/{REPO_OWNER}/{REPO_NAME}"
+# CourtListener/RECAP endpoints (public; no auth needed)
+CL_SEARCH = "https://www.courtlistener.com/api/rest/v4/search/"     # search across case law + PACER metadata
+CL_DOCKETS = "https://www.courtlistener.com/api/rest/v4/dockets/"   # docket objects
+CL_DEs = "https://www.courtlistener.com/api/rest/v4/docket-entries/"
 
-# ---------- CASE / AI PATTERNS ----------
-CASE_PATTERNS = [
-    r"\b[A-Z][\w'.&-]{1,40}\s+v\.\s+[A-Z][\w'.&-]{1,80}\b",   # Foo v. Bar
-    r"\b[A-Z][\w'.&-]{1,40}\s+vs\.?\s+[A-Z][\w'.&-]{1,80}\b", # Foo vs Bar
-    r"\bIn\s+re\s+[A-Z][\w'.&-]{2,}\b",                      # In re Something
-    r"\bU\.S\.\s+v\.\s+[A-Z][\w'.&-]{1,80}\b",               # U.S. v. X
-]
-CASE_REGEX = re.compile("|".join(CASE_PATTERNS))
-
-AI_TERMS = [
-    "ai", "generative", "llm", "model", "training", "dataset", "copyright",
-    "openai", "anthropic", "meta", "midjourney", "stability", "stability ai",
-    "reddit", "getty", "new york times", "nyt", "suno", "udio", "disney",
-    "universal", "authors guild", "kadrey", "silverman", "bartz", "claude",
-    "chatgpt", "copilot", "diffusion", "watermark", "replica", "deepfake"
+# Parties we care about (expand as needed)
+TARGET_PARTIES = [
+    "OpenAI", "Anthropic", "Meta", "Midjourney", "Stability AI", "Stability",
+    "Suno", "Udio", "Reddit", "Disney", "Getty", "New York Times",
+    "Authors Guild", "Universal Music", "UMG", "Warner Music", "Sony Music"
 ]
 
-# Hard false-positives to exclude
-BLACKLIST_PHRASES = [
-    "blue cross", "antitrust", "facebook consumer privacy", "erisa",
-    "whistleblower", "false claims act", "metaverse", "nft", "cryptoassets",
-    "internal investigations", "mdr mayfair"
+AI_KEYWORDS = [
+    "AI","artificial intelligence","generative","LLM","model","training",
+    "dataset","copyright","diffusion","watermark","deepfake","replica"
 ]
 
-COURT_PAT = re.compile(
-    r"(?:\b\d{1,2}(?:st|nd|rd|th)\s+Cir\.\b|\bN\.D\. Cal\.\b|\bS\.D\.N\.Y\.\b|\bN\.D\. Ill\.\b|\bC\.D\. Cal\.\b|\bD\. Del\.\b|\bD\. Mass\.\b|\bS\.D\. Fla\.\b|\bE\.D\. Va\.\b|\bN\.D\. Tex\.\b|\bN\.D\. Ga\.\b|\bW\.D\. Wash\.\b|\bS\.D\. Cal\.\b)",
-    re.I
-)
-
-# ---------- GitHub helpers ----------
+# ====== helpers ======
 def gh_headers():
-    if not TOKEN:
-        raise RuntimeError("Missing token. Map secrets.PAT_TOKEN to PERSONAL_ACCESS_TOKEN.")
-    return {
-        "Authorization": f"token {TOKEN}",
-        "Accept": "application/vnd.github+json",
-        "User-Agent": "ai-litigation-tracker-bot"
-    }
+    if not TOKEN: raise RuntimeError("Missing token (map secrets.PAT_TOKEN to PERSONAL_ACCESS_TOKEN).")
+    return {"Authorization": f"token {TOKEN}",
+            "Accept": "application/vnd.github+json",
+            "User-Agent": "ai-litigation-tracker-bot"}
 
-def ensure_labels(extra_labels):
-    r = requests.get(f"{API_BASE}/labels?per_page=100", headers=gh_headers(), timeout=TIMEOUT)
-    r.raise_for_status()
-    have = {x["name"] for x in r.json()}
-    for name in set(COMMON_LABELS) | set(extra_labels):
-        if name not in have:
-            requests.post(f"{API_BASE}/labels", headers=gh_headers(), json={"name": name}, timeout=TIMEOUT)
+def clean(s): return re.sub(r"\s+"," ",(s or "").strip())
 
-def list_existing_issue_keys():
-    keys = set()
-    for state in ("open", "closed"):
-        page = 1
-        while True:
-            r = requests.get(f"{API_BASE}/issues", headers=gh_headers(),
-                             params={"state": state, "per_page": 100, "page": page}, timeout=TIMEOUT)
-            r.raise_for_status()
-            items = r.json()
-            if not items: break
-            for it in items:
-                if "pull_request" in it:  # skip PRs
-                    continue
-                body = it.get("body") or ""
-                m = re.search(r"<!--\s*KEY:\s*([a-f0-9]{32})\s*-->", body, flags=re.I)
-                if m:
-                    keys.add(m.group(1))
-            page += 1
-    return keys
-
-def create_issue(title, body, labels):
-    payload = {"title": title, "body": body, "labels": labels}
-    r = requests.post(f"{API_BASE}/issues", headers=gh_headers(), json=payload, timeout=TIMEOUT)
-    if r.status_code != 201:
-        raise RuntimeError(f"Issue create failed: {r.status_code} {r.text}")
-    print(f"Created: {title}")
-
-# ---------- utils ----------
-def get_html(url):
-    return requests.get(url, timeout=TIMEOUT).text
-
-def clean(text):
-    return re.sub(r"\s+", " ", (text or "").strip())
-
-def is_probable_case(text):
-    return bool(CASE_REGEX.search(text))
-
-def is_ai_related(text):
-    t = text.lower()
-    if any(bad in t for bad in BLACKLIST_PHRASES):
-        return False
-    return any(term in t for term in AI_TERMS)
-
-def infer_status(text):
-    t = text.lower()
-    if any(k in t for k in ["recently filed", "filed on", "filed ", "new case", "complaint"]):
-        return "Recently filed"
-    if any(k in t for k in ["summary judgment", "judgment entered", "verdict", "liability", "granted judgment", "order granting"]):
-        return "Judgment"
-    if any(k in t for k in ["dismissed", "dismissal", "motion to dismiss granted", "dismissal with prejudice", "12(b)"]):
-        return "Dismissed"
-    if any(k in t for k in ["preliminary injunction", "permanent injunction", "injunction"]):
-        return "Injunction"
-    if any(k in t for k in ["settled", "settlement", "settle"]):
-        return "Settled"
-    if any(k in t for k in ["class certification", "certified class", "class certified"]):
-        return "Class certified"
-    if any(k in t for k in ["mdl", "transferred", "transfer order", "centralized"]):
-        return "MDL/Transfer"
-    if any(k in t for k in ["stayed", "remand"]):
-        return "Stayed/Remand"
+def status_from_text(t):
+    t = (t or "").lower()
+    if any(x in t for x in ["summary judgment","judgment entered","granted judgment","verdict"]): return "Judgment"
+    if any(x in t for x in ["dismissed","dismissal","12(b)"]): return "Dismissed"
+    if any(x in t for x in ["preliminary injunction","permanent injunction","injunction"]): return "Injunction"
+    if any(x in t for x in ["settlement","settled"]): return "Settled"
+    if any(x in t for x in ["class certified","class certification"]): return "Class certified"
+    if any(x in t for x in ["mdl","transferred","transfer order","centralized"]): return "MDL/Transfer"
+    if any(x in t for x in ["stayed","remand"]): return "Stayed/Remand"
     return "Open/Active"
 
-def infer_outcome_short(text):
-    m = re.search(
-        r"(fair use|summary judgment|partial summary judgment|dismiss(ed)?|prelim(inary)? injunction|injunction|"
-        r"settle(d)?|class certification|class action|md(l)?|transfer|stay(ed)?|remand|verdict|trial|damages)",
-        text, re.I
-    )
+def outcome_short(t):
+    m = re.search(r"(fair use|summary judgment|partial summary judgment|dismiss(ed)?|prelim(inary)? injunction|injunction|"
+                  r"settle(d)?|class certification|md(l)?|transfer|stay(ed)?|remand|verdict|trial|damages)", t or "", re.I)
     return clean(m.group(0)).capitalize() if m else "Update"
 
-def extract_court(text):
-    m = COURT_PAT.search(text or "")
-    return m.group(0) if m else ""
-
-def normalize_case_key(title):
-    t = title.lower()
-    t = re.sub(r"\bvs\.?\b", "v.", t)
-    t = re.sub(r"\s+v\.\s+", " v. ", t)
-    t = re.sub(r"[\u2013\u2014\-:;,\.\(\)\[\]“”\"']", " ", t)
-    t = re.sub(r"\s+", " ", t).strip()
-    return t
-
-def unique_cases(entries):
-    seen = set()
-    out = []
-    for e in entries:
-        key = normalize_case_key(e["title"])
-        if key in seen: 
-            continue
-        seen.add(key)
-        out.append(e)
-    return out
-
-def url_abs(base, href):
-    if not href: return None
-    return urljoin(base, href)
-
-# ---------- auto key takeaway (music publisher focus) ----------
-def generate_takeaway(summary_text, outcome_text):
-    t = (summary_text + " " + (outcome_text or "")).lower()
-
-    # Only emit when there is a real ruling/decision signal
-    ruling_hit = any(k in t for k in [
-        "summary judgment", "granted", "denied", "dismiss", "injunction", "verdict", "order", "class certification"
-    ])
-    if not ruling_hit:
+def music_publisher_takeaway(text):
+    t = (text or "").lower()
+    # Only emit if we detect an actual ruling-ish signal
+    if not any(k in t for k in ["judgment","dismiss","injunction","verdict","order","class certific"]):
         return ""
-
-    # Fair use + acquisition/piracy
-    if "fair use" in t and any(k in t for k in ["pirated", "piracy", "torrent", "unauthorized download", "7 million"]):
-        return ("Even if training is deemed fair use, liability can still attach to dataset acquisition. "
-                "For music publishers, provenance of audio datasets (and any scraping of pirated files) remains a high-risk vector.")
-
-    # Fair use + market harm/licensing market
+    if "fair use" in t and any(k in t for k in ["pirated","torrent","unauthorized","7 million","scrape"]):
+        return ("Even if training is ruled fair use, dataset acquisition can still create liability. "
+                "For music publishers, scrutinize provenance of audio datasets and any scraping of pirated files.")
     if "fair use" in t and "market" in t:
-        return ("Courts weigh harm to the market for the original works more heavily than abstract ‘training license’ markets. "
-                "Publisher strategies should document concrete substitution or licensing displacement.")
-
-    # Injunctions
+        return ("Courts weigh harm to the market for the original works more than a separate 'training license' market. "
+                "Publishers should document concrete substitution or licensing displacement.")
     if "injunction" in t:
         return ("Injunctions can restrict model distribution or retraining. "
                 "Publishers should evaluate leverage for prospective relief and guardrails on future training.")
-
-    # Dismissals / pleading defects
     if "dismiss" in t:
-        return ("Complaints that don’t connect copying to cognizable market harm risk dismissal. "
-                "Allegations should tie training and outputs to specific revenue impact on the catalog.")
-
-    # Class certification
-    if "class certification" in t or "class certified" in t:
-        return ("Class certification turns on commonality/predominance; heterogeneous catalogs can cut both ways. "
-                "Publishers should track whether work-by-work issues defeat class treatment.")
-
-    # Settlements
+        return ("Complaints that don't connect copying to market harm risk dismissal. "
+                "Tie training/outputs to measurable revenue impact on the catalog.")
+    if "class certific" in t:
+        return ("Class certification hinges on commonality/predominance; heterogeneous catalogs can cut both ways. "
+                "Watch whether work-by-work issues defeat class treatment.")
     if "settle" in t:
-        return ("Parties are resolving AI/IP disputes without merits rulings. "
-                "Settlement patterns inform licensing benchmarks for training and output uses.")
-
-    # MDL/transfer
-    if "mdl" in t or "transfer" in t or "centralized" in t:
-        return ("Centralization can accelerate coordinated rulings. "
-                "Publishers should follow lead-case motions that will shape discovery on training data and outputs.")
-
-    # Verdict / damages
+        return ("Parties are resolving AI/IP disputes without merits rulings—use settlement patterns to set benchmarks "
+                "for training and output licenses.")
     if "verdict" in t or "damages" in t:
-        return ("Damages frameworks and revenue attribution will be key. "
-                "Publishers should model statutory vs. actual damages and apportionment theories for AI uses.")
-
+        return ("Damages frameworks and attribution will be key. "
+                "Model statutory vs. actual damages and apportionment for AI uses.")
     return ""
 
-# ---------- extract case lines from article ----------
-def extract_cases_from_article(url):
-    try:
-        html = get_html(url)
-    except Exception:
-        return []
-    soup = BeautifulSoup(html, "html.parser")
+def fetch(url, params=None):
+    r = requests.get(url, params=params, timeout=TIMEOUT)
+    r.raise_for_status()
+    return r.json()
 
-    # Gather sentences from p/li/headings
-    sentences = []
-    for sel in ["p", "li", "h2", "h3"]:
-        for el in soup.select(sel):
-            t = clean(el.get_text())
-            if not t:
-                continue
-            parts = re.split(r"(?<=[\.\?!])\s+", t)
-            sentences.extend([p for p in parts if p])
+def court_short(name):
+    # Try to compress common district names
+    if not name: return ""
+    x = name.replace("District Court for the ","").replace("District Court, ","")
+    x = x.replace("United States ","").replace("U.S. ","")
+    x = x.replace("Northern District of California","N.D. Cal").replace("Southern District of New York","S.D.N.Y.")
+    x = x.replace("Central District of California","C.D. Cal").replace("District of Delaware","D. Del")
+    x = x.replace("District of Massachusetts","D. Mass")
+    return x
 
-    cases = []
-    for i, sent in enumerate(sentences):
-        if not is_probable_case(sent):
-            continue
+def build_query():
+    # party:(OpenAI OR Anthropic ... ) AND (AI keywords)
+    party_q = " OR ".join([f'"{p}"' for p in TARGET_PARTIES])
+    kw_q = " OR ".join([f'"{k}"' for k in AI_KEYWORDS])
+    # CourtListener v4 search params:
+    # q=, type=dockets|opinions|everything, order_by, date filters, etc.
+    return {
+        "q": f"({party_q}) ({kw_q})",
+        "type": "dockets",
+        "page_size": 50,  # per page
+        "order_by": "dateFiled desc"
+    }
 
-        # Context window for AI relevance + court extraction
-        context = " ".join([sentences[j] for j in range(max(0, i-1), min(len(sentences), i+3))])
-        if not is_ai_related(context):
-            continue
+def latest_entries_for_docket(docket_id, limit=6):
+    data = fetch(CL_DEs, {"docket": docket_id, "page_size": limit, "order_by": "date_filed desc"})
+    return data.get("results", [])
 
-        # Caption
-        m = CASE_REGEX.search(sent)
-        caption = m.group(0) if m else sent[:120]
+def search_dockets():
+    results = []
+    params = build_query()
+    url = CL_SEARCH
+    while True:
+        data = fetch(url, params)
+        for row in data.get("results", []):
+            if row.get("result_type") != "docket": continue
+            d = row.get("docket") or {}
+            # Basic fields
+            caption = clean(d.get("caption") or row.get("caseName") or "")
+            if not caption: continue
+            court = court_short(d.get("court_name") or row.get("court") or "")
+            docket_id = d.get("id") or row.get("id")
+            docket_num = d.get("docket_number") or row.get("docketNumber") or ""
+            filed = d.get("date_filed") or row.get("dateFiled") or ""
+            # Pull recent entries to infer status/outcome
+            entries = latest_entries_for_docket(docket_id)
+            text_blob = " ".join([clean(x.get("description") or x.get("entry_text") or "") for x in entries])
+            status = status_from_text(text_blob) if entries else "Open/Active"
+            outcome = outcome_short(text_blob)
+            takeaway = music_publisher_takeaway(text_blob)
+            headline = caption + (f" – {court}" if court else "")
+            # Build summary from most recent notable entries
+            top = [e for e in entries if len(clean(e.get("description",""))) > 0][:3]
+            if top:
+                bullets = "; ".join([clean(e["description"]) for e in top])
+                summary = f"Recent docket activity: {bullets}"
+            else:
+                summary = "Docket retrieved from CourtListener/RECAP."
 
-        # Build 1–3 sentence summary around the detected sentence
-        summary_sents = [sent]
-        if i + 1 < len(sentences) and len(sentences[i+1]) > 40:
-            summary_sents.append(sentences[i+1])
-        if i + 2 < len(sentences) and len(" ".join(summary_sents)) < 500:
-            summary_sents.append(sentences[i+2])
-        summary = " ".join(summary_sents)
+            results.append({
+                "title": caption,
+                "headline": headline,
+                "date": filed or "",
+                "summary": summary[:900],
+                "source": "CourtListener/RECAP",
+                "url": f"https://www.courtlistener.com/docket/{docket_id}/",
+                "outcome": outcome,
+                "status": status,
+                "takeaway": takeaway
+            })
+        # pagination
+        next_url = data.get("next")
+        if not next_url: break
+        url, params = next_url, None
+    return results
 
-        outcome = infer_outcome_short(summary)
-        status  = infer_status(summary)
-        court   = extract_court(context)
-        headline = f"{caption}" + (f" – {court}" if court else "")
+def normalize_case_key(title):
+    t = title.lower()
+    t = re.sub(r"\bvs\.?\b","v.", t)
+    t = re.sub(r"\s+v\.\s+"," v. ", t)
+    t = re.sub(r"[^\w\s]"," ", t)
+    t = re.sub(r"\s+"," ", t).strip()
+    return t
 
-        takeaway = generate_takeaway(summary, outcome)
+def unique(docs):
+    seen=set(); out=[]
+    for e in docs:
+        k = normalize_case_key(e["title"])
+        if k in seen: continue
+        seen.add(k); out.append(e)
+    return out
 
-        cases.append({
-            "title": caption,
-            "headline": headline,
-            "date": "",               # could be refined per-source later
-            "summary": summary[:900],
-            "source": "",             # filled by caller
-            "url": url,
-            "outcome": outcome,
-            "status": status,
-            "takeaway": takeaway
-        })
-    return cases
-
-# ---------- list page extractor: follow article links ----------
-def harvest_from_listing(list_url, source_name, link_selectors, block_selectors=None):
-    html = get_html(list_url)
-    soup = BeautifulSoup(html, "html.parser")
-
-    links = set()
-    if block_selectors:
-        blocks = []
-        for sel in block_selectors:
-            blocks.extend(soup.select(sel))
-        for b in blocks:
-            for sel in link_selectors:
-                a = b.select_one(sel)
-                if a and a.get("href"):
-                    links.add(url_abs(list_url, a["href"]))
-    else:
-        for sel in link_selectors:
-            for a in soup.select(sel):
-                if a and a.get("href"):
-                    links.add(url_abs(list_url, a["href"]))
-
-    entries = []
-    for href in links:
-        if not href: 
-            continue
-        if urlparse(href).netloc and urlparse(href).netloc not in urlparse(list_url).netloc:
-            continue
-        article_cases = extract_cases_from_article(href)
-        for c in article_cases:
-            c["source"] = source_name
-        entries.extend(article_cases)
-
-    print(f"[{source_name}] articles: {len(links)} • cases extracted: {len(entries)}")
-    return entries
-
-# ---------- per-source scrapers (ONLY the 4 you asked) ----------
-def scrape_mckool():
-    list_url = "https://www.mckoolsmith.com/newsroom-ailitigation"
-    return harvest_from_listing(
-        list_url, "McKool Smith",
-        link_selectors=["h1 a", "h2 a", "h3 a", "a"],
-        block_selectors=["article", "li", "div.item", "div.card", "div.teaser", "section"]
-    )
-
-def scrape_bakerhostetler():
-    list_url = "https://www.bakerlaw.com/services/artificial-intelligence-ai/case-tracker-artificial-intelligence-copyrights-and-class-actions/"
-    return harvest_from_listing(
-        list_url, "BakerHostetler",
-        link_selectors=["h1 a", "h2 a", "h3 a", "a"],
-        block_selectors=["article", "li", "div", "section"]
-    )
-
-def scrape_wired():
-    list_url = "https://www.wired.com/story/ai-copyright-case-tracker/"
-    return harvest_from_listing(
-        list_url, "WIRED",
-        link_selectors=["h1 a", "h2 a", "h3 a", "a"],
-        block_selectors=["article", "li", "div", "section"]
-    )
-
-def scrape_mishcon():
-    list_url = "https://www.mishcon.com/generative-ai-intellectual-property-cases-and-policy-tracker"
-    return harvest_from_listing(
-        list_url, "Mishcon de Reya LLP",
-        link_selectors=["h1 a", "h2 a", "h3 a", "a"],
-        block_selectors=["article", "li", "div", "section"]
-    )
-
-SOURCES = [scrape_mckool, scrape_bakerhostetler, scrape_wired, scrape_mishcon]  # priority order
-
-# ---------- issues + site ----------
-def make_issue_body(entry, key_hex):
-    headline = entry["headline"]
-    summary  = entry["summary"]
-    src      = entry.get("source", "Unknown")
-    url      = entry.get("url", "")
-    outcome  = entry.get("outcome") or "Update"
-    status   = entry.get("status") or "Open/Active"
-    takeaway = entry.get("takeaway", "")
-
-    body = f"""{headline} – {outcome}.
-{summary}
-{"Key takeaway: " + takeaway if takeaway else ""}
-
-Status: {status}
-Source: {src} ({url})
-
-<!-- KEY: {key_hex} -->
-"""
-    return body
-
-def ensure_site_shell_overwrite():
-    os.makedirs(DOCS_DIR, exist_ok=True)
-    with open(os.path.join(DOCS_DIR, ".nojekyll"), "w", encoding="utf-8") as f:
-        f.write("")
-    with open(os.path.join(DOCS_DIR, "index.html"), "w", encoding="utf-8") as f:
-        f.write(_INDEX_HTML)
-
-def run():
-    # 1) scrape
-    all_entries = []
-    for fn in SOURCES:
-        try:
-            all_entries.extend(fn())
-        except Exception as e:
-            print(f"[WARN] {fn.__name__} failed: {e}")
-
-    # 2) keep only real captions AND AI-related context
-    all_entries = [e for e in all_entries if is_probable_case(e["title"]) and is_ai_related(e["summary"] + " " + e["headline"])]
-
-    # 3) de-dup
-    deduped = unique_cases(all_entries)
-    print(f"[TOTAL] deduped cases: {len(deduped)}")
-
-    # 4) labels + issues
-    source_labels = {SOURCE_LABEL_PREFIX + (e.get("source") or "Unknown") for e in deduped}
-    ensure_labels(list(source_labels))
-    existing = list_existing_issue_keys()
-    created = 0
-    for e in deduped:
-        key_hex = hashlib.md5((normalize_case_key(e["title"]) + "|" + (e.get("source") or "")).encode("utf-8")).hexdigest()
-        if key_hex in existing:
-            continue
-        body = make_issue_body(e, key_hex)
-        labels = COMMON_LABELS + [SOURCE_LABEL_PREFIX + e.get("source", "Unknown"), e.get("status","Open/Active")]
-        try:
-            create_issue(e["headline"], body, labels)
-            created += 1
-        except Exception as ex:
-            print(f"[ERROR] issue create failed for '{e['headline']}': {ex}")
-    print(f"Issues created: {created}")
-
-    # 5) Website data
-    ensure_site_shell_overwrite()
-    with open(JSON_PATH, "w", encoding="utf-8") as f:
-        json.dump(deduped, f, ensure_ascii=False, indent=2)
-    print(f"Wrote {JSON_PATH} with {len(deduped)} cases.")
-
-# ------- UI (clean cards, status filter, source link at bottom) -------
+# ====== site writer ======
 _INDEX_HTML = """<!doctype html>
 <html lang="en">
 <head>
@@ -463,6 +224,7 @@ _INDEX_HTML = """<!doctype html>
       <option value="title">Sort: Title</option>
       <option value="status">Sort: Status</option>
       <option value="source">Sort: Source</option>
+      <option value="date">Sort: Date</option>
     </select>
   </div>
   <div id="list" class="grid"></div>
@@ -487,9 +249,9 @@ async function load() {
     });
 
     items.sort((a,b)=>{
-      const A=(a[sortBy]||'').toString().toLowerCase();
-      const B=(b[sortBy]||'').toString().toLowerCase();
-      return A.localeCompare(B);
+      const ax=(a[sortBy]||'').toString().toLowerCase();
+      const bx=(b[sortBy]||'').toString().toLowerCase();
+      return ax.localeCompare(bx);
     });
 
     list.innerHTML = '';
@@ -508,8 +270,9 @@ async function load() {
         <div class="meta">
           <span class="pill">${status}</span>
           <span>${src}</span>
+          <span>${c.date ? new Date(c.date).toLocaleDateString() : ''}</span>
         </div>
-        <div class="summary">${c.summary || 'No summary provided by source.'}</div>
+        <div class="summary">${c.summary || 'No summary available.'}</div>
         ${takeaway}
         <div class="footer">
           <a class="linkbtn" href="${url}" target="_blank" rel="noopener">View source →</a>
@@ -529,6 +292,22 @@ load();
 </body>
 </html>
 """
+
+# ====== main ======
+def ensure_docs():
+    os.makedirs(DOCS_DIR, exist_ok=True)
+    with open(os.path.join(DOCS_DIR, ".nojekyll"), "w", encoding="utf-8") as f: f.write("")
+    with open(os.path.join(DOCS_DIR, "index.html"), "w", encoding="utf-8") as f: f.write(_INDEX_HTML)
+
+def run():
+    # 1) search structured dockets from CourtListener
+    items = search_dockets()
+    items = unique(items)
+    # 2) write site artifacts
+    ensure_docs()
+    with open(JSON_PATH, "w", encoding="utf-8") as f:
+        json.dump(items, f, ensure_ascii=False, indent=2)
+    print(f"Wrote {JSON_PATH} with {len(items)} cases.")
 
 if __name__ == "__main__":
     run()
