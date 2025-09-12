@@ -86,7 +86,8 @@ async function load() {
         const headline = (c.headline || c.title || 'Case');
         const src = c.source || '';
         const cref = c.case_ref ? `<span class="ref">Case ref: ${c.case_ref}</span>` : '';
-        const ktInline = (c.takeaway && c.takeaway.length)
+        const hasEmbeddedKT = (c.summary||"").toLowerCase().includes("<b>key takeaway:</b>");
+        const ktInline = (!hasEmbeddedKT && c.takeaway)
           ? `<div class="summary"><b>Key takeaway:</b> ${c.takeaway}</div>`
           : '';
 
