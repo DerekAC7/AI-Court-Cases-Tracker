@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"/>
-<title>AI Court Cases Tracker</title>
+<title>Key Generative AI Infringement Cases in Media and Entertainment</title>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <style>
   :root { --fg:#0f172a; --muted:#475569; --bg:#ffffff; --card:#f8fafc; --line:#e2e8f0; --pill:#0ea5e9; --pill2:#7c3aed; }
@@ -27,7 +27,7 @@
 </style>
 </head>
 <body>
-  <h1>AI Court Cases Tracker</h1>
+  <h1>Key Generative AI Infringement Cases in Media and Entertainment</h1>
 
   <div class="toolbar">
     <input id="q" type="search" placeholder="Filter by case, outcome, status…" aria-label="Filter"/>
@@ -82,7 +82,6 @@ async function load() {
         const url = c.url || '#';
         const status  = c.status || 'Open/Active';
         const headline = (c.headline || c.title || 'Case');
-        const src = c.source || '';
         const cref = c.case_ref ? `<span class="ref">Case ref: ${c.case_ref}</span>` : '';
         const hasEmbeddedKT = (c.summary||"").toLowerCase().includes("<b>key takeaway:</b>");
         const ktInline = (!hasEmbeddedKT && c.takeaway)

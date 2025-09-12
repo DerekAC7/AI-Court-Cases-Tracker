@@ -26,32 +26,6 @@
     "date": ""
   },
   {
-    "title": "et al et al. v Perplexity AI",
-    "headline": "et al et al. v Perplexity AI - dismisses AI/IP claims.",
-    "summary": "<b>Summaries:</b> <b>et al et al. v Perplexity AI</b> — Going into deep freeze.\nIt has been several months since Plaintiffs submitted their memorandum of law opposing Defendant’s motion to dismiss or transfer the case. We’re going to put this case on the back burner until there is some substantial movement on the docket.",
-    "takeaway": "",
-    "music_lens": "RAG systems pose ongoing reproduction risks. Assert claims on output reproduction of lyrics and require link-respecting behavior; consider negotiating paid access APIs for lyric metadata as an alternative.",
-    "status": "Open/Active",
-    "outcome": "Update",
-    "source": "",
-    "url": "https://www.courtlistener.com/?q=et+al+et+al.+v+Perplexity+AI+AND+%28court%3A%28new+york+southern%29%29&type=r&order_by=score%20desc",
-    "case_ref": "",
-    "date": ""
-  },
-  {
-    "title": "et al. v Anthropic",
-    "headline": "et al. v Anthropic",
-    "summary": "<b>Summaries:</b> <b>et al. v Anthropic</b> — Bartz\ncontinues to haunt Anthropic.\nA few weeks ago, Anthropic submitted an opposition to Plaintiffs’ motion seeking leave to amend its complaint, adding claims related to the torrenting of copyrighted work as well as several additional works. Plaintiffs’ likely seek to recreate some of the success seen by the Bartz plaintiffs in another case involving Anthropic. Anthropic has argued that this belated amendment should be disallowed. Last week, Plaintiffs submitted their reply brief supporting their motion to amend in which they argued that any delay in bringing these claims was attributable to discovery failures by Anthropic. The parties also submitted a joint discovery dispute statement regarding what Anthropic has called deficient damages disclosures by Plaintiffs.\nPlaintiffs also filed a motion to compel the production of the evidence related to torrenting that was produced in the\nBartz\ncase, arguing that “there is no question that Publishers’ lyrics are included in the 7 million books that Anthropic illegally downloaded.” Plaintiffs also ask for unredacted versions of briefing from\nBartz\n.",
-    "takeaway": "",
-    "music_lens": "Build evidentiary files on lyric/composition market harm (lost sync, sheet music, lyric licensing) and compel disclosure of training datasets and ingestion logs.",
-    "status": "Open/Active",
-    "outcome": "Update",
-    "source": "",
-    "url": "https://www.courtlistener.com/?q=et+al.+v+Anthropic+AND+%28court%3A%28california+northern%29%29&type=r&order_by=score%20desc",
-    "case_ref": "",
-    "date": ""
-  },
-  {
     "title": "Getty Images v Midjourney et al.",
     "headline": "Getty Images v Midjourney et al.",
     "summary": "<b>Summaries:</b> <b>Getty Images v Midjourney et al.</b> — Still no update for Getty\n. With no notable updates for Getty in over a third of a year, this case on the back-burner. As a final update on where we last left off: Getty had submitted a letter to the Court on November 25th, 2024 explaining its frustration with Stability AI’s refusal to participate in discovery or participate in a Rule 26(f) conference. In August 2024, Stability AI had argued that they were under no obligation to commence fact discovery until the Court issued its ruling on jurisdiction. Getty had requested that the Court order Stability to stop delaying and proceed with the case, but after several months with no response from the Court, it appears unclear when things will begin moving forward again.",
@@ -74,6 +48,32 @@
     "outcome": "Summary Judgment",
     "source": "",
     "url": "https://www.courtlistener.com/?q=Kadrey+et+al.+v+Meta&type=r&order_by=score%20desc",
+    "case_ref": "",
+    "date": ""
+  },
+  {
+    "title": "Plaintiffs et al. v Anthropic",
+    "headline": "Plaintiffs et al. v Anthropic",
+    "summary": "<b>Summaries:</b> <b>Plaintiffs et al. v Anthropic</b> — Bartz\ncontinues to haunt Anthropic.\nA few weeks ago, Anthropic submitted an opposition to Plaintiffs’ motion seeking leave to amend its complaint, adding claims related to the torrenting of copyrighted work as well as several additional works. Plaintiffs’ likely seek to recreate some of the success seen by the Bartz plaintiffs in another case involving Anthropic. Anthropic has argued that this belated amendment should be disallowed. Last week, Plaintiffs submitted their reply brief supporting their motion to amend in which they argued that any delay in bringing these claims was attributable to discovery failures by Anthropic. The parties also submitted a joint discovery dispute statement regarding what Anthropic has called deficient damages disclosures by Plaintiffs.\nPlaintiffs also filed a motion to compel the production of the evidence related to torrenting that was produced in the\nBartz\ncase, arguing that “there is no question that Publishers’ lyrics are included in the 7 million books that Anthropic illegally downloaded.” Plaintiffs also ask for unredacted versions of briefing from\nBartz\n.",
+    "takeaway": "",
+    "music_lens": "Build evidentiary files on lyric/composition market harm (lost sync, sheet music, lyric licensing) and compel disclosure of training datasets and ingestion logs.",
+    "status": "Open/Active",
+    "outcome": "Update",
+    "source": "",
+    "url": "https://www.courtlistener.com/?q=Plaintiffs+et+al.+v+Anthropic+AND+%28court%3A%28california+northern%29%29&type=r&order_by=score%20desc",
+    "case_ref": "",
+    "date": ""
+  },
+  {
+    "title": "Plaintiffs et al. v Perplexity AI",
+    "headline": "Plaintiffs et al. v Perplexity AI - motion to dismiss briefing.",
+    "summary": "<b>Summaries:</b> <b>Plaintiffs et al. v Perplexity AI</b> — Going into deep freeze.\nIt has been several months since Plaintiffs submitted their memorandum of law opposing Defendant’s motion to dismiss or transfer the case. We’re going to put this case on the back burner until there is some substantial movement on the docket.",
+    "takeaway": "",
+    "music_lens": "RAG systems pose ongoing reproduction risks. Assert claims on output reproduction of lyrics and require link-respecting behavior; consider negotiating paid access APIs for lyric metadata as an alternative.",
+    "status": "Open/Active",
+    "outcome": "Update",
+    "source": "",
+    "url": "https://www.courtlistener.com/?q=Plaintiffs+et+al.+v+Perplexity+AI+AND+%28court%3A%28new+york+southern%29%29&type=r&order_by=score%20desc",
     "case_ref": "",
     "date": ""
   },
@@ -105,7 +105,7 @@
   },
   {
     "title": "SDNY Multi-District Litigation",
-    "headline": "SDNY Multi-District Litigation - dismisses AI/IP claims.",
+    "headline": "SDNY Multi-District Litigation - motion to dismiss briefing.",
     "summary": "<b>Summaries:</b> <b>SDNY Multi-District Litigation</b> — The parties exchange discovery salvos\n. The last two weeks brought several discovery motions between the MDL parties. Ziff Davis filed its reply memorandum of law opposing OpenAI’s motion to dismiss. OpenAI has alleged that Ziff Davis’ robots.txt (includes information to inform web crawlers of whether a site owner permits scraping) was not a sufficient technological measure to give rise to a DMCA claim. OpenAI also argued that Ziff Davis’ unjust enrichment claims were preempted and that its trademark claims were not sufficiently plead. Ziff Davis maintained that its claims regarding circumvention of its robots.txt configuration were actionable under the DMCA; that its unjust enrichment claims involved non-copyright interests, avoiding pre-emption; and that it had sufficiently alleged the fame of its trademarks to establish a claim of trademark infringement.\nOpenAI and Microsoft also filed reply briefs in support of their motions to strike portions of the class plaintiffs’ complaint. They contend that the addition of models other than GPT-3, GPT-3.5, GPT-4, and GPT-4 Turbo is improper and that the case should be limited to the originally-plead models. Additionally, they argue that the addition of copyright claims based on the downloading of copyrighted materials (rather than their use for model training) should be disallowed.\nFinally, the class plaintiffs filed a motion seeking in camera review of a number of OpenAI documents, arguing that they were improperly withheld as privileged. Though the motion is heavily redacted, it is evident that the class plaintiffs are challenging whether these documents served the primary purpose of obtaining legal advice in order for work product privilege to attach. OpenAI has also filed a reply opposing the class plaintiffs’ motion.",
     "takeaway": "",
     "music_lens": "Coordinate with aligned plaintiffs; file amicus on market-harm factors relevant to compositions. Track scheduling to time publisher filings with key expert discovery milestones.",
@@ -170,7 +170,7 @@
   },
   {
     "title": "Warner Bros. Discovery v Midjourney",
-    "headline": "Warner Bros. Discovery v Midjourney - dismisses AI/IP claims.",
+    "headline": "Warner Bros. Discovery v Midjourney",
     "summary": "<b>Summaries:</b> <b>Warner Bros. Discovery v Midjourney</b> — Warner Bros. Discovery joins the fight against Midjourney!\nOn September 4th, Warner Bros. Discovery sued Midjourney in the United States District Court for the Central District of California alleging direct and secondary copyright infringement. The complaint is similar in many ways to Disney and Universal’s showing dozens of strikingly similar images where Midjourney’s outputs mimic Warner Bros. copyrighted characters. The fact that Warner Bros. also picked Midjourney as a sole target speaks volumes about Midjourney’s uniquely dismissive attitude towards copyright and generative AI.\nThe next step will be for Midjourney to file an answer or other responsive pleading. We expect an answer from Midjourney will track the answer in the case against Disney and Universal, claiming fair use and that it does not control what its users create.\nThree of the “Big Five” studios have now sued Midjourney, leaving only Sony and Paramount on the sidelines. We will see if they follow suit.",
     "takeaway": "",
     "music_lens": "Outputs mimicking protected characters strengthen arguments that AI can reproduce protected expression. For lyrics/compositions, pursue evidence that prompts yield lyric-like outputs and prepare injunctive relief asks tied to output filters.",
