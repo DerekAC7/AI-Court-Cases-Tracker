@@ -1,25 +1,28 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-AI Court Cases Tracker — pulls latest McKool Smith weekly edition and 3 other public trackers,
-merges & de-dupes, and writes docs/index.html + docs/cases.json for GitHub Pages.
+AI Court Cases Tracker — McKool-only edition with publisher-specific expert takeaways
+and docket/source linking to original filings (via CourtListener search).
 
-Sources:
-  - McKool Smith (ALWAYS fetch the latest edition; parse numbered case blocks)
-  - BakerHostetler
-  - WIRED
-  - Mishcon de Reya
+What it does
+- Finds the NEWEST McKool Smith weekly page (newsroom-ailitigation-XX)
+- Parses each numbered case block (1., 2., …)
+- Builds bold HTML summaries with:
+    • Key takeaway (generic, when inferable from the text)
+    • Music lens (publisher-focused, expert/actionable)
+- Replaces “source: McKool…” with a link to the original docket/filings:
+    • CourtListener search URL tailored to the caption (no scraping/API; deterministic URL)
 
-Output:
-  - docs/index.html (UI)
-  - docs/cases.json (data)
+Output
+- docs/index.html
+- docs/cases.json
 
-Usage:
+Usage
   pip install requests beautifulsoup4
   python case_tracker.py
 """
 
-import os, re, time, json, html
+import os, re, time, json, html, urllib.parse
 import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
@@ -31,44 +34,12 @@ from urllib.parse import urljoin
 DOCS_DIR = "docs"
 JSON_PATH = os.path.join(DOCS_DIR, "cases.json")
 
-SOURCES = [
-    {"name": "McKool Smith", "url": "https://www.mckoolsmith.com/newsroom-ailitigation"},
-    {"name": "BakerHostetler", "url": "https://www.bakerlaw.com/services/artificial-intelligence-ai/case-tracker-artificial-intelligence-copyrights-and-class-actions/"},
-    {"name": "WIRED", "url": "https://www.wired.com/story/ai-copyright-case-tracker/"},
-    {"name": "Mishcon de Reya LLP", "url": "https://www.mishcon.com/generative-ai-intellectual-property-cases-and-policy-tracker"},
-]
+HEADERS = {"User-Agent": "AI-Cases-Tracker/11.0 (+GitHub Pages/Actions)"}
 
-HEADERS = {"User-Agent": "AI-Cases-Tracker/9.1 (+GitHub Actions)"}
-
-# Prefer McKool text first (it’s the curated weekly digest),
-# then Mishcon, then Baker, then WIRED.
-SOURCE_PREFERENCE = ["McKool Smith", "Mishcon de Reya LLP", "BakerHostetler", "WIRED"]
-
-AI_IP_PARTIES = [
-    "OpenAI","Anthropic","Meta","Google","Alphabet","Midjourney","Stability AI","Suno","Udio",
-    "Perplexity","Cohere","Nvidia","Ross Intelligence","Thomson Reuters","Getty","Disney",
-    "Universal","UMG","Warner","Sony","Authors Guild","New York Times","Reddit","Databricks",
-    "LAION","GitHub","Microsoft","Bloomberg","IGN","Ziff Davis","Everyday Health","Dow Jones",
-    "NY Post","Center for Investigative Reporting","Canadian Broadcasting Corporation","Radio-Canada",
-    "Warner Bros. Discovery","Uncharted Labs","Paramount","Sony"
-]
-
-CAPTION_PAT = re.compile(r"\b([A-Z][A-Za-z0-9\.\-’'& ]{1,90})\s+v\.?\s+([A-Z][A-Za-z0-9\.\-’'& ]{1,90})\b")
-CASE_NO_PAT = re.compile(r"\b(\d{1,2}:\d{2}-cv-\d{4,6}[A-Za-z\-]*|No\.\s?[A-Za-z0-9\-\.:]+|Case\s?(?:No\.|#)\s?[A-Za-z0-9\-:]+|Claim\s?No\.\s?[A-Za-z0-9\-]+)\b", re.I)
-AI_CONTEXT_PAT = re.compile(
-    r"\b(ai|artificial intelligence|gen(?:erative)? ai|llm|model|training|dataset|copyright|dmca|"
-    r"right of publicity|digital replica|scrap(?:e|ing)|music|recordings?|publisher|labels?|lyrics|headnotes|r\.?a\.?g|rag)\b",
-    re.I,
-)
-JUNK_HEADINGS_PAT = re.compile(
-    r"^(case updates|current edition|our professionals|disclaimer|training & development|"
-    r"a b c d e f g h i j k l m n o p q r s t u v w x y z|interactive entertainment|"
-    r"blockchain, crypto and digital assets|mishcon purpose|philanthropic strategy|supply chain advice)\b",
-    re.I
-)
+CAPTION_PAT = re.compile(r"\b([A-Z][A-Za-z0-9\.\-’'& ]{1,90})\s+v\.?\s+([A-Z][A-Za-z0-9\.\-’'& ]{1,90})\b", re.I)
 
 # -----------------------
-# UI (index.html) — HTML with bold summaries
+# UI (index.html) — Title ONLY, no subtitle
 # -----------------------
 
 INDEX_HTML = """<!doctype html>
@@ -82,8 +53,7 @@ INDEX_HTML = """<!doctype html>
   *{box-sizing:border-box}
   html,body{margin:0;padding:0}
   body{font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; color:var(--fg); background:var(--bg); padding:24px;}
-  h1{margin:0 0 6px 0; font-size:26px; font-weight:800}
-  .sub{color:var(--muted); margin-bottom:16px; font-size:14px}
+  h1{margin:0 0 16px 0; font-size:26px; font-weight:800}
   .toolbar{display:flex; gap:12px; margin:12px 0 18px; flex-wrap:wrap}
   input,select{padding:10px 12px; border:1px solid var(--line); border-radius:10px; font-size:14px}
   .grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(420px,1fr)); gap:14px}
@@ -102,10 +72,9 @@ INDEX_HTML = """<!doctype html>
 </head>
 <body>
   <h1>AI Court Cases Tracker</h1>
-  <div class="sub">Latest weekly summaries from McKool Smith plus cross-checks with BakerHostetler, WIRED, and Mishcon.</div>
 
   <div class="toolbar">
-    <input id="q" type="search" placeholder="Filter by case, outcome, status, source…" aria-label="Filter"/>
+    <input id="q" type="search" placeholder="Filter by case, outcome, status…" aria-label="Filter"/>
     <select id="status" aria-label="Filter by status">
       <option value="">Status: All</option>
       <option>Recently filed</option>
@@ -171,14 +140,14 @@ async function load() {
           <div class="meta">
             <span class="pill">${status}</span>
             ${c.outcome && c.outcome !== 'Update' ? `<span class="pill2">${c.outcome}</span>` : ''}
-            <span>${src}</span>
             ${cref}
           </div>
           <div class="summary">${c.summary || '<b>Summaries:</b> No summary available.'}</div>
           ${ktInline}
+          ${c.music_lens ? `<div class="summary"><b>Music lens:</b> ${c.music_lens}</div>` : ''}
           <div class="footer">
             <span></span>
-            <a class="linkbtn" href="${url}" target="_blank" rel="noopener">View source →</a>
+            <a class="linkbtn" href="${url}" target="_blank" rel="noopener">Source →</a>
           </div>
         `;
         list.appendChild(card);
@@ -219,26 +188,12 @@ def fetch(url: str) -> str:
     raise RuntimeError(f"Failed to fetch {url}")
 
 # -----------------------
-# Generic helpers
+# Helpers
 # -----------------------
-
-def looks_like_junk(title: str, ctx: str) -> bool:
-    if JUNK_HEADINGS_PAT.match((title or "").strip()):
-        return True
-    low = (f"{title or ''} {ctx or ''}").lower()
-    if "our professionals" in low:
-        return True
-    if re.search(r"\bA B C D E F G\b", title or ""):
-        return True
-    if "background" == (title or "").strip().lower():
-        return True
-    if "case updates" in (title or "").lower():
-        return True
-    return False
 
 def compress_caption(caption: str) -> str:
     cap = re.sub(r"\(\d+\)\s*", "", caption or "")
-    m = re.search(r"\s+v\.?\s+", cap)
+    m = re.search(r"\s+v\.?\s+", cap, flags=re.I)
     if not m: return cap.strip()
     left, right = cap[:m.start()], cap[m.end():]
     def first_party(side: str) -> str:
@@ -251,29 +206,25 @@ def compress_caption(caption: str) -> str:
     R = first_party(right) + (" et al." if many(right) else "")
     L = re.sub(r"(et al\.)\s*et al\.$", r"\1", L, flags=re.I)
     R = re.sub(r"(et al\.)\s*et al\.$", r"\1", R, flags=re.I)
-    # strip trailing "Background"
     L = re.sub(r"\s*\bbackground\b\s*$", "", L, flags=re.I)
     R = re.sub(r"\s*\bbackground\b\s*$", "", R, flags=re.I)
     return f"{L} v {R}"
 
 def smart_sentence(ctx: str) -> str:
     sents = re.split(r"(?<=[.!?])\s+", ctx or "")
-    prefs = (" sued ", " files ", " filed ", " alleges ", " rules ", " granted ", " dismissed ", " injunction ", "certif", "settle", "summary judgment")
+    prefs = (" sued ", " files ", " filed ", " alleges ", " rules ", " granted ", " dismissed ",
+             " injunction ", "certif", "settle", "summary judgment", "motion")
     for s in sents:
         ss = " " + s.lower() + " "
         if any(p in ss for p in prefs) and 44 <= len(s) <= 360:
             return s.strip()
-    # fallback: first 2–3 sentences up to ~420 chars
     take, out = 0, []
     for s in sents:
         if not s.strip(): continue
-        out.append(s.strip())
-        take += 1
+        out.append(s.strip()); take += 1
         if take >= 3 or len(" ".join(out)) >= 420:
             break
-    if out:
-        return " ".join(out)
-    return (ctx or "")[:240].strip()
+    return " ".join(out) if out else (ctx or "")[:240].strip()
 
 def infer_status_outcome(text: str):
     t = (text or "").lower()
@@ -311,38 +262,80 @@ def headline_for(caption: str, ctx: str) -> str:
         return f"{caption} - settlement."
     return caption
 
-def choose_takeaway(status: str, ctx: str, already_has_takeaway: bool) -> str:
-    if already_has_takeaway: return ""
-    t = (ctx or "").lower(); s = (status or "").lower()
-    if "settle" in t:
-        if re.search(r"\$1\.?5\s*billion|\$1,?500,?000,?000", t):
-            return "Historic settlement magnitude (~$1.5B) signals heavy liability where acquisition of works was unauthorized."
-        return "Settlement values are emerging benchmarks; data acquisition practices can drive liability even if training is argued as fair use."
-    if "judgment" in s and "fair use" in t and ("pirated" in t or "torrent" in t or "shadow library" in t):
-        return "Even if training is fair use, acquisition via piracy/torrents can still create liability."
-    if "judgment" in s and "fair use" in t and "market" in t:
-        return "Courts weigh harm to the market for original works over a separate training license market."
-    if "injunction" in s:
-        return "Injunctions can constrain model distribution or retraining—leverage for ingestion guardrails."
-    if "dismissed" in s:
-        return "Claims that don’t connect copying to cognizable market harm risk dismissal."
-    return ""
+# -----------------------
+# Music-publisher expert lens (deterministic rules)
+# -----------------------
 
-def prefer_source(a, b):
-    pa = SOURCE_PREFERENCE.index(a["source"]) if a["source"] in SOURCE_PREFERENCE else 99
-    pb = SOURCE_PREFERENCE.index(b["source"]) if b["source"] in SOURCE_PREFERENCE else 99
-    if pa != pb: return pa < pb
-    return len(a.get("summary","")) > len(b.get("summary",""))
+def music_publisher_lens(caption: str, status_text: str, background_text: str) -> str:
+    """
+    Returns a concise, expert/actionable publisher-focused takeaway.
+    Deterministic: pattern/keyword-based; no external API calls.
+    """
+    cap = (caption or "").lower()
+    txt = f"{status_text or ''} {background_text or ''}".lower()
 
-def dedupe(items):
-    norm = lambda s: re.sub(r"[^a-z0-9]+", " ", (s or "").lower()).strip()
-    best = {}
-    for it in items:
-        k = norm(it["title"])
-        if not k: continue
-        if k not in best or prefer_source(it, best[k]):
-            best[k] = it
-    return list(best.values())
+    def has(*words):
+        return all(w.lower() in txt for w in words)
+
+    # Case-specific adjustments
+    if "bartz" in cap and "anthropic" in cap:
+        # Settlement magnitude + provenance leverage
+        return ("Settlement magnitude (~$3k/work) is a valuation anchor. "
+                "Push provenance audits and disclosure of acquisition sources; leverage Bartz’s acquisition-vs-training split to frame composition claims and negotiations.")
+
+    if ("kadrey" in cap or "silverman" in cap) and "meta" in cap:
+        return ("Fair-use win here hinged on record-specific market-harm showings. "
+                "For compositions, build a damages narrative tied to substitution (lyrics, sheet music, sync) and document lost licensing opportunities to survive early motions.")
+
+    if "warner bros" in cap and "midjourney" in cap:
+        return ("Outputs mimicking protected characters strengthen arguments that AI can reproduce protected expression. "
+                "For lyrics/compositions, pursue evidence that prompts yield lyric-like outputs and prepare injunctive relief asks tied to output filters.")
+
+    if ("umg" in cap or "universal" in cap) and ("suno" in cap or "udio" in cap or "uncharted" in cap):
+        # Label-led cases; publisher angle is discovery into compositions ingestion
+        return ("Label-led pleadings focus on sound recordings; monitor discovery for training-data disclosures. "
+                "If lyrics or compositions appear in ingestion logs, be prepared to assert composition-specific claims and request preservation of training artifacts.")
+
+    if "concord" in cap and "anthropic" in cap:
+        return ("Music-lyrics ingestion dispute: demand cross-use of Bartz discovery on torrenting and any overlap with lyric corpora. "
+                "Seek unredacted dataset inventories and negotiate protective orders that allow publisher-side experts to inspect samples.")
+
+    if "reddit" in cap and "anthropic" in cap:
+        return ("TOS/robots-based claims highlight enforceable access controls. "
+                "Harden publisher lyric-site terms and robots.txt, and preserve access logs to support contract/DMCA 1201 theories against unlicensed scrapers.")
+
+    if "new york times" in cap and ("openai" in cap or "microsoft" in cap):
+        return ("Preservation obligations may unlock ingestion and output logs. "
+                "Request parallel preservation and model-audit protocols in music cases to surface lyric/composition usage and quantify market harm.")
+
+    if "perplexity" in cap or "rag" in txt:
+        return ("RAG systems pose ongoing reproduction risks. "
+                "Assert claims on output reproduction of lyrics and require link-respecting behavior; consider negotiating paid access APIs for lyric metadata as an alternative.")
+
+    if "thomson reuters" in cap and "ross" in cap:
+        return ("Court’s emphasis on market impact is instructive: develop evidence that unlicensed training forecloses licensing for compositions/lyrics. "
+                "Frame publisher markets distinctly from any proposed 'training-license' market.")
+
+    if "andersen" in cap or "stability" in cap or "midjourney" in cap:
+        return ("Visual-art rulings on inducement and output similarity can carry over: "
+                "document AI outputs that recreate lyric structure/phrases to support composition claims and push for output filtering obligations.")
+
+    if "mdl" in cap or "multi-district" in cap or "southern district of new york" in txt:
+        return ("Coordinate with aligned plaintiffs; file amicus on market-harm factors relevant to compositions. "
+                "Track scheduling to time publisher filings with key expert discovery milestones.")
+
+    # Generic fallbacks keyed by signals in text
+    if "summary judgment" in txt and "fair use" in txt:
+        return ("Anticipate fair-use defenses: center evidence on market substitution for compositions (lyrics/sheet music) rather than separate 'training-license' markets.")
+    if "injunction" in txt:
+        return ("Seek injunction terms that require dataset disclosure and output filters for lyrics; tie relief to retraining constraints if compositions were ingested.")
+    if "settlement" in txt or "settled" in txt or "$" in txt:
+        return ("Use settlement figures to benchmark per-work valuation; pursue early settlement conferences backed by provenance audits and catalog-specific damages models.")
+    if "robots" in txt or "terms of service" in txt or "trespass" in txt:
+        return ("Strengthen site TOS and robots.txt for lyrics; maintain detailed access logs to support contract and anti-circumvention claims.")
+
+    # Final generic advice
+    return ("Build evidentiary files on lyric/composition market harm (lost sync, sheet music, lyric licensing) and compel disclosure of training datasets and ingestion logs.")
 
 # -----------------------
 # McKool Smith: always fetch latest edition and parse numbered items
@@ -360,7 +353,6 @@ def mckool_find_latest_url(index_html: str) -> str:
     best_href, best_n = None, -1
     for a in soup.find_all("a", href=True):
         href = a["href"].strip()
-        # normalize to absolute first so regex is consistent
         abs_href = urljoin(MCKOOL_BASE, href)
         m = re.search(r"/newsroom-ailitigation-(\d+)(?:/)?$", abs_href)
         if not m:
@@ -432,10 +424,10 @@ def mckool_parse_latest() -> list:
 
     items = []
     for (num, caption_line, block_text) in sections:
+        # Normalize caption
         raw_caption = caption_line
-        raw_caption = re.sub(r"\s+v\.\s+", " v ", raw_caption)
-        raw_caption = re.sub(r"\s+v\s+", " v ", raw_caption)
-
+        raw_caption = re.sub(r"\s+v\.\s+", " v ", raw_caption, flags=re.I)
+        raw_caption = re.sub(r"\s+v\s+", " v ", raw_caption, flags=re.I)
         mcap = CAPTION_PAT.search(raw_caption)
         caption = compress_caption(mcap.group(0)) if mcap else raw_caption.strip()
         caption = re.sub(r"\s*\bbackground\b\s*$", "", caption, flags=re.I)
@@ -452,181 +444,93 @@ def mckool_parse_latest() -> list:
         # Infer status/outcome/headline/takeaway
         status, outcome = infer_status_outcome(status_text + " " + background_text)
         headline = headline_for(caption, status_text + " " + background_text)
-        takeaway_guess = choose_takeaway(status, status_text + " " + background_text, already_has_takeaway=False)
 
+        # Generic Key takeaway (optional, brief)
+        generic_takeaway = ""
+        t = (status_text + " " + background_text).lower()
+        if "fair use" in t and ("judgment" in t or "summary judgment" in t):
+            generic_takeaway = "Fair-use outcomes may hinge on record-specific market-harm proof."
+        elif "settlement" in t or "settled" in t:
+            generic_takeaway = "Settlement figures are emerging benchmarks for per-work valuation."
+        elif "injunction" in t:
+            generic_takeaway = "Injunctive relief can impose output filters and retraining constraints."
+
+        # Publisher expert lens
+        pub_lens = music_publisher_lens(caption, status_text, background_text)
+
+        # Build summary HTML (with bold “Summaries:”)
         summary_html = f"<b>Summaries:</b> <b>{html.escape(caption)}</b> — {html.escape(lead)}"
-        if takeaway_guess:
-            summary_html += "<br><br><b>Key takeaway:</b> " + html.escape(takeaway_guess)
+        if generic_takeaway:
+            summary_html += "<br><br><b>Key takeaway:</b> " + html.escape(generic_takeaway)
 
+        # Link to original filings (CourtListener search URL built from caption)
+        src_url = courtlistener_search_url(caption, hint_text=status_text + " " + background_text)
+
+        # Fragment to the numbered section on the weekly page (optional)
         frag = f"#sec-{num}"
+
         items.append({
             "title": caption,
             "headline": headline,
             "summary": summary_html,
-            "takeaway": "",
+            "takeaway": "",  # generic takeaway already embedded above
+            "music_lens": pub_lens,
             "status": status,
             "outcome": outcome,
-            "source": "McKool Smith",
-            "url": latest_url + frag,
+            "source": "",  # not shown; we only display the Source button (url)
+            "url": src_url or (latest_url + frag),
             "case_ref": "",
             "date": ""
         })
 
     print(f"[McKool] built {len(items)} items", flush=True)
-    # Do NOT filter McKool items by AI context — the page is curated.
     return items
 
 # -----------------------
-# Other sources — sectionize then mine captions
+# Docket/source resolver (no scraping): CourtListener search URL
 # -----------------------
 
-def soup_sections(html_text: str, base_url: str):
-    soup = BeautifulSoup(html_text, "html.parser")
-    for bad in soup(["script","style","noscript","svg","nav","header","footer","form","aside"]):
-        bad.decompose()
-    container = soup.find("main") or soup.find("article") or soup.find("body") or soup
-    headers = container.find_all(re.compile(r"^h[1-4]$"))
-    if not headers:
-        txt = container.get_text(" ", strip=True)
-        return [("Page", re.sub(r"\s+", " ", html.unescape(txt)), base_url)]
-    sections = []
-    for i, h in enumerate(headers):
-        title = h.get_text(" ", strip=True)
-        frag = ""
-        if h.has_attr("id"):
-            frag = "#" + h["id"].strip()
-        level = int(h.name[1])
-        buff = []
-        sib = h.next_sibling
-        while sib:
-            if getattr(sib, "name", None) and re.match(r"^h[1-4]$", sib.name):
-                nxt_level = int(sib.name[1])
-                if nxt_level <= level:
-                    break
-            if hasattr(sib, "get_text"):
-                buff.append(sib.get_text(" ", strip=True))
-            sib = getattr(sib, "next_sibling", None)
-        raw = " ".join(buff)
-        raw = html.unescape(raw)
-        raw = re.sub(r"\s+", " ", raw).strip()
-        sections.append((title, raw, base_url + frag))
-    return sections
+def courtlistener_search_url(caption: str, hint_text: str = "") -> str:
+    """
+    Build a deterministic CourtListener search URL for the case caption.
+    Prefer including likely court hints if found in hint_text.
+    This avoids scraping or API calls but still lands on original filings/dockets.
+    """
+    q = caption
+    # Add soft court hints if present
+    hint = ""
+    ht = (hint_text or "").lower()
+    # Common districts from these cases
+    if "n.d. cal" in ht or "northern district of california" in ht:
+        hint = " AND (court:(california northern))"
+    elif "s.d.n.y." in ht or "southern district of new york" in ht:
+        hint = " AND (court:(new york southern))"
+    elif "d. mass" in ht or "district of massachusetts" in ht:
+        hint = " AND (court:(massachusetts))"
+    elif "d. del" in ht or "district of delaware" in ht:
+        hint = " AND (court:(delaware))"
 
-def extract_from_html(src_name: str, url: str):
-    html_text = fetch(url)
-    sections = soup_sections(html_text, url)
-    items = []
-    for (title, block, sec_url) in sections:
-        if looks_like_junk(title, block):
-            continue
-        # find ALL captions in this section (title + early body)
-        captions = set()
-        for m in CAPTION_PAT.finditer(title + " " + block[:1500]):
-            captions.add(m.group(0).strip())
-        if not captions:
-            continue
-        for raw_caption in captions:
-            caption = compress_caption(raw_caption)
-            # For non-McKool sources, require AI/IP context or known parties
-            has_ai_ctx = bool(AI_CONTEXT_PAT.search(block)) or any(
-                p.lower() in (title + " " + block).lower() for p in AI_IP_PARTIES
-            )
-            if not has_ai_ctx:
-                continue
-
-            case_ref = ""
-            cr = CASE_NO_PAT.search(block)
-            if cr:
-                case_ref = cr.group(0).strip()
-
-            status, outcome = infer_status_outcome(block)
-            headline = headline_for(caption, block)
-            sent = smart_sentence(block)
-            summary_html = f"<b>Summaries:</b> <b>{html.escape(caption)}</b> — {html.escape(sent)}"
-            takeaway = choose_takeaway(status, block, already_has_takeaway=False)
-
-            items.append({
-                "title": caption,
-                "headline": headline,
-                "summary": summary_html,
-                "takeaway": "" if not takeaway else takeaway,
-                "status": status,
-                "outcome": outcome,
-                "source": src_name,
-                "url": sec_url or url,
-                "case_ref": case_ref,
-                "date": ""
-            })
-    return items
-
-# -----------------------
-# Seeds (only used if something truly missing)
-# -----------------------
-
-SEED_CASES = [
-    {
-        "title": "Bartz v Anthropic",
-        "headline": "Bartz v Anthropic - settlement (~$1.5B) and prior fair-use/train vs piracy distinction.",
-        "summary": (
-            "<b>Summaries:</b> <b>Bartz v Anthropic</b> — Proposed global settlement reported around $1.5B "
-            "covering ~500,000 works (~$3,000/work), following Judge Alsup’s earlier ruling distinguishing "
-            "training (potentially fair use) from mass pirated acquisition (not fair use).<br><br>"
-            "<b>Key takeaway:</b> Even if training is fair use, acquisition via piracy/torrents can still create liability."
-        ),
-        "status": "Settled",
-        "outcome": "Settlement",
-    },
-    {
-        "title": "Kadrey et al. v Meta",
-        "headline": "Kadrey et al. v Meta - N.D. Cal rules AI training fair use (on record presented).",
-        "summary": (
-            "<b>Summaries:</b> <b>Kadrey et al. v Meta</b> — Summary judgment found training on books to be fair use on the case record, "
-            "but noted market harm pleadings could matter in other circumstances; ongoing disputes include issues around acquisition/torrenting context.<br><br>"
-            "<b>Key takeaway:</b> Future pleadings that prove harm to the market for original works may fare better than focusing on a separate training-license market."
-        ),
-        "status": "Judgment",
-        "outcome": "Summary Judgment",
-    },
-]
-
-def ensure_seed_cases(items):
-    have = {re.sub(r"[^a-z0-9]+"," ", it["title"].lower()).strip() for it in items}
-    added = 0
-    for s in SEED_CASES:
-        norm = re.sub(r"[^a-z0-9]+"," ", s["title"].lower()).strip()
-        if norm in have:
-            continue
-        items.append({
-            "title": s["title"],
-            "headline": s["headline"],
-            "summary": s["summary"],
-            "takeaway": "",
-            "status": s["status"],
-            "outcome": s["outcome"],
-            "source": "Seeded",
-            "url": "",
-            "case_ref": "",
-            "date": ""
-        })
-        added += 1
-    return added
+    # Encode query for CourtListener UI search
+    query = urllib.parse.quote_plus(q + hint)
+    return f"https://www.courtlistener.com/?q={query}&type=r&order_by=score%20desc"
 
 # -----------------------
 # Output + runner
 # -----------------------
 
+INDEX_PATH = os.path.join(DOCS_DIR, "index.html")
+
 def ensure_docs():
     os.makedirs(DOCS_DIR, exist_ok=True)
     with open(os.path.join(DOCS_DIR, ".nojekyll"), "w", encoding="utf-8") as f:
         f.write("")
-    with open(os.path.join(DOCS_DIR, "index.html"), "w", encoding="utf-8") as f:
+    with open(INDEX_PATH, "w", encoding="utf-8") as f:
         f.write(INDEX_HTML)
 
 def run():
-    print("[tracker] pulling latest McKool edition + other trackers", flush=True)
+    print("[tracker] pulling latest McKool edition (publisher-focused)", flush=True)
     all_items = []
 
-    # 1) McKool Smith — authoritative weekly digest
     try:
         mk = mckool_parse_latest()
         print(f"[McKool] extracted: {len(mk)} items (first: {mk[0]['title'] if mk else '—'})", flush=True)
@@ -634,31 +538,17 @@ def run():
     except Exception as e:
         print(f"[McKool] ERROR: {e}", flush=True)
 
-    # 2) Other trackers (best-effort, de-dup via caption)
-    for src in SOURCES:
-        if src["name"] == "McKool Smith":
-            continue
-        print(f"[scrape] {src['name']} -> {src['url']}", flush=True)
-        try:
-            items = extract_from_html(src["name"], src["url"])
-        except Exception as e:
-            print(f"[scrape] ERROR {src['name']}: {e}", flush=True)
-            items = []
-        print(f"[scrape]   extracted: {len(items)}", flush=True)
-        all_items.extend(items)
-
-    items = dedupe(all_items)
-    seeded = ensure_seed_cases(items)
-    if seeded:
-        print(f"[seed] added {seeded} case(s) to cover gaps", flush=True)
-
-    items.sort(key=lambda x: x["title"].lower())
-
+    # Sort & write
+    items = sorted(all_items, key=lambda x: x["title"].lower())
     ensure_docs()
     with open(JSON_PATH, "w", encoding="utf-8") as f:
         json.dump(items, f, ensure_ascii=False, indent=2)
 
     print(f"[tracker] wrote {JSON_PATH} with {len(items)} items", flush=True)
+
+# -----------------------
+# Main
+# -----------------------
 
 if __name__ == "__main__":
     run()
