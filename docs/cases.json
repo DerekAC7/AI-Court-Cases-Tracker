@@ -7,7 +7,8 @@
     "source": "McKool Smith",
     "url": "https://www.mckoolsmith.com/newsroom-ailitigation-15",
     "outcome": "Update",
-    "status": "Open/Active"
+    "status": "Open/Active",
+    "takeaway": ""
   },
   {
     "title": "In re Facebook",
@@ -17,17 +18,8 @@
     "source": "McKool Smith",
     "url": "https://www.mckoolsmith.com/newsroom-ailitigation-5",
     "outcome": "Class action",
-    "status": "Open/Active"
-  },
-  {
-    "title": "In re Blue",
-    "headline": "In re Blue",
-    "date": "",
-    "summary": "Representing more than twenty companies that opted out of the $2.7 billion settlement of the In re Blue Cross Blue Shield Antitrust Litigation. In that matter the plaintiffs accused the Blue Cross Blue Shield Association and the Blue Cross Blue Shield health insurance companies of engaging in territorial market allocation in violation of federal antitrust law. Prosecuting a Fortune 100 company’s ERISA breach of fiduciary duty and related claims against the health insurer administering the company’s self-funded health insurance benefits.",
-    "source": "McKool Smith",
-    "url": "https://www.mckoolsmith.com/practices-56",
-    "outcome": "Settle",
-    "status": "Settled"
+    "status": "Open/Active",
+    "takeaway": ""
   },
   {
     "title": "In re ChatGPT",
@@ -35,9 +27,10 @@
     "date": "",
     "summary": "In re ChatGPT Litigation: Tremblay v OpenAI (consolidated with Silverman v OpenAI and Chabon v OpenAI) (1) Paul Tremblay & (2) Mona Awad v (1) OpenAI, Inc.; (2) OpenAI, L.P.; (3) OpenAI Gp, L.L.C., (4) OpenAI Opco, L.L.C. (5) OpenAI Startup Fund Gp I, L.L.C.; (6) OpenAI Startup Fund I, L.P.;(7) OpenAI Startup Fund Management, LLC",
     "source": "Mishcon de Reya LLP",
-    "url": "https://www.mishcon.com/generative-ai-intellectual-property-cases-and-policy-tracker#tab-1",
+    "url": "https://www.mishcon.com/generative-ai-intellectual-property-cases-and-policy-tracker#tab-4",
     "outcome": "Update",
-    "status": "Open/Active"
+    "status": "Open/Active",
+    "takeaway": ""
   },
   {
     "title": "In re Google",
@@ -45,18 +38,9 @@
     "date": "",
     "summary": "The case has been consolidated with Zhang v Google and named In re Google Generative AI Copyright Litigation. A consolidated complaint was filed in December 2024, bringing in new Plaintiffs. Google and Alphabet have filed a Motion to Dismiss the consolidated complaint and to strike the class allegations.",
     "source": "Mishcon de Reya LLP",
-    "url": "https://www.mishcon.com/generative-ai-intellectual-property-cases-and-policy-tracker#tab-1",
+    "url": "https://www.mishcon.com/generative-ai-intellectual-property-cases-and-policy-tracker#tab-4",
     "outcome": "Dismiss",
-    "status": "Recently filed"
-  },
-  {
-    "title": "Transparency vs Privacy",
-    "headline": "Transparency vs Privacy",
-    "date": "",
-    "summary": "Meet the team Key issues Meet the team \"to do list\" Meet the team How we can help Meet the team Technology Politics and Law Public Consultation Responses Meet the team Official Secrets Act campaign Meet the team Investigations White Collar Crime and Investigations Meet the team Civil Fraud and Asset Recovery Investigations Meet the team Internal Investigations Meet the team Workplace Investigations Meet the team ESG Investigations Meet the team Serious and General Crime Meet the team Enforcement of Non-Performing Loans Community FATCA Background Information Meet the team Correspondence Meet the team Corporate Advisory: Singapore Mergers and Acquisitions: Singapore Private Wealth: Asia Private Equity Disputes Private Commercial Litigation Corporate Governance Bribery and Corruption Criminal Restraint and Confiscation Employee Fraud Individuals Meet the team Unexplained Wealth Orders Inque",
-    "source": "Mishcon de Reya LLP",
-    "url": "https://www.mishcon.com/siteinformation/site_map",
-    "outcome": "Transfer",
-    "status": "Open/Active"
+    "status": "Recently filed",
+    "takeaway": "Complaints that don’t connect copying to cognizable market harm risk dismissal. Allegations should tie training and outputs to specific revenue impact on the catalog."
   }
 ]

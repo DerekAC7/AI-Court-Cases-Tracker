@@ -81,6 +81,7 @@ async function load() {
       const status  = c.status || 'Open/Active';
       const headline = (c.headline || c.title) + ' – ' + outcome + '.';
       const src = c.source || '';
+      const takeaway = c.takeaway ? `<div class="summary"><strong>Key takeaway:</strong> ${c.takeaway}</div>` : '';
 
       const card = document.createElement('div');
       card.className = 'card';
@@ -91,6 +92,7 @@ async function load() {
           <span>${src}</span>
         </div>
         <div class="summary">${c.summary || 'No summary provided by source.'}</div>
+        ${takeaway}
         <div class="footer">
           <a class="linkbtn" href="${url}" target="_blank" rel="noopener">View source →</a>
         </div>
