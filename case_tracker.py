@@ -28,20 +28,27 @@ CASE_PATTERNS = [
 ]
 CASE_REGEX = re.compile("|".join(CASE_PATTERNS))
 
-# Terms to insist on so we only keep GenAI/IP cases
 AI_TERMS = [
     "ai", "generative", "llm", "model", "training", "dataset", "copyright",
     "openai", "anthropic", "meta", "midjourney", "stability", "stability ai",
     "reddit", "getty", "new york times", "nyt", "suno", "udio", "disney",
-    "universal", "authors guild", "kadrey", "silverman", "bartz", "midjourney",
-    "claude", "chatgpt", "copilot", "diffusion"
+    "universal", "authors guild", "kadrey", "silverman", "bartz", "claude",
+    "chatgpt", "copilot", "diffusion", "watermark", "replica", "deepfake"
+]
+
+# Hard false-positives to exclude
+BLACKLIST_PHRASES = [
+    "blue cross", "antitrust", "facebook consumer privacy", "erisa",
+    "whistleblower", "false claims act", "metaverse", "nft", "cryptoassets",
+    "internal investigations", "mdr mayfair"
 ]
 
 COURT_PAT = re.compile(
-    r"(?:\b[A-Z]\d{1,2}th\s+Cir\.\b|\bN\.D\. Cal\b|\bS\.D\.N\.Y\.\b|\bN\.D\. Ill\.\b|\bC\.D\. Cal\.\b|\bD\. Del\.\b|\bD\. Mass\.\b|\bS\.D\. Fla\.\b|\bE\.D\. Va\.\b|\bN\.D\. Tex\.\b|\bN\.D\. Ga\.\b|\bC\.D\. Ill\.\b|\bW\.D\. Wash\.\b|\bS\.D\. Cal\.\b)",
+    r"(?:\b\d{1,2}(?:st|nd|rd|th)\s+Cir\.\b|\bN\.D\. Cal\.\b|\bS\.D\.N\.Y\.\b|\bN\.D\. Ill\.\b|\bC\.D\. Cal\.\b|\bD\. Del\.\b|\bD\. Mass\.\b|\bS\.D\. Fla\.\b|\bE\.D\. Va\.\b|\bN\.D\. Tex\.\b|\bN\.D\. Ga\.\b|\bW\.D\. Wash\.\b|\bS\.D\. Cal\.\b)",
     re.I
 )
 
+# ---------- GitHub helpers ----------
 def gh_headers():
     if not TOKEN:
         raise RuntimeError("Missing token. Map secrets.PAT_TOKEN to PERSONAL_ACCESS_TOKEN.")
@@ -98,19 +105,21 @@ def is_probable_case(text):
 
 def is_ai_related(text):
     t = text.lower()
+    if any(bad in t for bad in BLACKLIST_PHRASES):
+        return False
     return any(term in t for term in AI_TERMS)
 
 def infer_status(text):
     t = text.lower()
-    if any(k in t for k in ["recently filed", "filed on", "filed", "new case", "complaint"]):
+    if any(k in t for k in ["recently filed", "filed on", "filed ", "new case", "complaint"]):
         return "Recently filed"
-    if any(k in t for k in ["summary judgment", "judgment entered", "verdict", "liability", "granted judgment"]):
+    if any(k in t for k in ["summary judgment", "judgment entered", "verdict", "liability", "granted judgment", "order granting"]):
         return "Judgment"
-    if any(k in t for k in ["dismissed", "dismissal", "motion to dismiss granted"]):
+    if any(k in t for k in ["dismissed", "dismissal", "motion to dismiss granted", "dismissal with prejudice", "12(b)"]):
         return "Dismissed"
     if any(k in t for k in ["preliminary injunction", "permanent injunction", "injunction"]):
         return "Injunction"
-    if any(k in t for k in ["settled", "settlement"]):
+    if any(k in t for k in ["settled", "settlement", "settle"]):
         return "Settled"
     if any(k in t for k in ["class certification", "certified class", "class certified"]):
         return "Class certified"
@@ -155,6 +164,59 @@ def url_abs(base, href):
     if not href: return None
     return urljoin(base, href)
 
+# ---------- auto key takeaway (music publisher focus) ----------
+def generate_takeaway(summary_text, outcome_text):
+    t = (summary_text + " " + (outcome_text or "")).lower()
+
+    # Only emit when there is a real ruling/decision signal
+    ruling_hit = any(k in t for k in [
+        "summary judgment", "granted", "denied", "dismiss", "injunction", "verdict", "order", "class certification"
+    ])
+    if not ruling_hit:
+        return ""
+
+    # Fair use + acquisition/piracy
+    if "fair use" in t and any(k in t for k in ["pirated", "piracy", "torrent", "unauthorized download", "7 million"]):
+        return ("Even if training is deemed fair use, liability can still attach to dataset acquisition. "
+                "For music publishers, provenance of audio datasets (and any scraping of pirated files) remains a high-risk vector.")
+
+    # Fair use + market harm/licensing market
+    if "fair use" in t and "market" in t:
+        return ("Courts weigh harm to the market for the original works more heavily than abstract ‘training license’ markets. "
+                "Publisher strategies should document concrete substitution or licensing displacement.")
+
+    # Injunctions
+    if "injunction" in t:
+        return ("Injunctions can restrict model distribution or retraining. "
+                "Publishers should evaluate leverage for prospective relief and guardrails on future training.")
+
+    # Dismissals / pleading defects
+    if "dismiss" in t:
+        return ("Complaints that don’t connect copying to cognizable market harm risk dismissal. "
+                "Allegations should tie training and outputs to specific revenue impact on the catalog.")
+
+    # Class certification
+    if "class certification" in t or "class certified" in t:
+        return ("Class certification turns on commonality/predominance; heterogeneous catalogs can cut both ways. "
+                "Publishers should track whether work-by-work issues defeat class treatment.")
+
+    # Settlements
+    if "settle" in t:
+        return ("Parties are resolving AI/IP disputes without merits rulings. "
+                "Settlement patterns inform licensing benchmarks for training and output uses.")
+
+    # MDL/transfer
+    if "mdl" in t or "transfer" in t or "centralized" in t:
+        return ("Centralization can accelerate coordinated rulings. "
+                "Publishers should follow lead-case motions that will shape discovery on training data and outputs.")
+
+    # Verdict / damages
+    if "verdict" in t or "damages" in t:
+        return ("Damages frameworks and revenue attribution will be key. "
+                "Publishers should model statutory vs. actual damages and apportionment theories for AI uses.")
+
+    return ""
+
 # ---------- extract case lines from article ----------
 def extract_cases_from_article(url):
     try:
@@ -173,21 +235,21 @@ def extract_cases_from_article(url):
             parts = re.split(r"(?<=[\.\?!])\s+", t)
             sentences.extend([p for p in parts if p])
 
-    # Collect ALL case captions that are AI-related
     cases = []
     for i, sent in enumerate(sentences):
         if not is_probable_case(sent):
             continue
-        # Expand context to check AI relation
+
+        # Context window for AI relevance + court extraction
         context = " ".join([sentences[j] for j in range(max(0, i-1), min(len(sentences), i+3))])
         if not is_ai_related(context):
             continue
 
-        # Title/caption
+        # Caption
         m = CASE_REGEX.search(sent)
         caption = m.group(0) if m else sent[:120]
 
-        # Build 1–3 sentence summary
+        # Build 1–3 sentence summary around the detected sentence
         summary_sents = [sent]
         if i + 1 < len(sentences) and len(sentences[i+1]) > 40:
             summary_sents.append(sentences[i+1])
@@ -198,20 +260,20 @@ def extract_cases_from_article(url):
         outcome = infer_outcome_short(summary)
         status  = infer_status(summary)
         court   = extract_court(context)
+        headline = f"{caption}" + (f" – {court}" if court else "")
 
-        headline = f"{caption}"
-        if court:
-            headline = f"{caption} – {court}"
+        takeaway = generate_takeaway(summary, outcome)
 
         cases.append({
             "title": caption,
             "headline": headline,
-            "date": "",               # can be refined per-source later
+            "date": "",               # could be refined per-source later
             "summary": summary[:900],
             "source": "",             # filled by caller
             "url": url,
             "outcome": outcome,
-            "status": status
+            "status": status,
+            "takeaway": takeaway
         })
     return cases
 
@@ -250,7 +312,7 @@ def harvest_from_listing(list_url, source_name, link_selectors, block_selectors=
     print(f"[{source_name}] articles: {len(links)} • cases extracted: {len(entries)}")
     return entries
 
-# ---------- per-source scrapers ----------
+# ---------- per-source scrapers (ONLY the 4 you asked) ----------
 def scrape_mckool():
     list_url = "https://www.mckoolsmith.com/newsroom-ailitigation"
     return harvest_from_listing(
@@ -283,28 +345,21 @@ def scrape_mishcon():
         block_selectors=["article", "li", "div", "section"]
     )
 
-def scrape_cms():
-    list_url = "https://cms.law/en/int/publication/artificial-intelligence-and-copyright-case-tracker"
-    return harvest_from_listing(
-        list_url, "CMS Law",
-        link_selectors=["h1 a", "h2 a", "h3 a", "a"],
-        block_selectors=["article", "li", "div", "section"]
-    )
-
-SOURCES = [scrape_mckool, scrape_bakerhostetler, scrape_wired, scrape_mishcon, scrape_cms]  # priority order
+SOURCES = [scrape_mckool, scrape_bakerhostetler, scrape_wired, scrape_mishcon]  # priority order
 
 # ---------- issues + site ----------
 def make_issue_body(entry, key_hex):
-    # Headline line, then one tight paragraph, then status, then source link (no generic filler)
     headline = entry["headline"]
     summary  = entry["summary"]
     src      = entry.get("source", "Unknown")
     url      = entry.get("url", "")
     outcome  = entry.get("outcome") or "Update"
     status   = entry.get("status") or "Open/Active"
+    takeaway = entry.get("takeaway", "")
 
     body = f"""{headline} – {outcome}.
 {summary}
+{"Key takeaway: " + takeaway if takeaway else ""}
 
 Status: {status}
 Source: {src} ({url})
@@ -444,6 +499,7 @@ async function load() {
       const status  = c.status || 'Open/Active';
       const headline = (c.headline || c.title) + ' – ' + outcome + '.';
       const src = c.source || '';
+      const takeaway = c.takeaway ? `<div class="summary"><strong>Key takeaway:</strong> ${c.takeaway}</div>` : '';
 
       const card = document.createElement('div');
       card.className = 'card';
@@ -454,6 +510,7 @@ async function load() {
           <span>${src}</span>
         </div>
         <div class="summary">${c.summary || 'No summary provided by source.'}</div>
+        ${takeaway}
         <div class="footer">
           <a class="linkbtn" href="${url}" target="_blank" rel="noopener">View source →</a>
         </div>
