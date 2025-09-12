@@ -2,8 +2,11 @@ name: AI Court Cases Tracker
 
 on:
   schedule:
-    - cron: '0 14 * * 1'    # Mondays 14:00 UTC; change as you like
+    - cron: '0 14 * * 1'    # Mondays 14:00 UTC; adjust if you want
   workflow_dispatch:         # Allow manual runs
+
+permissions:
+  contents: write            # needed to commit /docs updates back to the repo
 
 jobs:
   track-cases:
@@ -23,8 +26,20 @@ jobs:
           python -m pip install --upgrade pip
           pip install requests beautifulsoup4
 
-      - name: Run tracker
+      - name: Run tracker (scrape, dedupe, write docs/cases.json, create issues)
         env:
           PERSONAL_ACCESS_TOKEN: ${{ secrets.PAT_TOKEN }}
         run: |
           python case_tracker.py
+
+      - name: Commit website changes (docs/)
+        run: |
+          if [[ -n "$(git status --porcelain docs/)" ]]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add docs/
+            git commit -m "Update site data (cases.json/index.html)"
+            git push
+          else
+            echo "No changes in docs/ to commit."
+          fi
