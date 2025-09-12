@@ -26,9 +26,9 @@
 </head>
 <body>
   <h1>AI Court Cases Tracker</h1>
-  <div class="sub">Case summaries across multiple trackers. Updates via GitHub Actions.</div>
+  <div class="sub">Case summaries across federal dockets (CourtListener/RECAP). Updates via GitHub Actions.</div>
   <div class="toolbar">
-    <input id="q" type="search" placeholder="Filter by case, outcome, source…" aria-label="Filter"/>
+    <input id="q" type="search" placeholder="Filter by case, outcome, status, source…" aria-label="Filter"/>
     <select id="status" aria-label="Filter by status">
       <option value="">Status: All</option>
       <option>Recently filed</option>
@@ -45,6 +45,7 @@
       <option value="title">Sort: Title</option>
       <option value="status">Sort: Status</option>
       <option value="source">Sort: Source</option>
+      <option value="date">Sort: Date</option>
     </select>
   </div>
   <div id="list" class="grid"></div>
@@ -69,9 +70,9 @@ async function load() {
     });
 
     items.sort((a,b)=>{
-      const A=(a[sortBy]||'').toString().toLowerCase();
-      const B=(b[sortBy]||'').toString().toLowerCase();
-      return A.localeCompare(B);
+      const ax=(a[sortBy]||'').toString().toLowerCase();
+      const bx=(b[sortBy]||'').toString().toLowerCase();
+      return ax.localeCompare(bx);
     });
 
     list.innerHTML = '';
@@ -79,8 +80,9 @@ async function load() {
       const url = c.url || '#';
       const outcome = c.outcome || 'Update';
       const status  = c.status || 'Open/Active';
-      const headline = (c.headline || c.title) + ' – ' + outcome + '.';
+      const headline = (c.headline || c.title);
       const src = c.source || '';
+      const date = c.date ? new Date(c.date).toLocaleDateString() : '';
       const takeaway = c.takeaway ? `<div class="summary"><strong>Key takeaway:</strong> ${c.takeaway}</div>` : '';
 
       const card = document.createElement('div');
@@ -90,8 +92,9 @@ async function load() {
         <div class="meta">
           <span class="pill">${status}</span>
           <span>${src}</span>
+          <span>${date}</span>
         </div>
-        <div class="summary">${c.summary || 'No summary provided by source.'}</div>
+        <div class="summary">${c.summary || 'No summary available.'}</div>
         ${takeaway}
         <div class="footer">
           <a class="linkbtn" href="${url}" target="_blank" rel="noopener">View source →</a>
