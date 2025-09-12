@@ -13,23 +13,34 @@
   .sub{color:var(--muted); margin-bottom:16px; font-size:14px}
   .toolbar{display:flex; gap:12px; margin:10px 0 18px; flex-wrap:wrap}
   input,select{padding:10px 12px; border:1px solid var(--line); border-radius:10px; font-size:14px}
-  .grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(380px,1fr)); gap:14px}
-  .card{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px; display:flex; flex-direction:column; gap:10px}
+  .grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(420px,1fr)); gap:14px}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:16px; display:flex; flex-direction:column; gap:10px}
   .title{font-weight:700; font-size:16px; line-height:1.35}
   .meta{font-size:12px; color:var(--muted); display:flex; gap:8px; align-items:center; flex-wrap:wrap}
   .pill{background:var(--pill); color:#fff; border-radius:999px; padding:3px 8px; font-size:11px; font-weight:600}
-  .outcome{font-weight:600}
   .summary{font-size:14px; line-height:1.45}
-  .takeaway{border-top:1px dashed var(--line); padding-top:8px; font-size:13px}
-  a{color:#0ea5e9; text-decoration:none}
-  a:hover{text-decoration:underline}
+  .footer{display:flex; justify-content:flex-end}
+  .linkbtn{display:inline-block; padding:8px 10px; border-radius:10px; border:1px solid var(--line); background:#fff; font-size:13px; text-decoration:none}
+  .linkbtn:hover{text-decoration:underline}
 </style>
 </head>
 <body>
   <h1>AI Court Cases Tracker</h1>
-  <div class="sub">De-duplicated case summaries across multiple public trackers. Updates via GitHub Actions.</div>
+  <div class="sub">Case summaries across multiple trackers. Updates via GitHub Actions.</div>
   <div class="toolbar">
     <input id="q" type="search" placeholder="Filter by case, outcome, source…" aria-label="Filter"/>
+    <select id="status" aria-label="Filter by status">
+      <option value="">Status: All</option>
+      <option>Recently filed</option>
+      <option>Open/Active</option>
+      <option>Judgment</option>
+      <option>Dismissed</option>
+      <option>Injunction</option>
+      <option>Settled</option>
+      <option>Class certified</option>
+      <option>MDL/Transfer</option>
+      <option>Stayed/Remand</option>
+    </select>
     <select id="sort" aria-label="Sort">
       <option value="title">Sort: Title</option>
       <option value="status">Sort: Status</option>
@@ -46,12 +57,15 @@ async function load() {
   const list = document.getElementById('list');
   const q = document.getElementById('q');
   const sortSel = document.getElementById('sort');
+  const statusSel = document.getElementById('status');
 
-  function render(filter='', sortBy='title') {
+  function render(filter='', sortBy='title', statusFilter='') {
     const f = filter.toLowerCase();
     let items = data.filter(c => {
       const hay = (c.title + ' ' + (c.outcome||'') + ' ' + (c.source||'') + ' ' + (c.summary||'') + ' ' + (c.status||'')).toLowerCase();
-      return !f || hay.includes(f);
+      const passText = !f || hay.includes(f);
+      const passStatus = !statusFilter || (c.status||'').toLowerCase() === statusFilter.toLowerCase();
+      return passText && passStatus;
     });
 
     items.sort((a,b)=>{
@@ -63,26 +77,31 @@ async function load() {
     list.innerHTML = '';
     items.forEach(c=>{
       const url = c.url || '#';
-      const takeawayLine = c.takeaway ? `<div class="takeaway"><strong>Key takeaway:</strong> ${c.takeaway}</div>` : '';
       const outcome = c.outcome || 'Update';
-      const status = c.status || 'Open/Active';
-      const headline = c.headline || c.title;
-      list.innerHTML += `
-        <div class="card">
-          <div class="title">${headline} – ${outcome}.</div>
-          <div class="meta">
-            <span class="pill">${status}</span>
-            <span>${c.source || ''}</span>
-            <a href="${url}" target="_blank" rel="noopener">Source</a>
-          </div>
-          <div class="summary">${c.summary || 'No summary provided by source.'}</div>
-          ${takeawayLine}
-        </div>`;
+      const status  = c.status || 'Open/Active';
+      const headline = (c.headline || c.title) + ' – ' + outcome + '.';
+      const src = c.source || '';
+
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `
+        <div class="title">${headline}</div>
+        <div class="meta">
+          <span class="pill">${status}</span>
+          <span>${src}</span>
+        </div>
+        <div class="summary">${c.summary || 'No summary provided by source.'}</div>
+        <div class="footer">
+          <a class="linkbtn" href="${url}" target="_blank" rel="noopener">View source →</a>
+        </div>
+      `;
+      list.appendChild(card);
     });
   }
 
-  q.addEventListener('input', (e)=>render(e.target.value, sortSel.value));
-  sortSel.addEventListener('change', ()=>render(q.value, sortSel.value));
+  q.addEventListener('input', (e)=>render(e.target.value, sortSel.value, statusSel.value));
+  sortSel.addEventListener('change', ()=>render(q.value, sortSel.value, statusSel.value));
+  statusSel.addEventListener('change', ()=>render(q.value, sortSel.value, statusSel.value));
   render();
 }
 load();
