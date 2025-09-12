@@ -8,7 +8,7 @@ JSON_PATH = f"{DOCS_DIR}/cases.json"
 CL_DOCKETS = "https://www.courtlistener.com/api/rest/v4/dockets/"
 CL_DEs     = "https://www.courtlistener.com/api/rest/v4/docket-entries/"
 
-# Broad AI+IP search terms (federal). We iterate combinations to be inclusive.
+# Broad AI+IP search: inclusive but still focused on training/use issues.
 AI_TERMS = [
     "AI", "artificial intelligence", "generative", "LLM", "model", "training",
     "dataset", "diffusion", "deepfake", "replica", "scrape", "scraping"
@@ -19,9 +19,10 @@ IP_TERMS = [
     "composition", "phonorecord", "license", "infringement"
 ]
 
-# Limit pages per query so the job doesn't explode. Tune up/down as you like.
-MAX_PAGES_PER_QUERY = 4
-DOCKET_ENTRIES_PER_CASE = 8
+# Speed / safety knobs (adjust later if you want):
+MAX_PAGES_PER_QUERY = 3          # pages per query (each page is up to 50 dockets)
+DOCKET_ENTRIES_PER_CASE = 8      # recent docket entries to scan per case
+MAX_CASES_TOTAL = 250            # hard cap to keep runs bounded
 
 CL_API_TOKEN = os.getenv("CL_API_TOKEN")
 
@@ -36,16 +37,27 @@ def http_headers():
     return h
 
 def fetch(url, params=None):
-    for i in range(3):
-        r = requests.get(url, params=params, headers=http_headers(), timeout=45)
+    for i in range(5):
+        print(f"[http] GET {url} params={params} attempt={i+1}", flush=True)
+        r = requests.get(url, params=params, headers=http_headers(), timeout=60)
         if r.status_code == 429:
-            time.sleep(2 + i)
+            wait = 2 + i * 2
+            print(f"[http] 429 rate-limited; sleeping {wait}s", flush=True)
+            time.sleep(wait)
             continue
         if r.status_code == 401:
-            raise RuntimeError("CourtListener 401 Unauthorized. Ensure CL_API_TOKEN repo secret is set.")
-        r.raise_for_status()
+            # Fail fast with a clear message
+            body = (r.text or "")[:300]
+            print(f"[http] 401 Unauthorized. Body: {body}", flush=True)
+            raise RuntimeError("CourtListener 401 Unauthorized. Ensure CL_API_TOKEN repo secret is set and valid.")
+        try:
+            r.raise_for_status()
+        except requests.HTTPError:
+            print(f"[http] ERROR {r.status_code}: {r.text[:500]}", flush=True)
+            raise
+        print(f"[http] {r.status_code} ok", flush=True)
         return r.json()
-    r.raise_for_status()
+    raise RuntimeError("HTTP retries exhausted")
 
 # ---------- TEXT UTILS ----------
 def clean(s: str) -> str:
@@ -119,7 +131,7 @@ def infer_headline_phrase(t):
         return "announces settlement in AI/IP dispute"
     if "verdict" in tl:
         return "returns verdict in AI/IP case"
-    return ""  # fallback to neutral “Update.”
+    return ""  # neutral
 
 # ---------- DATA GATHER ----------
 def docket_entries(docket_id, limit=DOCKET_ENTRIES_PER_CASE):
@@ -128,35 +140,50 @@ def docket_entries(docket_id, limit=DOCKET_ENTRIES_PER_CASE):
 
 def is_ai_ip_related(caption, entries_text):
     t = (caption + " " + entries_text).lower()
-    return (any(a in t for a in [x.lower() for x in AI_TERMS])
-            and any(ip in t for ip in [x.lower() for x in IP_TERMS]))
+    return (any(a.lower() in t for a in AI_TERMS)
+            and any(ip.lower() in t for ip in IP_TERMS))
 
 def search_block(search_str):
-    """Iterate the dockets endpoint with its 'search' parameter; yields results pages."""
+    print(f"[search] start: '{search_str}'", flush=True)
     url = CL_DOCKETS
     params = {"search": search_str, "order_by": "date_filed desc", "page_size": 50}
     pages = 0
     while url and pages < MAX_PAGES_PER_QUERY:
         data = fetch(url, params)
+        pages += 1
+        print(f"[search] page {pages} for '{search_str}' -> {len(data.get('results', []))} results", flush=True)
         yield data
         url = data.get("next")
         params = None
-        pages += 1
         time.sleep(0.25)
+    print(f"[search] done: '{search_str}' ({pages} page(s))", flush=True)
 
 def gather_from_dockets():
     items = []
     seen_ids = set()
+    cases_collected = 0
 
-    # Build combined query strings like: "AI AND copyright", "training AND copyright", etc.
-    COMBOS = []
-    for a in AI_TERMS:
-        for b in IP_TERMS:
-            COMBOS.append(f"{a} AND {b}")
+    # Build a modest set of high-signal combos
+    COMBOS = [
+        "training AND copyright",
+        "dataset AND copyright",
+        "ai AND copyright",
+        "llm AND copyright",
+        "ai AND right of publicity",
+        "ai AND dmca",
+    ]
+    print(f"[tracker] queries: {len(COMBOS)}", flush=True)
 
-    for q in COMBOS:
+    for qi, q in enumerate(COMBOS, start=1):
+        print(f"[tracker] query {qi}/{len(COMBOS)}: {q}", flush=True)
         for page in search_block(q):
-            for d in page.get("results", []):
+            results = page.get("results", [])
+            print(f"[tracker]  results on this page: {len(results)}", flush=True)
+            for d in results:
+                if cases_collected >= MAX_CASES_TOTAL:
+                    print("[tracker] hit MAX_CASES_TOTAL cap; stopping.", flush=True)
+                    return items
+
                 docket_id = d.get("id")
                 if not docket_id or docket_id in seen_ids:
                     continue
@@ -165,29 +192,34 @@ def gather_from_dockets():
                 if not caption:
                     continue
 
-                # Pull recent entries; then filter to AI+IP to cut noise
                 entries = docket_entries(docket_id)
                 text_blob = " ".join([clean(e.get("description") or e.get("entry_text") or "") for e in entries])
+
+                # Keep only cases with AI + IP signals
                 if not is_ai_ip_related(caption, text_blob):
                     continue
 
                 seen_ids.add(docket_id)
+                cases_collected += 1
 
                 status  = status_from_text(text_blob) if entries else "Open/Active"
                 outcome = outcome_short(text_blob)
                 court   = court_short(d.get("court","") or d.get("court_name",""))
                 phrase  = infer_headline_phrase(text_blob)
-                headline = caption + (f" – {court} " + (phrase + ".") if court and phrase else (f" – {court}." if court else ""))
+                if court and phrase:
+                    headline = f"{caption} – {court} {phrase}."
+                elif court:
+                    headline = f"{caption} – {court}."
+                else:
+                    headline = caption
 
-                # Compose summary from the most recent entries
                 top = [e for e in entries if clean(e.get("description",""))][:3]
                 summary = ("On the docket: " + " ".join([clean(e["description"]) for e in top])) if top else "Docket retrieved from CourtListener/RECAP."
-
                 takeaway = music_publisher_takeaway(text_blob)
 
                 items.append({
                     "title": caption,
-                    "headline": headline if headline else caption,
+                    "headline": headline,
                     "date": d.get("date_filed") or "",
                     "summary": summary[:900],
                     "source": "CourtListener/RECAP",
@@ -196,15 +228,8 @@ def gather_from_dockets():
                     "status": status,
                     "takeaway": takeaway
                 })
-    # Dedup by normalized title
-    uniq, seen_titles = [], set()
-    for e in items:
-        key = re.sub(r"\s+"," ", re.sub(r"[^\w\s]"," ", e["title"].lower()))
-        if key in seen_titles: 
-            continue
-        seen_titles.add(key)
-        uniq.append(e)
-    return uniq
+    print(f"[tracker] collected {len(items)} cases", flush=True)
+    return items
 
 # ---------- SITE ----------
 INDEX_HTML = """<!doctype html>
@@ -289,7 +314,7 @@ async function load() {
       const url = c.url || '#';
       const outcome = c.outcome || 'Update';
       const status  = c.status || 'Open/Active';
-      const headline = (c.headline || c.title) + (outcome && !/(update)/i.test(outcome) ? '' : '');
+      const headline = (c.headline || c.title);
       const src = c.source || '';
       const date = c.date ? new Date(c.date).toLocaleDateString() : '';
       const takeaway = c.takeaway ? `<div class="summary"><strong>Key takeaway:</strong> ${c.takeaway}</div>` : '';
@@ -331,11 +356,13 @@ def ensure_docs():
     with open(os.path.join(DOCS_DIR, "index.html"), "w", encoding="utf-8") as f: f.write(INDEX_HTML)
 
 def run():
+    print("[tracker] starting CourtListener crawl", flush=True)
     items = gather_from_dockets()
+    print(f"[tracker] collected {len(items)} cases", flush=True)
     ensure_docs()
     with open(JSON_PATH, "w", encoding="utf-8") as f:
         json.dump(items, f, ensure_ascii=False, indent=2)
-    print(f"Wrote {len(items)} cases to {JSON_PATH}")
+    print(f"[tracker] wrote {JSON_PATH}", flush=True)
 
 if __name__ == "__main__":
     run()
