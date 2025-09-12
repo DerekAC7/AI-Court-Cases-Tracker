@@ -1,18 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Key Generative AI Infringement Cases in Media and Entertainment — McKool-only edition
-with publisher-specific expert takeaways and docket/source linking to original filings
+Key Generative AI Infringement Cases in Media and Entertainment with publisher-specific expert takeaways and docket/source linking to original filings
 (via CourtListener search URL).
-
-What it does
-- Finds the NEWEST McKool Smith weekly page (newsroom-ailitigation-XX)
-- Parses each numbered case block (1., 2., …)
-- Builds bold HTML summaries with:
-    • Key takeaway (generic, when inferable from the text)
-    • Music lens (publisher-focused, expert/actionable)
-- Replaces “source: …” with a link to the original docket/filings:
-    • CourtListener search URL tailored to the caption (deterministic URL; no scraping/API)
 
 Output
 - docs/index.html
