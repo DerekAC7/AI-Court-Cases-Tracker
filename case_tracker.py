@@ -19,16 +19,29 @@ JSON_PATH = f"{DOCS_DIR}/cases.json"
 
 API_BASE = f"https://api.github.com/repos/{REPO_OWNER}/{REPO_NAME}"
 
-# ---------- CASE PATTERNS ----------
+# ---------- CASE / AI PATTERNS ----------
 CASE_PATTERNS = [
-    r"\b[A-Z][\w'.&-]{1,40}\s+v\.\s+[A-Z][\w'.&-]{1,60}\b",  # Foo v. Bar
-    r"\b[A-Z][\w'.&-]{1,40}\s+vs\.?\s+[A-Z][\w'.&-]{1,60}\b",# Foo vs Bar
-    r"\bIn\s+re\s+[A-Z][\w'.&-]{2,}\b",                     # In re Something
-    r"\bU\.S\.\s+v\.\s+[A-Z][\w'.&-]{1,60}\b",              # U.S. v. X
+    r"\b[A-Z][\w'.&-]{1,40}\s+v\.\s+[A-Z][\w'.&-]{1,80}\b",   # Foo v. Bar
+    r"\b[A-Z][\w'.&-]{1,40}\s+vs\.?\s+[A-Z][\w'.&-]{1,80}\b", # Foo vs Bar
+    r"\bIn\s+re\s+[A-Z][\w'.&-]{2,}\b",                      # In re Something
+    r"\bU\.S\.\s+v\.\s+[A-Z][\w'.&-]{1,80}\b",               # U.S. v. X
 ]
 CASE_REGEX = re.compile("|".join(CASE_PATTERNS))
 
-# ---------- GitHub helpers ----------
+# Terms to insist on so we only keep GenAI/IP cases
+AI_TERMS = [
+    "ai", "generative", "llm", "model", "training", "dataset", "copyright",
+    "openai", "anthropic", "meta", "midjourney", "stability", "stability ai",
+    "reddit", "getty", "new york times", "nyt", "suno", "udio", "disney",
+    "universal", "authors guild", "kadrey", "silverman", "bartz", "midjourney",
+    "claude", "chatgpt", "copilot", "diffusion"
+]
+
+COURT_PAT = re.compile(
+    r"(?:\b[A-Z]\d{1,2}th\s+Cir\.\b|\bN\.D\. Cal\b|\bS\.D\.N\.Y\.\b|\bN\.D\. Ill\.\b|\bC\.D\. Cal\.\b|\bD\. Del\.\b|\bD\. Mass\.\b|\bS\.D\. Fla\.\b|\bE\.D\. Va\.\b|\bN\.D\. Tex\.\b|\bN\.D\. Ga\.\b|\bC\.D\. Ill\.\b|\bW\.D\. Wash\.\b|\bS\.D\. Cal\.\b)",
+    re.I
+)
+
 def gh_headers():
     if not TOKEN:
         raise RuntimeError("Missing token. Map secrets.PAT_TOKEN to PERSONAL_ACCESS_TOKEN.")
@@ -83,11 +96,15 @@ def clean(text):
 def is_probable_case(text):
     return bool(CASE_REGEX.search(text))
 
+def is_ai_related(text):
+    t = text.lower()
+    return any(term in t for term in AI_TERMS)
+
 def infer_status(text):
     t = text.lower()
-    if any(k in t for k in ["recently filed", "filed on", "filed ", "new case", "complaint"]):
+    if any(k in t for k in ["recently filed", "filed on", "filed", "new case", "complaint"]):
         return "Recently filed"
-    if any(k in t for k in ["summary judgment", "granted judgment", "judgment entered", "verdict", "liability"]):
+    if any(k in t for k in ["summary judgment", "judgment entered", "verdict", "liability", "granted judgment"]):
         return "Judgment"
     if any(k in t for k in ["dismissed", "dismissal", "motion to dismiss granted"]):
         return "Dismissed"
@@ -111,21 +128,9 @@ def infer_outcome_short(text):
     )
     return clean(m.group(0)).capitalize() if m else "Update"
 
-def generate_takeaway(text):
-    t = text.lower()
-    if "fair use" in t and "pirat" in t:
-        return "Even where training is fair use, downloading pirated content can still trigger liability."
-    if "fair use" in t and "market" in t:
-        return "Fair use can turn on evidence of market harm to the original works."
-    if "injunction" in t:
-        return "Preliminary injunctions may issue where likelihood-of-success and irreparable harm are shown."
-    if "dismiss" in t:
-        return "Pleadings must tie copying to cognizable harm; conclusory allegations risk dismissal."
-    if "class" in t and "certif" in t:
-        return "Class certification depends on commonality and predominance; records-heavy issues can defeat it."
-    if "settle" in t:
-        return "Parties continue to resolve AI/IP disputes without merits rulings."
-    return ""
+def extract_court(text):
+    m = COURT_PAT.search(text or "")
+    return m.group(0) if m else ""
 
 def normalize_case_key(title):
     t = title.lower()
@@ -158,44 +163,55 @@ def extract_cases_from_article(url):
         return []
     soup = BeautifulSoup(html, "html.parser")
 
-    # collect text from p/li/headings; split into sentences
-    texts = []
+    # Gather sentences from p/li/headings
+    sentences = []
     for sel in ["p", "li", "h2", "h3"]:
         for el in soup.select(sel):
             t = clean(el.get_text())
-            if t:
-                # break into sentence-ish units
-                parts = re.split(r"(?<=[\.\?!])\s+", t)
-                texts.extend([p for p in parts if p])
+            if not t:
+                continue
+            parts = re.split(r"(?<=[\.\?!])\s+", t)
+            sentences.extend([p for p in parts if p])
 
+    # Collect ALL case captions that are AI-related
     cases = []
-    for i, sent in enumerate(texts):
+    for i, sent in enumerate(sentences):
         if not is_probable_case(sent):
             continue
-        # build a 1–3 sentence summary: sentence with match + following sentence if helpful
-        summary_sents = [sent]
-        if i + 1 < len(texts) and len(texts[i+1]) > 40:
-            summary_sents.append(texts[i+1])
-        if i + 2 < len(texts) and len(" ".join(summary_sents)) < 320:
-            summary_sents.append(texts[i+2])
-        summary = " ".join(summary_sents)
-        # title = matched case phrase
+        # Expand context to check AI relation
+        context = " ".join([sentences[j] for j in range(max(0, i-1), min(len(sentences), i+3))])
+        if not is_ai_related(context):
+            continue
+
+        # Title/caption
         m = CASE_REGEX.search(sent)
-        title = m.group(0) if m else sent[:120]
+        caption = m.group(0) if m else sent[:120]
+
+        # Build 1–3 sentence summary
+        summary_sents = [sent]
+        if i + 1 < len(sentences) and len(sentences[i+1]) > 40:
+            summary_sents.append(sentences[i+1])
+        if i + 2 < len(sentences) and len(" ".join(summary_sents)) < 500:
+            summary_sents.append(sentences[i+2])
+        summary = " ".join(summary_sents)
+
         outcome = infer_outcome_short(summary)
-        status = infer_status(summary)
-        takeaway = generate_takeaway(summary)
+        status  = infer_status(summary)
+        court   = extract_court(context)
+
+        headline = f"{caption}"
+        if court:
+            headline = f"{caption} – {court}"
 
         cases.append({
-            "title": title,
-            "headline": f"{title}",  # UI can extend with court/finding when available
-            "date": "",               # can be refined per-source if dates are exposed
-            "summary": summary[:700],
+            "title": caption,
+            "headline": headline,
+            "date": "",               # can be refined per-source later
+            "summary": summary[:900],
             "source": "",             # filled by caller
             "url": url,
             "outcome": outcome,
-            "status": status,
-            "takeaway": takeaway
+            "status": status
         })
     return cases
 
@@ -279,19 +295,16 @@ SOURCES = [scrape_mckool, scrape_bakerhostetler, scrape_wired, scrape_mishcon, s
 
 # ---------- issues + site ----------
 def make_issue_body(entry, key_hex):
-    # Format like your template: Headline line, then clean paragraph, then Key takeaway
+    # Headline line, then one tight paragraph, then status, then source link (no generic filler)
     headline = entry["headline"]
-    summary = entry["summary"]
-    takeaway = entry.get("takeaway", "")
-    src = entry.get("source", "Unknown")
-    url = entry.get("url", "")
-    outcome = entry.get("outcome") or "Update"
-    status = entry.get("status") or "Open/Active"
+    summary  = entry["summary"]
+    src      = entry.get("source", "Unknown")
+    url      = entry.get("url", "")
+    outcome  = entry.get("outcome") or "Update"
+    status   = entry.get("status") or "Open/Active"
 
-    # Combine into one tight paragraph (no generic filler)
     body = f"""{headline} – {outcome}.
 {summary}
-Key takeaway: {takeaway or '—'}
 
 Status: {status}
 Source: {src} ({url})
@@ -316,10 +329,10 @@ def run():
         except Exception as e:
             print(f"[WARN] {fn.__name__} failed: {e}")
 
-    # 2) real cases only
-    all_entries = [e for e in all_entries if is_probable_case(e["title"])]
+    # 2) keep only real captions AND AI-related context
+    all_entries = [e for e in all_entries if is_probable_case(e["title"]) and is_ai_related(e["summary"] + " " + e["headline"])]
 
-    # 3) de-dup across sources
+    # 3) de-dup
     deduped = unique_cases(all_entries)
     print(f"[TOTAL] deduped cases: {len(deduped)}")
 
@@ -341,13 +354,13 @@ def run():
             print(f"[ERROR] issue create failed for '{e['headline']}': {ex}")
     print(f"Issues created: {created}")
 
-    # 5) Website artifacts (overwrite index; JSON with status/takeaway)
+    # 5) Website data
     ensure_site_shell_overwrite()
     with open(JSON_PATH, "w", encoding="utf-8") as f:
         json.dump(deduped, f, ensure_ascii=False, indent=2)
     print(f"Wrote {JSON_PATH} with {len(deduped)} cases.")
 
-# ------- UI (uniform fonts, status badge, clean cards) -------
+# ------- UI (clean cards, status filter, source link at bottom) -------
 _INDEX_HTML = """<!doctype html>
 <html lang="en">
 <head>
@@ -363,23 +376,34 @@ _INDEX_HTML = """<!doctype html>
   .sub{color:var(--muted); margin-bottom:16px; font-size:14px}
   .toolbar{display:flex; gap:12px; margin:10px 0 18px; flex-wrap:wrap}
   input,select{padding:10px 12px; border:1px solid var(--line); border-radius:10px; font-size:14px}
-  .grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(380px,1fr)); gap:14px}
-  .card{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px; display:flex; flex-direction:column; gap:10px}
+  .grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(420px,1fr)); gap:14px}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:16px; display:flex; flex-direction:column; gap:10px}
   .title{font-weight:700; font-size:16px; line-height:1.35}
   .meta{font-size:12px; color:var(--muted); display:flex; gap:8px; align-items:center; flex-wrap:wrap}
   .pill{background:var(--pill); color:#fff; border-radius:999px; padding:3px 8px; font-size:11px; font-weight:600}
-  .outcome{font-weight:600}
   .summary{font-size:14px; line-height:1.45}
-  .takeaway{border-top:1px dashed var(--line); padding-top:8px; font-size:13px}
-  a{color:#0ea5e9; text-decoration:none}
-  a:hover{text-decoration:underline}
+  .footer{display:flex; justify-content:flex-end}
+  .linkbtn{display:inline-block; padding:8px 10px; border-radius:10px; border:1px solid var(--line); background:#fff; font-size:13px; text-decoration:none}
+  .linkbtn:hover{text-decoration:underline}
 </style>
 </head>
 <body>
   <h1>AI Court Cases Tracker</h1>
-  <div class="sub">De-duplicated case summaries across multiple public trackers. Updates via GitHub Actions.</div>
+  <div class="sub">Case summaries across multiple trackers. Updates via GitHub Actions.</div>
   <div class="toolbar">
     <input id="q" type="search" placeholder="Filter by case, outcome, source…" aria-label="Filter"/>
+    <select id="status" aria-label="Filter by status">
+      <option value="">Status: All</option>
+      <option>Recently filed</option>
+      <option>Open/Active</option>
+      <option>Judgment</option>
+      <option>Dismissed</option>
+      <option>Injunction</option>
+      <option>Settled</option>
+      <option>Class certified</option>
+      <option>MDL/Transfer</option>
+      <option>Stayed/Remand</option>
+    </select>
     <select id="sort" aria-label="Sort">
       <option value="title">Sort: Title</option>
       <option value="status">Sort: Status</option>
@@ -396,12 +420,15 @@ async function load() {
   const list = document.getElementById('list');
   const q = document.getElementById('q');
   const sortSel = document.getElementById('sort');
+  const statusSel = document.getElementById('status');
 
-  function render(filter='', sortBy='title') {
+  function render(filter='', sortBy='title', statusFilter='') {
     const f = filter.toLowerCase();
     let items = data.filter(c => {
       const hay = (c.title + ' ' + (c.outcome||'') + ' ' + (c.source||'') + ' ' + (c.summary||'') + ' ' + (c.status||'')).toLowerCase();
-      return !f || hay.includes(f);
+      const passText = !f || hay.includes(f);
+      const passStatus = !statusFilter || (c.status||'').toLowerCase() === statusFilter.toLowerCase();
+      return passText && passStatus;
     });
 
     items.sort((a,b)=>{
@@ -413,26 +440,31 @@ async function load() {
     list.innerHTML = '';
     items.forEach(c=>{
       const url = c.url || '#';
-      const takeawayLine = c.takeaway ? `<div class="takeaway"><strong>Key takeaway:</strong> ${c.takeaway}</div>` : '';
       const outcome = c.outcome || 'Update';
-      const status = c.status || 'Open/Active';
-      const headline = c.headline || c.title;
-      list.innerHTML += `
-        <div class="card">
-          <div class="title">${headline} – ${outcome}.</div>
-          <div class="meta">
-            <span class="pill">${status}</span>
-            <span>${c.source || ''}</span>
-            <a href="${url}" target="_blank" rel="noopener">Source</a>
-          </div>
-          <div class="summary">${c.summary || 'No summary provided by source.'}</div>
-          ${takeawayLine}
-        </div>`;
+      const status  = c.status || 'Open/Active';
+      const headline = (c.headline || c.title) + ' – ' + outcome + '.';
+      const src = c.source || '';
+
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `
+        <div class="title">${headline}</div>
+        <div class="meta">
+          <span class="pill">${status}</span>
+          <span>${src}</span>
+        </div>
+        <div class="summary">${c.summary || 'No summary provided by source.'}</div>
+        <div class="footer">
+          <a class="linkbtn" href="${url}" target="_blank" rel="noopener">View source →</a>
+        </div>
+      `;
+      list.appendChild(card);
     });
   }
 
-  q.addEventListener('input', (e)=>render(e.target.value, sortSel.value));
-  sortSel.addEventListener('change', ()=>render(q.value, sortSel.value));
+  q.addEventListener('input', (e)=>render(e.target.value, sortSel.value, statusSel.value));
+  sortSel.addEventListener('change', ()=>render(q.value, sortSel.value, statusSel.value));
+  statusSel.addEventListener('change', ()=>render(q.value, sortSel.value, statusSel.value));
   render();
 }
 load();
