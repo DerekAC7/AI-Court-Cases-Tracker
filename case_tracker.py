@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-AI Court Cases Tracker — McKool-only edition with publisher-specific expert takeaways
-and docket/source linking to original filings (via CourtListener search).
+Key Generative AI Infringement Cases in Media and Entertainment — McKool-only edition
+with publisher-specific expert takeaways and docket/source linking to original filings
+(via CourtListener search URL).
 
 What it does
 - Finds the NEWEST McKool Smith weekly page (newsroom-ailitigation-XX)
@@ -10,8 +11,8 @@ What it does
 - Builds bold HTML summaries with:
     • Key takeaway (generic, when inferable from the text)
     • Music lens (publisher-focused, expert/actionable)
-- Replaces “source: McKool…” with a link to the original docket/filings:
-    • CourtListener search URL tailored to the caption (no scraping/API; deterministic URL)
+- Replaces “source: …” with a link to the original docket/filings:
+    • CourtListener search URL tailored to the caption (deterministic URL; no scraping/API)
 
 Output
 - docs/index.html
@@ -34,9 +35,12 @@ from urllib.parse import urljoin
 DOCS_DIR = "docs"
 JSON_PATH = os.path.join(DOCS_DIR, "cases.json")
 
-HEADERS = {"User-Agent": "AI-Cases-Tracker/11.0 (+GitHub Pages/Actions)"}
+HEADERS = {"User-Agent": "AI-Cases-Tracker/13.0 (+GitHub Pages/Actions)"}
 
-CAPTION_PAT = re.compile(r"\b([A-Z][A-Za-z0-9\.\-’'& ]{1,90})\s+v\.?\s+([A-Z][A-Za-z0-9\.\-’'& ]{1,90})\b", re.I)
+CAPTION_PAT = re.compile(
+    r"\b([A-Z][A-Za-z0-9\.\-’'& ]{1,90})\s+v\.?\s+([A-Z][A-Za-z0-9\.\-’'& ]{1,90})\b",
+    re.I
+)
 
 # -----------------------
 # UI (index.html) — Title ONLY, no subtitle
@@ -46,7 +50,7 @@ INDEX_HTML = """<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8"/>
-<title>AI Court Cases Tracker</title>
+<title>Key Generative AI Infringement Cases in Media and Entertainment</title>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <style>
   :root { --fg:#0f172a; --muted:#475569; --bg:#ffffff; --card:#f8fafc; --line:#e2e8f0; --pill:#0ea5e9; --pill2:#7c3aed; }
@@ -71,7 +75,7 @@ INDEX_HTML = """<!doctype html>
 </style>
 </head>
 <body>
-  <h1>AI Court Cases Tracker</h1>
+  <h1>Key Generative AI Infringement Cases in Media and Entertainment</h1>
 
   <div class="toolbar">
     <input id="q" type="search" placeholder="Filter by case, outcome, status…" aria-label="Filter"/>
@@ -126,7 +130,6 @@ async function load() {
         const url = c.url || '#';
         const status  = c.status || 'Open/Active';
         const headline = (c.headline || c.title || 'Case');
-        const src = c.source || '';
         const cref = c.case_ref ? `<span class="ref">Case ref: ${c.case_ref}</span>` : '';
         const hasEmbeddedKT = (c.summary||"").toLowerCase().includes("<b>key takeaway:</b>");
         const ktInline = (!hasEmbeddedKT && c.takeaway)
@@ -188,26 +191,64 @@ def fetch(url: str) -> str:
     raise RuntimeError(f"Failed to fetch {url}")
 
 # -----------------------
-# Helpers
+# Caption helpers
 # -----------------------
 
+def _clean_party_label(p: str, default_label: str) -> str:
+    """Normalize a single party label and avoid lone 'et al.' results."""
+    s = (p or "").strip()
+    # Remove stray quotes/commas and trim whitespace
+    s = re.sub(r"^[,;]+|[,;]+$", "", s)
+    s = re.sub(r"\s+", " ", s).strip()
+    # If the side is just 'et al.' (or variations), replace with default
+    if re.fullmatch(r"(?i)et\.?\s*al\.?", s):
+        return default_label
+    # Collapse duplicates like 'et al. et al.'
+    s = re.sub(r"(?i)\bet\.?\s*al\.?(?:\s*et\.?\s*al\.?)+", "et al.", s)
+    return s
+
 def compress_caption(caption: str) -> str:
+    """
+    Turn messy captions like 'Concord Music Group, et al. v. Anthropic, Inc., et al.'
+    into 'Concord Music Group et al. v Anthropic et al.' and avoid lone 'et al.' sides.
+    """
     cap = re.sub(r"\(\d+\)\s*", "", caption or "")
     m = re.search(r"\s+v\.?\s+", cap, flags=re.I)
-    if not m: return cap.strip()
-    left, right = cap[:m.start()], cap[m.end():]
-    def first_party(side: str) -> str:
+    if not m:
+        return cap.strip()
+
+    left_raw, right_raw = cap[:m.start()], cap[m.end():]
+
+    # Split on common conjunctions/delimiters to get lead party on each side
+    def first_party(side: str, default_label: str) -> str:
         parts = re.split(r"\s*,\s*| & | and |;|\s{2,}", side)
         lead = parts[0].strip() if parts and parts[0] else side.strip()
-        return re.sub(r"[,;]+$", "", lead)
+        lead = _clean_party_label(lead, default_label)
+        # If still empty after cleaning, use default
+        if not lead:
+            lead = default_label
+        return lead
+
     def many(side: str) -> bool:
-        return bool(re.search(r"\bet\.?\s*al\.?|,|\band\b|&", side, re.I)) or len(side) > 60
-    L = first_party(left) + (" et al." if many(left) else "")
-    R = first_party(right) + (" et al." if many(right) else "")
-    L = re.sub(r"(et al\.)\s*et al\.$", r"\1", L, flags=re.I)
-    R = re.sub(r"(et al\.)\s*et al\.$", r"\1", R, flags=re.I)
-    L = re.sub(r"\s*\bbackground\b\s*$", "", L, flags=re.I)
-    R = re.sub(r"\s*\bbackground\b\s*$", "", R, flags=re.I)
+        return bool(re.search(r"(?i)\bet\.?\s*al\.?|,|\band\b|&", side)) or len(side) > 60
+
+    L = first_party(left_raw, "Plaintiffs")
+    R = first_party(right_raw, "Defendants")
+
+    # Append 'et al.' once if many parties
+    if many(left_raw) and not re.search(r"(?i)\bet\.?\s*al\.?$", L):
+        L = f"{L} et al."
+    if many(right_raw) and not re.search(r"(?i)\bet\.?\s*al\.?$", R):
+        R = f"{R} et al."
+
+    # De-dup any accidental 'et al. et al.'
+    L = re.sub(r"(?i)\bet\.?\s*al\.?\s*et\.?\s*al\.?$", "et al.", L)
+    R = re.sub(r"(?i)\bet\.?\s*al\.?\s*et\.?\s*al\.?$", "et al.", R)
+
+    # Strip stray 'background'
+    L = re.sub(r"(?i)\s*\bbackground\b\s*$", "", L)
+    R = re.sub(r"(?i)\s*\bbackground\b\s*$", "", R)
+
     return f"{L} v {R}"
 
 def smart_sentence(ctx: str) -> str:
@@ -236,7 +277,9 @@ def infer_status_outcome(text: str):
         return ("Injunction", "Injunction")
     if "dismissed with prejudice" in t:
         return ("Dismissed", "Dismissal with prejudice")
-    if "dismissed" in t or "motion to dismiss granted" in t:
+    if re.search(r"\b(granted|granting)\b.*\bmotion to dismiss\b", t):
+        return ("Dismissed", "Dismissal")
+    if "dismissed" in t:
         return ("Dismissed", "Dismissal")
     if "settlement" in t or "settled" in t or ("$" in t and "settle" in t):
         return ("Settled", "Settlement")
@@ -246,20 +289,24 @@ def infer_status_outcome(text: str):
 
 def headline_for(caption: str, ctx: str) -> str:
     t = (ctx or "").lower()
-    if "fair use" in t and ("judgment" in t or "summary judgment" in t):
+
+    # Be careful not to overstate dismissals: treat "motion to dismiss" distinctly
+    if re.search(r"\b(granted|granting)\b.*\bsummary judgment\b|\bsummary judgment (granted|entered)\b", t) or ("fair use" in t and "judgment" in t):
         return f"{caption} - rules AI training fair use."
     if "class certification" in t or "class certified" in t:
         return f"{caption} - certifies class in AI/IP case."
-    if "injunction" in t:
+    if "injunction" in t and ("granted" in t or "preliminary" in t or "permanent" in t):
         return f"{caption} - injunction regarding AI use."
-    if "dismiss" in t:
-        return f"{caption} - dismisses AI/IP claims."
     if "settle" in t or "settlement" in t:
         m = re.search(r"\$\s?([0-9][\d\.,]+)\s*(billion|million|bn|m)?", ctx or "", re.I)
         if m:
             amt = m.group(0)
             return f"{caption} - settlement ({amt})."
         return f"{caption} - settlement."
+    if "motion to dismiss" in t and not ("granted" in t or "denied" in t):
+        return f"{caption} - motion to dismiss briefing."
+    if "dismissed" in t or "dismisses" in t:
+        return f"{caption} - dismisses AI/IP claims."
     return caption
 
 # -----------------------
@@ -279,7 +326,6 @@ def music_publisher_lens(caption: str, status_text: str, background_text: str) -
 
     # Case-specific adjustments
     if "bartz" in cap and "anthropic" in cap:
-        # Settlement magnitude + provenance leverage
         return ("Settlement magnitude (~$3k/work) is a valuation anchor. "
                 "Push provenance audits and disclosure of acquisition sources; leverage Bartz’s acquisition-vs-training split to frame composition claims and negotiations.")
 
@@ -292,7 +338,6 @@ def music_publisher_lens(caption: str, status_text: str, background_text: str) -
                 "For lyrics/compositions, pursue evidence that prompts yield lyric-like outputs and prepare injunctive relief asks tied to output filters.")
 
     if ("umg" in cap or "universal" in cap) and ("suno" in cap or "udio" in cap or "uncharted" in cap):
-        # Label-led cases; publisher angle is discovery into compositions ingestion
         return ("Label-led pleadings focus on sound recordings; monitor discovery for training-data disclosures. "
                 "If lyrics or compositions appear in ingestion logs, be prepared to assert composition-specific claims and request preservation of training artifacts.")
 
@@ -308,7 +353,7 @@ def music_publisher_lens(caption: str, status_text: str, background_text: str) -
         return ("Preservation obligations may unlock ingestion and output logs. "
                 "Request parallel preservation and model-audit protocols in music cases to surface lyric/composition usage and quantify market harm.")
 
-    if "perplexity" in cap or "rag" in txt:
+    if "perplexity" in cap or " rag " in txt or "r.a.g" in txt:
         return ("RAG systems pose ongoing reproduction risks. "
                 "Assert claims on output reproduction of lyrics and require link-respecting behavior; consider negotiating paid access APIs for lyric metadata as an alternative.")
 
@@ -324,7 +369,7 @@ def music_publisher_lens(caption: str, status_text: str, background_text: str) -
         return ("Coordinate with aligned plaintiffs; file amicus on market-harm factors relevant to compositions. "
                 "Track scheduling to time publisher filings with key expert discovery milestones.")
 
-    # Generic fallbacks keyed by signals in text
+    # Generic fallbacks keyed by signals
     if "summary judgment" in txt and "fair use" in txt:
         return ("Anticipate fair-use defenses: center evidence on market substitution for compositions (lyrics/sheet music) rather than separate 'training-license' markets.")
     if "injunction" in txt:
@@ -334,11 +379,10 @@ def music_publisher_lens(caption: str, status_text: str, background_text: str) -
     if "robots" in txt or "terms of service" in txt or "trespass" in txt:
         return ("Strengthen site TOS and robots.txt for lyrics; maintain detailed access logs to support contract and anti-circumvention claims.")
 
-    # Final generic advice
     return ("Build evidentiary files on lyric/composition market harm (lost sync, sheet music, lyric licensing) and compel disclosure of training datasets and ingestion logs.")
 
 # -----------------------
-# McKool Smith: always fetch latest edition and parse numbered items
+# McKool Smith: fetch latest edition and parse numbered items
 # -----------------------
 
 MCKOOL_INDEX = "https://www.mckoolsmith.com/newsroom-ailitigation"
@@ -466,19 +510,19 @@ def mckool_parse_latest() -> list:
         # Link to original filings (CourtListener search URL built from caption)
         src_url = courtlistener_search_url(caption, hint_text=status_text + " " + background_text)
 
-        # Fragment to the numbered section on the weekly page (optional)
-        frag = f"#sec-{num}"
+        # Optional fragment to the numbered section on the weekly page (not shown in UI)
+        # frag = f"#sec-{num}"
 
         items.append({
             "title": caption,
             "headline": headline,
             "summary": summary_html,
-            "takeaway": "",  # generic takeaway already embedded above
+            "takeaway": "",  # generic takeaway embedded above
             "music_lens": pub_lens,
             "status": status,
             "outcome": outcome,
-            "source": "",  # not shown; we only display the Source button (url)
-            "url": src_url or (latest_url + frag),
+            "source": "",  # not shown; UI only renders url as "Source →"
+            "url": src_url,
             "case_ref": "",
             "date": ""
         })
@@ -494,13 +538,11 @@ def courtlistener_search_url(caption: str, hint_text: str = "") -> str:
     """
     Build a deterministic CourtListener search URL for the case caption.
     Prefer including likely court hints if found in hint_text.
-    This avoids scraping or API calls but still lands on original filings/dockets.
     """
     q = caption
     # Add soft court hints if present
     hint = ""
     ht = (hint_text or "").lower()
-    # Common districts from these cases
     if "n.d. cal" in ht or "northern district of california" in ht:
         hint = " AND (court:(california northern))"
     elif "s.d.n.y." in ht or "southern district of new york" in ht:
@@ -510,7 +552,6 @@ def courtlistener_search_url(caption: str, hint_text: str = "") -> str:
     elif "d. del" in ht or "district of delaware" in ht:
         hint = " AND (court:(delaware))"
 
-    # Encode query for CourtListener UI search
     query = urllib.parse.quote_plus(q + hint)
     return f"https://www.courtlistener.com/?q={query}&type=r&order_by=score%20desc"
 
