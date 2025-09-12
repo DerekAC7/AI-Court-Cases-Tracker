@@ -1,16 +1,18 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-AI Court Cases Tracker
-- Scrapes four public trackers (McKool, BakerHostetler, WIRED, Mishcon)
-- Extracts real case captions "X v. Y"
-- Filters by AI/IP-training context to avoid junk
-- Compresses long party lists ("et al.") for readability
-- Pulls case reference numbers when available
-- Infers status/outcome and adds Key takeaway only for rulings
+AI Court Cases Tracker — FOUR SOURCES ONLY (no CourtListener)
+- Sources: McKool Smith, BakerHostetler, WIRED, Mishcon
+- Finds real case captions "X v. Y"
+- Cleans giant party lists -> "et al."
+- Produces clean summaries:
+  * Judgments (e.g., Bartz v. Anthropic, Kadrey v. Meta): narrative + bold "Key takeaway"
+  * New/ongoing cases: single-sentence, plain language
+- Fixes clipped words like "tiffs" -> "plaintiffs"
 - De-duplicates across sources
-- Writes docs/index.html and docs/cases.json
+- Writes docs/cases.json and docs/index.html
 """
+
 import os, re, json, time, html
 import requests
 from bs4 import BeautifulSoup
@@ -25,70 +27,24 @@ SOURCES = [
     {"name": "Mishcon de Reya LLP", "url": "https://www.mishcon.com/generative-ai-intellectual-property-cases-and-policy-tracker"},
 ]
 
-HEADERS = {"User-Agent": "AI-Cases-Tracker/2.0 (+github pages bot)"}
+HEADERS = {"User-Agent": "AI-Cases-Tracker/3.0 (+GitHub Pages bot)"}
 
-# ---------- regexes ----------
+# -------- regexes --------
 CAPTION_PAT = re.compile(r"\b([A-Z][A-Za-z0-9\.\-’'& ]+)\s+v\.?\s+([A-Z][A-Za-z0-9\.\-’'& ]+)\b")
 CASE_NO_PAT = re.compile(r"\b(\d{1,2}:\d{2}-cv-\d{4,6}[A-Za-z\-]*|No\.\s?[A-Za-z0-9\-\.:]+|Case\s?(?:No\.|#)\s?[A-Za-z0-9\-:]+|Claim\s?No\.\s?[A-Za-z0-9\-]+)\b", re.I)
-
 AI_CONTEXT_PAT = re.compile(
-    r"\b(ai|artificial intelligence|gen(?:erative)? ai|llm|model|training|dataset|copyright|dmca|right of publicity|digital replica|source code)\b",
+    r"\b(ai|artificial intelligence|gen(?:erative)? ai|llm|model|training|dataset|copyright|dmca|right of publicity|digital replica|source code|scrap(?:e|ing))\b",
     re.I,
 )
 
-# status / outcome inference
-STATUS_RULES = [
-    ("Judgment", r"\b(summary\s+judgment|judgment\s+entered|granted\s+summary|verdict)\b"),
-    ("Dismissed", r"\b(dismiss(?:al|ed)|with\s+prejudice|without\s+prejudice)\b"),
-    ("Injunction", r"\b(preliminary|permanent)\s+injunction\b|\binjunction\b"),
-    ("Settled", r"\b(settle(?:d|ment))\b"),
-    ("Class certified", r"\b(class\s+certification|certif(?:y|ied)\s+class)\b"),
-    ("MDL/Transfer", r"\b(mdl|multi-?district|transferred|centralized)\b"),
-    ("Stayed/Remand", r"\b(stay(?:ed)?|remand(?:ed)?)\b"),
-    ("Recently filed", r"\b(complaint\s+filed|filed\s+on|new\s+case)\b"),
-]
-
-# tailor headlines
-HEADLINE_KEYS = [
-    ("rules AI training fair use", r"\bfair\s+use\b.*\b(summary\s+judgment|judgment)\b"),
-    ("issues injunction related to AI use", r"\binjunction\b"),
-    ("dismisses AI/IP claims", r"\bdismiss"),
-    ("announces settlement in AI/IP dispute", r"\bsettle"),
-    ("certifies class in AI/IP case", r"\bclass\s+cert"),
-    ("returns verdict in AI/IP case", r"\bverdict\b"),
-]
-
-# known music-publisher focused takeaways
-def music_takeaway(text: str) -> str:
-    t = text.lower()
-    if "fair use" in t and ("pirated" in t or "torrent" in t or "unauthorized" in t or "7 million" in t or "shadow library" in t):
-        return ("Even if training is ruled fair use, acquisition of pirated datasets can still create liability. "
-                "For music publishers, scrutinize provenance of audio datasets and any scraping of leaked files.")
-    if "fair use" in t and "market" in t:
-        return ("Courts weigh harm to the market for the original works more than any separate 'training-license' market. "
-                "Document concrete substitution/licensing displacement on your catalog.")
-    if "injunction" in t:
-        return ("Injunctions can limit model distribution or future retraining—leverage for prospective relief and guardrails on music ingestion.")
-    if "dismiss" in t:
-        return ("Complaints that don’t connect copying to cognizable market harm risk dismissal. "
-                "Tie training/outputs to measurable revenue impact and licensing loss.")
-    if "settle" in t:
-        return ("Settlements set practical ranges for training/output licenses even without merits rulings—useful for negotiation benchmarks.")
-    if "verdict" in t:
-        return ("Damages frameworks and apportionment will shape payouts for sound recordings and compositions in AI contexts.")
-    return ""
-
-# --------- helpers ----------
-def clean(s: str) -> str:
-    return re.sub(r"\s+", " ", (s or "").strip())
-
+# ---------- helpers ----------
 def fetch(url: str) -> str:
     for i in range(4):
         r = requests.get(url, timeout=45, headers=HEADERS)
         if r.status_code == 200:
             return r.text
         if r.status_code in (429, 503):
-            time.sleep(2 + 2 * i)
+            time.sleep(2 + 2*i)
             continue
         r.raise_for_status()
     raise RuntimeError(f"Failed to fetch {url}")
@@ -99,126 +55,184 @@ def extract_visible_text(html_text: str) -> str:
         bad.decompose()
     txt = soup.get_text(" ", strip=True)
     txt = html.unescape(txt)
-    return clean(txt)
+    # fix clipped “plaintiffs” issue (e.g., “…tiffs”)
+    txt = re.sub(r"(?<![A-Za-z])tiffs\b", "plaintiffs", txt, flags=re.I)
+    txt = re.sub(r"\s+", " ", txt).strip()
+    return txt
 
-def window(text: str, start: int, end: int, radius: int = 360) -> str:
-    a = max(0, start - radius)
-    b = min(len(text), end + radius)
-    return clean(text[a:b])
+def window(text: str, start: int, end: int, radius: int = 480) -> str:
+    a = max(0, start - radius); b = min(len(text), end + radius)
+    seg = text[a:b]
+    # try to snap to sentence boundaries
+    seg = re.split(r"(?<=[\.!?])\s+", seg)
+    if len(seg) > 2:
+        seg = " ".join(seg[1:-1])
+    else:
+        seg = " ".join(seg)
+    return seg.strip()
 
 def compress_caption(caption: str) -> str:
-    """
-    Turn massive party lists into 'Foo et al. v Bar' forms.
-    E.g., "(1) A (2) B (3) C v (1) OpenAI ... " -> "A et al. v OpenAI et al."
-    """
-    cap = caption
-    # remove numbering artifacts like "(1) " etc.
-    cap = re.sub(r"\(\d+\)\s*", "", cap)
-    # Split sides
+    cap = re.sub(r"\(\d+\)\s*", "", caption)  # remove (1) (2) numbering
     vm = re.search(r"\s+v\.?\s+", cap)
     if not vm:
-        return clean(cap)
+        return cap.strip()
     left = cap[:vm.start()]
     right = cap[vm.end():]
     def first_party(side: str) -> str:
-        # split by commas/ & / and / ;
         parts = re.split(r"\s*,\s*| & | and |;|\s{2,}", side)
-        lead = clean(parts[0]) if parts and parts[0] else clean(side)
-        # trim trailing org punctuation
-        lead = re.sub(r"[,;]+$", "", lead).strip()
-        return lead
-    def has_many(side: str) -> bool:
+        lead = parts[0].strip() if parts and parts[0] else side.strip()
+        return re.sub(r"[,;]+$", "", lead)
+    def many(side: str) -> bool:
         return bool(re.search(r"\bet\.?\s*al\.?|,|\band\b|&", side, re.I)) or len(side) > 60
-    L = first_party(left)
-    R = first_party(right)
-    L_more = " et al." if has_many(left) else ""
-    R_more = " et al." if has_many(right) else ""
-    return f"{L}{L_more} v {R}{R_more}"
+    L = first_party(left) + (" et al." if many(left) else "")
+    R = first_party(right) + (" et al." if many(right) else "")
+    return f"{L} v {R}"
 
-def infer_status(text: str) -> str:
-    for status, pat in STATUS_RULES:
-        if re.search(pat, text, re.I):
-            return status
-    return "Open/Active"
-
-def infer_outcome(text: str) -> str:
+def infer_status_outcome(text: str):
     t = text.lower()
-    if "fair use" in t and re.search(r"\bsummary\s+judgment|\bjudgment\b", t):
-        return "Fair use (SJ)"
-    if re.search(r"\bsummary\s+judgment\b", t): return "Summary Judgment"
-    if "injunction" in t: return "Injunction"
-    if "dismiss" in t: return "Dismissal"
-    if "settle" in t: return "Settlement"
-    if "class cert" in t or "class certification" in t: return "Class Certification"
-    if "verdict" in t: return "Verdict"
-    return "Update"
+    if "settle" in t: return ("Settled", "Settlement")
+    if "injunction" in t: return ("Injunction", "Injunction")
+    if "dismiss" in t: return ("Dismissed", "Dismissal")
+    if "summary judgment" in t or ("fair use" in t and "judgment" in t): return ("Judgment", "Fair use (SJ)" if "fair use" in t else "Summary Judgment")
+    if "class certification" in t or "class cert" in t: return ("Class certified", "Class Certification")
+    if "complaint filed" in t or "filed on" in t or "new case" in t: return ("Recently filed", "Update")
+    return ("Open/Active", "Update")
 
-def headline_for(text: str, caption: str) -> str:
-    for phrase, pat in HEADLINE_KEYS:
-        if re.search(pat, text, re.I):
-            return f"{caption} – {phrase}."
+def smart_sentence(ctx: str) -> str:
+    # choose a short, declarative sentence
+    sentences = re.split(r"(?<=[.!?])\s+", ctx)
+    # prefer ones with "sued", "files", "filed", "alleges", "rules", "granted", "dismiss"
+    prefs = (" sued ", " files ", " filed ", " alleges ", " rules ", " granted ", " dismissed ", " injunction ")
+    for s in sentences:
+        ss = " " + s.lower() + " "
+        if any(p in ss for p in prefs) and 40 <= len(s) <= 360:
+            return s.strip()
+    # fallback to first reasonable sentence
+    for s in sentences:
+        if 40 <= len(s) <= 360:
+            return s.strip()
+    return sentences[0].strip() if sentences else ctx[:240].strip()
+
+def summary_for(caption: str, ctx: str) -> str:
+    # Explicit narrative templates for the two key judgments:
+    if re.search(r"\bBartz\b", caption) and "Anthropic" in caption:
+        return ("**Summaries:** **" + caption + " – N.D. Cal rules AI training fair use.** "
+                "On June 23, Judge Alsup granted partial summary judgment to Anthropic, ruling that "
+                "1) training Claude on plaintiffs’ books was “exceedingly transformative” and fair use, and "
+                "2) digitizing purchased physical books for Anthropic’s central library was also fair use. "
+                "But the court declined to extend the fair use ruling to Anthropic downloading over 7 million pirated books for its central library, "
+                "saying that such piracy is “inherently, irredeemably infringing” regardless of whether the copies are later put to a fair use. "
+                "This issue will proceed to trial.\n\n"
+                "**Key takeaway:** Even where training is fair use, developers may still face significant liability for downloading pirated content.")
+    if re.search(r"\bKadrey\b", caption) and "Meta" in caption:
+        return ("**Summaries:** **" + caption + " – N.D. Cal rules AI training fair use.** "
+                "On June 25, Judge Chhabria granted summary judgment on fair use for AI training to Meta finding that "
+                "1) using plaintiffs’ books to train Meta’s LLM was highly transformative, and "
+                "2) plaintiffs are not entitled to the market for licensing for AI training. "
+                "But Judge Chhabria noted that his decision was limited to the specific record of the case, and that in many circumstances training would not be fair use. "
+                "He indicated that the order likely would have been different if plaintiffs had pled harm to the market for their original works, and even criticized Judge Alsup’s Bartz order for brushing aside market harm concerns.\n\n"
+                "**Key takeaway:** Future pleadings may be more successful if they focus on harm to the market for the original works and not only on the harm to the market for training licenses.")
+
+    # For everything else: one concise sentence like “X sued Y …”
+    sent = smart_sentence(ctx)
+    return f"**Summaries:** {sent}"
+
+def headline_for(caption: str, text: str) -> str:
+    # If we have a clear holding pattern, include a short clause; else leave caption
+    t = text.lower()
+    if "fair use" in t and ("judgment" in t or "summary judgment" in t):
+        return f"{caption} – rules AI training fair use."
+    if "injunction" in t:
+        return f"{caption} – injunction related to AI use."
+    if "dismiss" in t:
+        return f"{caption} – dismisses AI/IP claims."
+    if "settle" in t:
+        return f"{caption} – settlement."
     return caption
 
-def gather_from_sources():
+def extract_cases_from_source(src_name: str, url: str):
+    html_text = fetch(url)
+    full = extract_visible_text(html_text)
     items = []
+    for m in CAPTION_PAT.finditer(full):
+        cap_raw = m.group(0)
+        cap = compress_caption(cap_raw)
+        ctx = window(full, m.start(), m.end(), radius=520)
+
+        # require AI/IP context near the caption
+        if not AI_CONTEXT_PAT.search(ctx):
+            continue
+
+        # case reference (if present) from nearby text
+        case_ref = ""
+        cr = CASE_NO_PAT.search(ctx)
+        if cr:
+            case_ref = cr.group(0).strip()
+
+        status, outcome = infer_status_outcome(ctx)
+        headline = headline_for(cap, ctx)
+        summary = summary_for(cap, ctx)
+
+        # Add music-publisher-focused takeaway only when a ruling status
+        takeaway = ""
+        st_low = status.lower()
+        if any(s in st_low for s in ["judgment", "dismissed", "injunction", "settled", "class"]):
+            # Try to generate a sensible one if not Bartz/Kadrey
+            if "Key takeaway:" not in summary:
+                tl = ctx.lower()
+                if "fair use" in tl and ("pirated" in tl or "shadow library" in tl or "torrent" in tl):
+                    takeaway = ("Even if training is fair use, acquisition of pirated datasets can still create liability for developers and vendors supplying models.")
+                elif "fair use" in tl and "market" in tl:
+                    takeaway = ("Courts weigh harm to the market for original works more than any separate 'training license' market. Map concrete substitution/licensing loss.")
+                elif "injunction" in tl:
+                    takeaway = ("Injunctions can constrain model distribution or retraining—useful leverage for prospective guardrails on ingestion of music catalogs.")
+                elif "dismiss" in tl:
+                    takeaway = ("Complaints that don’t connect copying to cognizable market harm risk dismissal. Tie training/outputs to measurable revenue impact.")
+                elif "settle" in tl:
+                    takeaway = ("Settlements set practical value ranges for training/output uses even without merits rulings—useful benchmarks for music catalog negotiations.")
+        # If Bartz/Kadrey templated text already includes Key takeaway, leave takeaway empty; the renderer will show the one in summary.
+
+        items.append({
+            "title": cap,
+            "headline": headline,
+            "summary": summary,
+            "takeaway": takeaway,
+            "status": status,
+            "outcome": outcome,
+            "source": src_name,
+            "url": url,
+            "case_ref": case_ref,
+            "date": ""  # trackers rarely expose structured dates near captions
+        })
+    return items
+
+def dedupe(items):
+    def key(it):
+        core = re.sub(r"[^a-z0-9]+", " ", (it["title"] or "").lower()).strip()
+        cref = (it.get("case_ref","") or "").lower()
+        return f"{core}|{cref}"
+    best = {}
+    for it in items:
+        k = key(it)
+        cand_score = len(it.get("summary",""))
+        if k not in best or cand_score > len(best[k].get("summary","")):
+            best[k] = it
+    return list(best.values())
+
+def build():
+    all_items = []
     for src in SOURCES:
         print(f"[scrape] {src['name']} -> {src['url']}", flush=True)
-        html_text = fetch(src["url"])
-        full = extract_visible_text(html_text)
+        got = extract_cases_from_source(src["name"], src["url"])
+        print(f"[scrape]   extracted: {len(got)}", flush=True)
+        all_items.extend(got)
 
-        for m in CAPTION_PAT.finditer(full):
-            cap = clean(m.group(0))
-            ctx = window(full, m.start(), m.end(), radius=400)
+    uniq = dedupe(all_items)
+    uniq.sort(key=lambda x: x["title"].lower())
+    print(f"[scrape] total unique cases: {len(uniq)}", flush=True)
+    return uniq
 
-            # require AI/IP context in the neighborhood to cut noise
-            if not AI_CONTEXT_PAT.search(ctx):
-                continue
-
-            caption_short = compress_caption(cap)
-            # case number if present near
-            case_no_match = CASE_NO_PAT.search(ctx)
-            case_no = clean(case_no_match.group(0)) if case_no_match else ""
-
-            text_for_rules = f"{caption_short}. {ctx}"
-            status = infer_status(text_for_rules)
-            outcome = infer_outcome(text_for_rules)
-            takeaway = music_takeaway(text_for_rules) if status in {"Judgment","Dismissed","Injunction","Settled","Class certified","Verdict"} else ""
-
-            item = {
-                "title": caption_short,
-                "headline": headline_for(text_for_rules, caption_short),
-                "date": "",  # trackers rarely publish exact court dates consistently
-                "summary": ctx[:900],
-                "source": src["name"],
-                "url": src["url"],
-                "outcome": outcome,
-                "status": status,
-                "takeaway": takeaway,
-                "case_ref": case_no,
-            }
-            items.append(item)
-        print(f"[scrape]   now {len(items)} extracted", flush=True)
-
-    # de-duplicate by normalized caption (title + case_ref if present)
-    def norm_key(it):
-        t = re.sub(r"[^a-z0-9]+", " ", it["title"].lower()).strip()
-        cref = it.get("case_ref","").lower()
-        return f"{t}|{cref}"
-    dedup = {}
-    for it in items:
-        k = norm_key(it)
-        # prefer longer summary / stronger source ordering
-        score = len(it.get("summary",""))
-        if k not in dedup or score > len(dedup[k].get("summary","")):
-            dedup[k] = it
-
-    items2 = list(dedup.values())
-    # sort by title
-    items2.sort(key=lambda x: x["title"].lower())
-    print(f"[scrape] total unique cases: {len(items2)}", flush=True)
-    return items2
-
-# ---------- site HTML ----------
+# -------- site writer --------
 INDEX_HTML = """<!doctype html>
 <html lang="en">
 <head>
@@ -240,17 +254,18 @@ INDEX_HTML = """<!doctype html>
   .meta{font-size:12px; color:var(--muted); display:flex; gap:8px; align-items:center; flex-wrap:wrap}
   .pill{background:var(--pill); color:#fff; border-radius:999px; padding:3px 8px; font-size:11px; font-weight:700}
   .pill2{background:var(--pill2); color:#fff; border-radius:999px; padding:3px 8px; font-size:11px; font-weight:700}
-  .summary{font-size:14px; line-height:1.45}
+  .summary{font-size:14px; line-height:1.5}
+  .summary b{font-weight:800}
   .footer{display:flex; justify-content:space-between; align-items:center}
   .linkbtn{display:inline-block; padding:8px 10px; border-radius:10px; border:1px solid var(--line); background:#fff; font-size:13px; text-decoration:none}
   .linkbtn:hover{text-decoration:underline}
-  .takeaway strong{font-weight:800}
   .ref{font-size:12px; color:var(--muted)}
 </style>
 </head>
 <body>
   <h1>AI Court Cases Tracker</h1>
-  <div class="sub">De-duplicated case summaries across McKool Smith, BakerHostetler, WIRED, and Mishcon. Filter by status; rulings include music-publisher-focused key takeaways.</div>
+  <div class="sub">De-duplicated case summaries across McKool Smith, BakerHostetler, WIRED, and Mishcon. No CourtListener. Rulings show a bold <b>Key takeaway</b>.</div>
+
   <div class="toolbar">
     <input id="q" type="search" placeholder="Filter by case, outcome, status, source…" aria-label="Filter"/>
     <select id="status" aria-label="Filter by status">
@@ -262,16 +277,14 @@ INDEX_HTML = """<!doctype html>
       <option>Injunction</option>
       <option>Settled</option>
       <option>Class certified</option>
-      <option>MDL/Transfer</option>
-      <option>Stayed/Remand</option>
     </select>
     <select id="sort" aria-label="Sort">
       <option value="title">Sort: Title</option>
-      <option value="date">Sort: Date</option>
       <option value="status">Sort: Status</option>
       <option value="source">Sort: Source</option>
     </select>
   </div>
+
   <div id="list" class="grid"></div>
 
 <script>
@@ -296,15 +309,9 @@ async function load() {
       });
 
       items.sort((a,b)=>{
-        if (sortBy === 'date') {
-          const ax = a.date ? Date.parse(a.date) : 0;
-          const bx = b.date ? Date.parse(b.date) : 0;
-          return (bx - ax);
-        } else {
-          const ax=(a[sortBy]||'').toString().toLowerCase();
-          const bx=(b[sortBy]||'').toString().toLowerCase();
-          return ax.localeCompare(bx);
-        }
+        const ax=(a[sortBy]||'').toString().toLowerCase();
+        const bx=(b[sortBy]||'').toString().toLowerCase();
+        return ax.localeCompare(bx);
       });
 
       list.innerHTML = '';
@@ -313,12 +320,10 @@ async function load() {
         const status  = c.status || 'Open/Active';
         const headline = (c.headline || c.title || 'Case');
         const src = c.source || '';
-        const date = c.date ? new Date(c.date).toLocaleDateString() : '';
         const cref = c.case_ref ? `<span class="ref">Case ref: ${c.case_ref}</span>` : '';
-        const takeaway = (c.takeaway && c.takeaway.length)
-          ? `<div class="summary takeaway"><strong>Key takeaway:</strong> ${c.takeaway}</div>`
+        const ktInline = (c.takeaway && c.takeaway.length)
+          ? `<div class="summary"><b>Key takeaway:</b> ${c.takeaway}</div>`
           : '';
-        const outcomePill = c.outcome && c.outcome !== 'Update' ? `<span class="pill2">${c.outcome}</span>` : '';
 
         const card = document.createElement('div');
         card.className = 'card';
@@ -326,13 +331,12 @@ async function load() {
           <div class="title">${headline}</div>
           <div class="meta">
             <span class="pill">${status}</span>
-            ${outcomePill}
+            ${c.outcome && c.outcome !== 'Update' ? `<span class="pill2">${c.outcome}</span>` : ''}
             <span>${src}</span>
-            <span>${date}</span>
             ${cref}
           </div>
-          <div class="summary">${c.summary || 'No summary available.'}</div>
-          ${takeaway}
+          <div class="summary">${c.summary || '<b>Summaries:</b> No summary available.'}</div>
+          ${ktInline}
           <div class="footer">
             <span></span>
             <a class="linkbtn" href="${url}" target="_blank" rel="noopener">View source →</a>
@@ -363,15 +367,17 @@ load();
 
 def ensure_docs():
     os.makedirs(DOCS_DIR, exist_ok=True)
-    # Ensure GitHub Pages builds from /docs without Jekyll
     with open(os.path.join(DOCS_DIR, ".nojekyll"), "w", encoding="utf-8") as f:
         f.write("")
     with open(os.path.join(DOCS_DIR, "index.html"), "w", encoding="utf-8") as f:
         f.write(INDEX_HTML)
 
 def run():
-    print("[tracker] scraping four public trackers", flush=True)
-    items = gather_from_sources()
+    print("[tracker] scraping four public trackers (no CourtListener)", flush=True)
+    items = []
+    for src in SOURCES:
+        items.extend(extract_cases_from_source(src["name"], src["url"]))
+    items = dedupe(items)
     ensure_docs()
     with open(JSON_PATH, "w", encoding="utf-8") as f:
         json.dump(items, f, ensure_ascii=False, indent=2)
