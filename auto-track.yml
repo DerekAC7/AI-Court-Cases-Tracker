@@ -2,8 +2,8 @@ name: AI Court Cases Tracker
 
 on:
   schedule:
-    - cron: '0 14 * * 1'   # Every Monday 14:00 UTC (adjust as you like)
-  workflow_dispatch:        # Allow manual runs from the Actions tab
+    - cron: '0 14 * * 1'    # Mondays 14:00 UTC; change as you like
+  workflow_dispatch:         # Allow manual runs
 
 jobs:
   track-cases:
