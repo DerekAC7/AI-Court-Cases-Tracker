@@ -12,11 +12,29 @@ TOKEN = os.getenv("PERSONAL_ACCESS_TOKEN")  # mapped from secrets.PAT_TOKEN in t
 COMMON_LABELS = ["AI Training", "Court Case"]
 SOURCE_LABEL_PREFIX = "Source: "
 TIMEOUT = 30
-DOCS_DIR = "docs"           # GitHub Pages will serve from /docs on main
+DOCS_DIR = "docs"
 JSON_PATH = f"{DOCS_DIR}/cases.json"
 # =========================
 
 API_BASE = f"https://api.github.com/repos/{REPO_OWNER}/{REPO_NAME}"
+
+# --------- CASE DETECTION (tighten to avoid junk) ----------
+CASE_PATTERNS = [
+    r"\b[A-Z][\w'.-]{1,40}\s+v\.\s+[A-Z][\w'.-]{1,40}\b",  # Foo v. Bar
+    r"\b[A-Z][\w'.-]{1,40}\s+vs\.?\s+[A-Z][\w'.-]{1,40}\b", # Foo vs. Bar
+    r"\bIn\s+re\s+[A-Z][\w'.-]+",                           # In re Something
+    r"\bU\.S\.\s+v\.\s+[A-Z][\w'.-]{1,40}\b",               # U.S. v. X
+]
+CASE_REGEX = re.compile("|".join(CASE_PATTERNS))
+
+# Common “non-case” noise we’ll drop if detected in titles
+JUNK_TITLE_PHRASES = [
+    "litigation tracker", "case updates", "current edition", "disclaimer",
+    "artificial intelligence (ai)", "training & development",
+    "copyright",
+    "interactive entertainment", "retail", "philanthropic", "blockchain",
+    "mdr mayfair", "metaverse", "nfts", "cryptoassets"
+]
 
 # ---------- GitHub helpers ----------
 def gh_headers():
@@ -37,23 +55,19 @@ def ensure_labels(extra_labels):
             requests.post(f"{API_BASE}/labels", headers=gh_headers(), json={"name": name}, timeout=TIMEOUT)
 
 def list_existing_issue_keys():
-    """
-    De-dup GitHub issues using a stored hash key in the body: <!-- KEY: ... -->
-    """
     keys = set()
     for state in ("open", "closed"):
         page = 1
         while True:
-            r = requests.get(f"{API_BASE}/issues",
-                             headers=gh_headers(),
-                             params={"state": state, "per_page": 100, "page": page},
-                             timeout=TIMEOUT)
+            r = requests.get(
+                f"{API_BASE}/issues", headers=gh_headers(),
+                params={"state": state, "per_page": 100, "page": page}, timeout=TIMEOUT
+            )
             r.raise_for_status()
             items = r.json()
-            if not items:
-                break
+            if not items: break
             for it in items:
-                if "pull_request" in it:
+                if "pull_request" in it:  # skip PRs
                     continue
                 body = it.get("body") or ""
                 m = re.search(r"<!--\s*KEY:\s*([a-f0-9]{32})\s*-->", body, flags=re.I)
@@ -69,134 +83,103 @@ def create_issue(title, body, labels):
         raise RuntimeError(f"Issue create failed: {r.status_code} {r.text}")
     print(f"Created: {title}")
 
-# ---------- HTTP / parsing ----------
+# ---------- utils ----------
 def get_html(url):
     return requests.get(url, timeout=TIMEOUT).text
 
 def clean(text):
     return re.sub(r"\s+", " ", (text or "").strip())
 
-def extract_entries_generic(soup):
-    """
-    Fallback extractor if a site changes layout.
-    Returns list of dicts with keys: title, date, summary
-    """
-    entries = []
-    blocks = []
-    for sel in ["article", "li", "div.card", "div.item", "div.teaser", "div.news-item", "div.post", "div.result"]:
-        found = soup.select(sel)
-        if found:
-            blocks.extend(found)
-    seen = set()
-    for b in blocks:
-        title_el = b.select_one("h1, h2, h3, a[title], a")
-        date_el  = b.select_one("time, .date, .news-date, span.date")
-        sum_el   = b.select_one("p, .summary, .teaser, .excerpt")
-        title = clean(title_el.get_text() if title_el else "")
-        if not title or title in seen:
-            continue
-        seen.add(title)
-        # keep likely case or strongly AI/IP relevant
-        looks_like_case = (" v. " in title) or (" v." in title) or (" vs " in title.lower())
-        if not looks_like_case:
-            if not any(k in title.lower() for k in ["ai", "copyright", "midjourney", "openai", "anthropic", "meta", "suno", "udio", "stability"]):
-                continue
-        entries.append({
-            "title": title,
-            "date": clean(date_el.get_text() if date_el else ""),
-            "summary": clean(sum_el.get_text() if sum_el else "")
-        })
-    return entries
+def is_probable_case(title):
+    t = title.lower()
+    if any(p in t for p in JUNK_TITLE_PHRASES):
+        return False
+    return bool(CASE_REGEX.search(title))
 
 def infer_outcome_short(text):
-    m = re.search(r"(fair use|summary judgment|dismiss(ed)?|prelim(inary)? injunction|injunction|settle(d)?|class action|stay(ed)?|remand)", text, re.I)
+    m = re.search(
+        r"(fair use|summary judgment|partial summary judgment|dismiss(ed)?|prelim(inary)? injunction|injunction|"
+        r"settle(d)?|class action|certification|md(l)?|transfer|stay(ed)?|remand|contempt|damages)",
+        text, re.I
+    )
     return clean(m.group(0)).capitalize() if m else "Update"
 
-# ---------- Source scrapers ----------
-def scrape_mckool():
-    url = "https://www.mckoolsmith.com/newsroom-ailitigation"
-    soup = BeautifulSoup(get_html(url), "html.parser")
-    items = extract_entries_generic(soup)
-    for it in items:
-        it["source"] = "McKool Smith"
-        it["url"] = url
-        it["outcome"] = infer_outcome_short(f"{it['title']} {it['summary']}")
-    return items
-
-def scrape_bakerhostetler():
-    url = "https://www.bakerlaw.com/services/artificial-intelligence-ai/case-tracker-artificial-intelligence-copyrights-and-class-actions/"
-    soup = BeautifulSoup(get_html(url), "html.parser")
-    items = extract_entries_generic(soup)
-    for it in items:
-        it["source"] = "BakerHostetler"
-        it["url"] = url
-        it["outcome"] = infer_outcome_short(f"{it['title']} {it['summary']}")
-    return items
-
-def scrape_wired():
-    url = "https://www.wired.com/story/ai-copyright-case-tracker/"
-    soup = BeautifulSoup(get_html(url), "html.parser")
-    items = extract_entries_generic(soup)
-    for it in items:
-        it["source"] = "WIRED"
-        it["url"] = url
-        it["outcome"] = infer_outcome_short(f"{it['title']} {it['summary']}")
-    return items
-
-def scrape_mishcon():
-    url = "https://www.mishcon.com/generative-ai-intellectual-property-cases-and-policy-tracker"
-    soup = BeautifulSoup(get_html(url), "html.parser")
-    items = extract_entries_generic(soup)
-    for it in items:
-        it["source"] = "Mishcon de Reya LLP"
-        it["url"] = url
-        it["outcome"] = infer_outcome_short(f"{it['title']} {it['summary']}")
-    return items
-
-def scrape_cms():
-    url = "https://cms.law/en/int/publication/artificial-intelligence-and-copyright-case-tracker"
-    soup = BeautifulSoup(get_html(url), "html.parser")
-    items = extract_entries_generic(soup)
-    for it in items:
-        it["source"] = "CMS Law"
-        it["url"] = url
-        it["outcome"] = infer_outcome_short(f"{it['title']} {it['summary']}")
-    return items
-
-SOURCES = [
-    # Priority order for de-dup (first source wins)
-    scrape_mckool,
-    scrape_bakerhostetler,
-    scrape_wired,
-    scrape_mishcon,
-    scrape_cms,
-]
-
-# ---------- De-duplication ----------
 def normalize_case_key(title):
     t = title.lower()
-    # normalize common variants of "v." / "vs"
     t = re.sub(r"\bvs\.?\b", "v.", t)
     t = re.sub(r"\s+v\.\s+", " v. ", t)
-    # collapse whitespace & punctuation noise
-    t = re.sub(r"[\u2013\u2014\-:;,\.\(\)\[\]]", " ", t)
+    t = re.sub(r"[\u2013\u2014\-:;,\.\(\)\[\]“”\"']", " ", t)
     t = re.sub(r"\s+", " ", t).strip()
-    # only keep up to the first sentence-ish for robustness
-    t = t.split(" – ")[0].split(" — ")[0].split(". ")[0]
     return t
 
 def unique_cases(entries):
     seen = set()
-    unique = []
+    out = []
     for e in entries:
         key = normalize_case_key(e["title"])
-        if key in seen:
+        if key in seen: 
             continue
         seen.add(key)
-        unique.append(e)
-    return unique
+        out.append(e)
+    return out
 
-# ---------- Issue body / site output ----------
+# ---------- generic extractor (with strict filtering) ----------
+def extract_entries_generic(soup, url, source_name):
+    entries = []
+    blocks = []
+    for sel in ["article", "li", "div.card", "div.item", "div.teaser", "div.news-item", "div.post", "div.result", "section"]:
+        blocks.extend(soup.select(sel))
+    for b in blocks:
+        title_el = b.select_one("h1, h2, h3, a[title], a")
+        if not title_el:
+            continue
+        title = clean(title_el.get_text())
+        if not title or not is_probable_case(title):
+            continue
+        # prefer nearby summary/date
+        date_el = b.select_one("time, .date, .news-date, span.date")
+        sum_el  = b.select_one("p, .summary, .teaser, .excerpt, div, span")
+        date = clean(date_el.get_text() if date_el else "")
+        summary = clean(sum_el.get_text() if sum_el else "")
+        entries.append({
+            "title": title,
+            "date": date,
+            "summary": summary,
+            "source": source_name,
+            "url": url,
+            "outcome": infer_outcome_short(f"{title} {summary}")
+        })
+    return entries
+
+# ---------- per-source scrapers (fast to maintain) ----------
+def scrape_mckool():
+    url = "https://www.mckoolsmith.com/newsroom-ailitigation"
+    soup = BeautifulSoup(get_html(url), "html.parser")
+    return extract_entries_generic(soup, url, "McKool Smith")
+
+def scrape_bakerhostetler():
+    url = "https://www.bakerlaw.com/services/artificial-intelligence-ai/case-tracker-artificial-intelligence-copyrights-and-class-actions/"
+    soup = BeautifulSoup(get_html(url), "html.parser")
+    return extract_entries_generic(soup, url, "BakerHostetler")
+
+def scrape_wired():
+    url = "https://www.wired.com/story/ai-copyright-case-tracker/"
+    soup = BeautifulSoup(get_html(url), "html.parser")
+    return extract_entries_generic(soup, url, "WIRED")
+
+def scrape_mishcon():
+    url = "https://www.mishcon.com/generative-ai-intellectual-property-cases-and-policy-tracker"
+    soup = BeautifulSoup(get_html(url), "html.parser")
+    return extract_entries_generic(soup, url, "Mishcon de Reya LLP")
+
+def scrape_cms():
+    url = "https://cms.law/en/int/publication/artificial-intelligence-and-copyright-case-tracker"
+    soup = BeautifulSoup(get_html(url), "html.parser")
+    return extract_entries_generic(soup, url, "CMS Law")
+
+SOURCES = [scrape_mckool, scrape_bakerhostetler, scrape_wired, scrape_mishcon, scrape_cms]  # priority order
+
+# ---------- issue body + site writer ----------
 def make_issue_body(entry, key_hex):
     headline = entry["title"]
     date_line = f"**Date/Update**: {entry.get('date') or 'N/A'}"
@@ -205,6 +188,7 @@ def make_issue_body(entry, key_hex):
     url = entry.get("url", "")
     summary = entry.get("summary") or "Summary coming soon."
 
+    # Match your template: 1-line headline, then tight para, then Key takeaway.
     body = f"""{headline}
 
 {date_line}
@@ -213,83 +197,22 @@ def make_issue_body(entry, key_hex):
 
 **Summary:** {summary}
 
-**Key takeaway:** _Add takeaway once confirmed._
-
+**Key takeaway:** Even where training might be fair use in some contexts, liability can still arise from acquisition/collection practices or market harm—track facts by case.
 <!-- KEY: {key_hex} -->
 """
     return body
 
-def ensure_docs_index_exists():
-    """
-    Create a very simple site if /docs/index.html doesn't exist.
-    """
+def ensure_docs_shell():
     os.makedirs(DOCS_DIR, exist_ok=True)
-    index_path = f"{DOCS_DIR}/index.html"
+    open(os.path.join(DOCS_DIR, ".nojekyll"), "a").close()  # disable Jekyll
+    index_path = os.path.join(DOCS_DIR, "index.html")
     if os.path.exists(index_path):
         return
-    html = """<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8"/>
-  <title>AI Court Cases Tracker</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <style>
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 24px; }
-    h1 { margin-bottom: 8px; }
-    .meta { color:#555; margin-bottom: 20px; }
-    .case { border: 1px solid #ddd; border-radius: 12px; padding: 14px; margin: 10px 0; }
-    .src { font-size: 12px; color:#666; }
-    .search { margin: 10px 0 20px; }
-    input[type="search"] { width: 100%; padding: 10px; font-size: 16px; }
-    .outcome { font-weight: 600; }
-  </style>
-</head>
-<body>
-  <h1>AI Court Cases Tracker</h1>
-  <div class="meta">Auto-generated from multiple public trackers. De-duplicated across sources.</div>
-  <div class="search">
-    <input id="q" type="search" placeholder="Filter by case name, outcome, source..."/>
-  </div>
-  <div id="list"></div>
-
-  <script>
-    async function load() {
-      const res = await fetch('cases.json', {cache:'no-store'});
-      const data = await res.json();
-      const list = document.getElementById('list');
-      const q = document.getElementById('q');
-
-      function render(filter='') {
-        const f = filter.toLowerCase();
-        list.innerHTML = '';
-        data.forEach(c => {
-          const hay = (c.title + ' ' + (c.outcome||'') + ' ' + (c.source||'') + ' ' + (c.summary||'')).toLowerCase();
-          if (f && !hay.includes(f)) return;
-          const el = document.createElement('div');
-          el.className = 'case';
-          el.innerHTML = `
-            <div class="src">${c.source} • ${c.date || 'N/A'}</div>
-            <div class="title"><strong>${c.title}</strong></div>
-            <div class="outcome">${c.outcome || 'Update'}</div>
-            <div class="summary">${c.summary || ''}</div>
-            <div class="src"><a href="${c.url}" target="_blank" rel="noopener">Source</a></div>
-          `;
-          list.appendChild(el);
-        });
-      }
-      q.addEventListener('input', (e)=>render(e.target.value));
-      render();
-    }
-    load();
-  </script>
-</body>
-</html>
-"""
     with open(index_path, "w", encoding="utf-8") as f:
-        f.write(html)
+        f.write(_INDEX_HTML)
 
 def run():
-    # 1) scrape all sources (tolerate per-source failures)
+    # scrape + filter
     all_entries = []
     for fn in SOURCES:
         try:
@@ -297,36 +220,127 @@ def run():
         except Exception as e:
             print(f"[WARN] {fn.__name__} failed: {e}")
 
-    # 2) de-duplicate across sources
+    # drop anything that slipped past filters
+    all_entries = [e for e in all_entries if is_probable_case(e["title"])]
+
+    # de-dup across sources (first source in SOURCES wins)
     deduped = unique_cases(all_entries)
 
-    # 3) labels & issues
+    # labels + issues
     source_labels = {SOURCE_LABEL_PREFIX + (e.get("source") or "Unknown") for e in deduped}
     ensure_labels(list(source_labels))
-    existing_issue_keys = list_existing_issue_keys()
+    existing = list_existing_issue_keys()
 
     created = 0
     for e in deduped:
-        # hash key based on normalized title + source kept for audit
         key_hex = hashlib.md5((normalize_case_key(e["title"]) + "|" + (e.get("source") or "")).encode("utf-8")).hexdigest()
-        if key_hex in existing_issue_keys:
+        if key_hex in existing:
             continue
-        labels = COMMON_LABELS + [SOURCE_LABEL_PREFIX + e.get("source", "Unknown")]
         body = make_issue_body(e, key_hex)
+        labels = COMMON_LABELS + [SOURCE_LABEL_PREFIX + e.get("source", "Unknown")]
         try:
             create_issue(e["title"], body, labels)
             created += 1
         except Exception as ex:
-            print(f"[ERROR] create issue for '{e['title']}' failed: {ex}")
+            print(f"[ERROR] issue create failed for '{e['title']}': {ex}")
 
     print(f"Issues created: {created}")
 
-    # 4) write website artifacts
-    ensure_docs_index_exists()
-    os.makedirs(DOCS_DIR, exist_ok=True)
+    # site output
+    ensure_docs_shell()
     with open(JSON_PATH, "w", encoding="utf-8") as f:
         json.dump(deduped, f, ensure_ascii=False, indent=2)
-    print(f"Wrote site data: {JSON_PATH} ({len(deduped)} cases)")
+    print(f"Wrote {JSON_PATH} with {len(deduped)} cases.")
+
+# ------------- CLEAN UI (cards) -------------
+_INDEX_HTML = """<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>AI Court Cases Tracker</title>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<style>
+  :root { --fg: #0f172a; --muted:#475569; --bg:#ffffff; --card:#f8fafc; --line:#e2e8f0; }
+  *{box-sizing:border-box}
+  body{font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; color:var(--fg); background:var(--bg); margin:24px;}
+  h1{margin:0 0 6px 0; font-size:28px; font-weight:750}
+  .sub{color:var(--muted); margin-bottom:16px}
+  .toolbar{display:flex; gap:12px; margin:10px 0 18px; flex-wrap:wrap}
+  input,select{padding:10px 12px; border:1px solid var(--line); border-radius:10px; font-size:14px}
+  .grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(320px,1fr)); gap:14px}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px; display:flex; flex-direction:column; gap:8px}
+  .title{font-weight:700}
+  .meta{font-size:12px; color:var(--muted)}
+  .outcome{font-weight:600}
+  .takeaway{border-top:1px dashed var(--line); padding-top:8px; font-size:14px}
+  a{color:#0ea5e9; text-decoration:none}
+  a:hover{text-decoration:underline}
+</style>
+</head>
+<body>
+  <h1>AI Court Cases Tracker</h1>
+  <div class="sub">De-duplicated case summaries across multiple public trackers. Updates via GitHub Actions.</div>
+  <div class="toolbar">
+    <input id="q" type="search" placeholder="Filter by case, court, outcome, source…"/>
+    <select id="sort">
+      <option value="title">Sort: Title</option>
+      <option value="date">Sort: Date</option>
+      <option value="source">Sort: Source</option>
+    </select>
+  </div>
+  <div id="list" class="grid"></div>
+
+<script>
+async function load() {
+  const res = await fetch('cases.json', {cache:'no-store'});
+  const data = await res.json();
+
+  const list = document.getElementById('list');
+  const q = document.getElementById('q');
+  const sortSel = document.getElementById('sort');
+
+  function render(filter='', sortBy='title') {
+    const f = filter.toLowerCase();
+    let items = data.filter(c => {
+      const hay = (c.title + ' ' + (c.outcome||'') + ' ' + (c.source||'') + ' ' + (c.summary||'') + ' ' + (c.date||'')).toLowerCase();
+      return !f || hay.includes(f);
+    });
+
+    items.sort((a,b)=>{
+      const A=(a[sortBy]||'').toString().toLowerCase();
+      const B=(b[sortBy]||'').toString().toLowerCase();
+      return A.localeCompare(B);
+    });
+
+    list.innerHTML = '';
+    items.forEach(c=>{
+      const el = document.createElement('div');
+      el.className = 'card';
+      const headline = c.title;  // already in "Foo v. Bar …" style
+      const summary = c.summary || 'Summary unavailable from source.';
+      const outcome = c.outcome || 'Update';
+      const date = c.date || 'N/A';
+      const src = c.source || 'Source';
+      const url = c.url || '#';
+      el.innerHTML = `
+        <div class="title">${headline}</div>
+        <div class="meta">${src} • ${date} • <span class="outcome">${outcome}</span> • <a href="${url}" target="_blank" rel="noopener">Source</a></div>
+        <div class="summary">${summary}</div>
+        <div class="takeaway"><strong>Key takeaway:</strong> Even where training may be argued as transformative, acquisition and market harm remain decisive issues. Track facts by case.</div>
+      `;
+      list.appendChild(el);
+    });
+  }
+
+  q.addEventListener('input', (e)=>render(e.target.value, sortSel.value));
+  sortSel.addEventListener('change', ()=>render(q.value, sortSel.value));
+  render();
+}
+load();
+</script>
+</body>
+</html>
+"""
 
 if __name__ == "__main__":
     run()
