@@ -1,0 +1,45 @@
+name: track-cases
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "23 14 * * *"   # daily at 14:23 UTC (07:23 PT)
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -V
+          python -m pip install --upgrade pip
+          pip install requests beautifulsoup4
+
+      - name: Run tracker
+        env:
+          PERSONAL_ACCESS_TOKEN: ${{ secrets.PAT_TOKEN }}
+        run: |
+          python case_tracker.py
+
+      - name: Commit website changes (docs/)
+        run: |
+          if [[ -n "$(git status --porcelain docs/)" ]]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add docs/
+            git commit -m "Update site data (cases.json/index.html)"
+            git push
+          else
+            echo "No changes in docs/ to commit."
+          fi
