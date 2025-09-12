@@ -26,6 +26,19 @@ jobs:
           python -m pip install --upgrade pip
           pip install requests
 
+      # ✅ Preflight: prove the secret is present (without leaking it)
+      - name: Check CL_API_TOKEN is present
+        env:
+          CL_API_TOKEN: ${{ secrets.CL_API_TOKEN }}
+        run: |
+          if [ -z "${CL_API_TOKEN}" ]; then
+            echo "ERROR: CL_API_TOKEN is not being passed into the job."
+            echo "Fix in repo Settings → Secrets and variables → Actions → New repository secret (CL_API_TOKEN)."
+            exit 1
+          else
+            echo "OK: CL_API_TOKEN is set (value is masked)."
+          fi
+
       - name: Run tracker
         env:
           CL_API_TOKEN: ${{ secrets.CL_API_TOKEN }}
