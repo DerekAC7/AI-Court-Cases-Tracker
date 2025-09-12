@@ -2,28 +2,29 @@ name: AI Court Cases Tracker
 
 on:
   schedule:
-    - cron: '0 9 * * 1'  # Runs every Monday at 9 AM UTC
-  workflow_dispatch:  # Allows manual triggering of the workflow
+    - cron: '0 14 * * 1'    # Mondays 14:00 UTC; change as you like
+  workflow_dispatch:         # Allow manual runs
 
 jobs:
   track-cases:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v2
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v5
         with:
           python-version: '3.x'
 
       - name: Install dependencies
         run: |
-          pip install requests beautifulsoup4 github
+          python -m pip install --upgrade pip
+          pip install requests beautifulsoup4
 
-      - name: Run case tracker script
-        run: |
-          python case_tracker.py  # Run your Python script directly from GitHub
+      - name: Run tracker
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # GitHub token is automatically provided in Actions
+          PERSONAL_ACCESS_TOKEN: ${{ secrets.PAT_TOKEN }}
+        run: |
+          python case_tracker.py
