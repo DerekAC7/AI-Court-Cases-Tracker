@@ -1,4 +1,4 @@
-name: track-cases
+name: AI Court Cases Tracker
 
 on:
   workflow_dispatch:
@@ -11,6 +11,8 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 25   # hard cap to prevent infinite runs
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -26,25 +28,29 @@ jobs:
           python -m pip install --upgrade pip
           pip install requests
 
-      # ✅ Preflight: prove the secret is present (without leaking it)
+      # ✅ Preflight check: confirms CL_API_TOKEN is present
       - name: Check CL_API_TOKEN is present
         env:
           CL_API_TOKEN: ${{ secrets.CL_API_TOKEN }}
         run: |
           if [ -z "${CL_API_TOKEN}" ]; then
             echo "ERROR: CL_API_TOKEN is not being passed into the job."
-            echo "Fix in repo Settings → Secrets and variables → Actions → New repository secret (CL_API_TOKEN)."
+            echo "Fix: Repo → Settings → Secrets and variables → Actions → New repository secret → Name: CL_API_TOKEN"
             exit 1
           else
             echo "OK: CL_API_TOKEN is set (value is masked)."
           fi
 
-      - name: Run tracker
+      # ✅ Unbuffered run so you see logs as they happen
+      - name: Run tracker (unbuffered)
         env:
           CL_API_TOKEN: ${{ secrets.CL_API_TOKEN }}
+          PYTHONUNBUFFERED: "1"
         run: |
-          python case_tracker.py
+          set -x
+          python -u case_tracker.py
 
+      # ✅ Commit docs/ if there are changes
       - name: Commit website changes (docs/)
         run: |
           if [[ -n "$(git status --porcelain docs/)" ]]; then
