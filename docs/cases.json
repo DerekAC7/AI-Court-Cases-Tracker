@@ -1,746 +1,79 @@
 [
   {
-    "title": "Reuters v. Ross",
-    "date": "",
-    "summary": "On February 11th, in a case that comes tantalizingly close to deciding the issue of “fair use” in generative AI model training (with many taking the position that now that issue is firmly decided, as laid out below), ...",
-    "source": "McKool Smith",
-    "url": "https://www.mckoolsmith.com/newsroom-ailitigation-10",
-    "outcome": "Fair use"
-  },
-  {
-    "title": "Times v. Microsoft",
-    "date": "",
-    "summary": "Background: Getty Images filed this lawsuit against image generator Stability AI on February 2nd, 2023, accusing the company of infringing more than 12 million photographs, their associated captions and metadata, in b...",
-    "source": "McKool Smith",
-    "url": "https://www.mckoolsmith.com/newsroom-ailitigation-10",
-    "outcome": "Transfer"
-  },
-  {
-    "title": "Times v. OpenAI",
-    "date": "",
-    "summary": "In a case similar to The New York Times v. OpenAI, Canada’s major news organizations sued OpenAI for copyright infringement on November 28th. Filed in Ontario’s Superior Court of Justice, the news organizations are se...",
-    "source": "McKool Smith",
-    "url": "https://www.mckoolsmith.com/newsroom-ailitigation-10",
-    "outcome": "Update"
-  },
-  {
     "title": "In re OpenAI",
+    "headline": "In re OpenAI",
     "date": "",
-    "summary": "Background: This case is similar to the “In re OpenAI ChatGPT Litigation” class action below against OpenAI. In this case, Kadrey, comedian Silverman, and others sued Mark Zuckerberg’s Meta on July 7, 2023 in the U.S....",
-    "source": "McKool Smith",
-    "url": "https://www.mckoolsmith.com/newsroom-ailitigation-6",
-    "outcome": "Class action"
-  },
-  {
-    "title": "Guild v. OpenAI",
-    "date": "",
-    "summary": "Current Status: No major substantive developments this past week since OpenAI notified the Court of its multi-district litigation (MDL) application. On December 6th, the parties jointly filed a letter brief concerning...",
-    "source": "McKool Smith",
-    "url": "https://www.mckoolsmith.com/newsroom-ailitigation-3",
-    "outcome": "Mdl"
-  },
-  {
-    "title": "SEC vs. Bank",
-    "date": "",
-    "summary": "\"SEC vs. Bank of America: Back to the Drawing Board\"American Bar Association Criminal Litigation Newsletter, Winter 2010",
-    "source": "McKool Smith",
-    "url": "https://www.mckoolsmith.com/practices-Internal_Investigations",
-    "outcome": "Update"
-  },
-  {
-    "title": "States vs. Textron",
-    "date": "",
-    "summary": "\"United States vs. Textron: Can You Secure Work Product Protection Despite Third Party Disclosure?\"American Bar Association, Criminal Litigation, Summer 2009",
-    "source": "McKool Smith",
-    "url": "https://www.mckoolsmith.com/practices-Internal_Investigations",
-    "outcome": "Update"
-  },
-  {
-    "title": "AL. v. OPENAI",
-    "date": "",
-    "summary": "1. TREMBLAY, ET AL. v. OPENAI, INC., ET AL., C.A. No. 3:23−03223",
-    "source": "McKool Smith",
-    "url": "https://www.mckoolsmith.com/newsroom-ailitigation-19",
-    "outcome": "Update"
-  },
-  {
-    "title": "MILLETTE v. OPENAI",
-    "date": "",
-    "summary": "4. MILLETTE v. OPENAI, INC., ET AL., C.A. No. 5:24−04710Southern District of New York",
-    "source": "McKool Smith",
-    "url": "https://www.mckoolsmith.com/newsroom-ailitigation-19",
-    "outcome": "Update"
-  },
-  {
-    "title": "COMPANY v. MICROSOFT",
-    "date": "",
-    "summary": "7. THE NEW YORK TIMES COMPANY v. MICROSOFT CORPORATION, ET AL.,C.A. No. 1:23−11195",
-    "source": "McKool Smith",
-    "url": "https://www.mckoolsmith.com/newsroom-ailitigation-19",
-    "outcome": "Update"
-  },
-  {
-    "title": "AL. v. MICROSOFT",
-    "date": "",
-    "summary": "8. BASBANES, ET AL. v. MICROSOFT CORPORATION, ET AL., C.A. No. 1:24−00084",
-    "source": "McKool Smith",
-    "url": "https://www.mckoolsmith.com/newsroom-ailitigation-19",
-    "outcome": "Update"
-  },
-  {
-    "title": "INC. v. OPENAI",
-    "date": "",
-    "summary": "10. THE INTERCEPT MEDIA, INC. v. OPENAI, INC., ET AL., C.A. No. 1:24−01515",
-    "source": "McKool Smith",
-    "url": "https://www.mckoolsmith.com/newsroom-ailitigation-19",
-    "outcome": "Update"
-  },
-  {
-    "title": "Recordings v. Uncharted",
-    "date": "",
-    "summary": "Current Status: No major substantive developments this past week. As we noted previously, Defendants previously requested deposit copies of the works which Plaintiffs allege have been infringed, which the court in UMG...",
-    "source": "McKool Smith",
-    "url": "https://www.mckoolsmith.com/newsroom-ailitigation-19",
-    "outcome": "Update"
-  },
-  {
-    "title": "Alternet v. OpenAI",
-    "date": "",
-    "summary": "6. Raw Story Media & Alternet v. OpenAI",
-    "source": "McKool Smith",
-    "url": "https://www.mckoolsmith.com/newsroom-ailitigation-19",
-    "outcome": "Update"
-  },
-  {
-    "title": "Recordings v. Suno",
-    "date": "",
-    "summary": "8. UMG Recordings v. Suno",
-    "source": "McKool Smith",
-    "url": "https://www.mckoolsmith.com/newsroom-ailitigation-19",
-    "outcome": "Update"
-  },
-  {
-    "title": "Inc. v. News",
-    "date": "",
-    "summary": "11. Brave Software, Inc. v. News Corp., et al.",
-    "source": "McKool Smith",
-    "url": "https://www.mckoolsmith.com/newsroom-ailitigation-19",
-    "outcome": "Update"
-  },
-  {
-    "title": "Andersen v. Stability",
-    "date": "",
-    "summary": "12. Sarah Andersen v. Stability AI",
-    "source": "McKool Smith",
-    "url": "https://www.mckoolsmith.com/newsroom-ailitigation-19",
-    "outcome": "Update"
-  },
-  {
-    "title": "Images v. Midjourney",
-    "date": "",
-    "summary": "13. Getty Images v. Midjourney and Stability AI",
-    "source": "McKool Smith",
-    "url": "https://www.mckoolsmith.com/newsroom-ailitigation-19",
-    "outcome": "Update"
-  },
-  {
-    "title": "Media v. OpenAI",
-    "date": "",
-    "summary": "14. The Intercept Media v. OpenAI",
-    "source": "McKool Smith",
-    "url": "https://www.mckoolsmith.com/newsroom-ailitigation-19",
-    "outcome": "Update"
-  },
-  {
-    "title": "Reporting v. OpenAI",
-    "date": "",
-    "summary": "15. The Center for Investigative Reporting v. OpenAI",
-    "source": "McKool Smith",
-    "url": "https://www.mckoolsmith.com/newsroom-ailitigation-19",
-    "outcome": "Update"
-  },
-  {
-    "title": "Companies v. OpenAI",
-    "date": "",
-    "summary": "17. INTERNATIONAL CASE TRACKED: Canadian News Media Companies v. OpenAI",
-    "source": "McKool Smith",
-    "url": "https://www.mckoolsmith.com/newsroom-ailitigation-19",
-    "outcome": "Update"
-  },
-  {
-    "title": "GEMA v. OpenAI",
-    "date": "",
-    "summary": "18. INTERNATIONAL CASE TRACKED: GEMA v. OpenAI",
-    "source": "McKool Smith",
-    "url": "https://www.mckoolsmith.com/newsroom-ailitigation-19",
-    "outcome": "Update"
-  },
-  {
-    "title": "DENIAL v. OPENAI",
-    "date": "",
-    "summary": "DENIAL v. OPENAI, INC, MICROSOFT CORPORATION",
-    "source": "McKool Smith",
-    "url": "https://www.mckoolsmith.com/newsroom-ailitigation-35",
-    "outcome": "Update"
-  },
-  {
-    "title": "Trust v. Greenstone",
-    "date": "",
-    "summary": "Maxus Liquidating Trust v. Greenstone Assurance, Ltd. Representation of bankruptcy trust of former policyholder, in Federal Court, seeking recovery of over $500 million in damages for historic liabilities assumed by c...",
-    "source": "McKool Smith",
-    "url": "https://www.mckoolsmith.com/practices-Insurance_Recovery_Litigation",
-    "outcome": "Damages"
-  },
-  {
-    "title": "Technologies v. AIG",
-    "date": "",
-    "summary": "SS&C Technologies v. AIG. Represented SS&C in securing a summary judgment ruling ordering that insurer must pay full amount of settlement of underlying litigation on professional liability policy, concerning a multimi...",
-    "source": "McKool Smith",
-    "url": "https://www.mckoolsmith.com/practices-Insurance_Recovery_Litigation",
-    "outcome": "Summary judgment"
-  },
-  {
-    "title": "L.P. v. Twin",
-    "date": "",
-    "summary": "Energy Transfer Equity, L.P. v. Twin City Fire Ins. Co. Represent Energy Transfer Partners in coverage suit against 17 insurers in Delaware state court arising out of stockholder lawsuit. Recently defeated two motions...",
-    "source": "McKool Smith",
-    "url": "https://www.mckoolsmith.com/practices-Insurance_Recovery_Litigation",
-    "outcome": "Transfer"
-  },
-  {
-    "title": "Corp. v. Aetna",
-    "date": "",
-    "summary": "Givaudan Fragrances Corp. v. Aetna Casualty & Surety Co. Represented insured in environmental coverage case involving historic environmental liabilities which, after years of litigation and appeals, settled favorably ...",
-    "source": "McKool Smith",
-    "url": "https://www.mckoolsmith.com/practices-Insurance_Recovery_Litigation",
-    "outcome": "Settled"
-  },
-  {
-    "title": "LLC v. Underwriters",
-    "date": "",
-    "summary": "Taylor Energy Company LLC v. Underwriters at Lloyd’s. Served as lead counsel for policyholder, obtaining summary judgment on coverage under an energy package policy for offshore environmental liabilities. Obtained fir...",
-    "source": "McKool Smith",
-    "url": "https://www.mckoolsmith.com/practices-Insurance_Recovery_Litigation",
-    "outcome": "Summary judgment"
-  },
-  {
-    "title": "America v. Travelers",
-    "date": "",
-    "summary": "CNH America v. Travelers Indemnity. Represented former corporate parent of plaintiff in third party indemnity litigation brought by an insurer under a global settlement agreement. Obtained favorable settlement for cli...",
-    "source": "McKool Smith",
-    "url": "https://www.mckoolsmith.com/practices-Insurance_Recovery_Litigation",
-    "outcome": "Settle"
-  },
-  {
-    "title": "Corporation v. OneBeacon",
-    "date": "",
-    "summary": "Celanese Corporation v. OneBeacon Americas Insurance Co. Served as trial counsel for policyholder seeking compliance with coverage-in-place agreements. Unanimous verdict for client found breach of contract and bad fai...",
-    "source": "McKool Smith",
-    "url": "https://www.mckoolsmith.com/practices-Insurance_Recovery_Litigation",
-    "outcome": "Trial"
-  },
-  {
-    "title": "Co. v. Celanese",
-    "date": "",
-    "summary": "OneBeacon America Insurance Co. v. Celanese Corporation. Served as lead trial and appellate counsel in suit brought by insurer to avoid all insuring obligations. Trial court judgment entered in favor of client in exce...",
-    "source": "McKool Smith",
-    "url": "https://www.mckoolsmith.com/practices-Insurance_Recovery_Litigation",
-    "outcome": "Trial"
-  },
-  {
-    "title": "Company v. London",
-    "date": "",
-    "summary": "Southern Natural Gas Company v. London Market Insurers. Served as lead trial counsel for policyholder seeking coverage for historic environmental liabilities; obtained two unanimous jury verdicts in favor of coverage,...",
-    "source": "McKool Smith",
-    "url": "https://www.mckoolsmith.com/practices-Insurance_Recovery_Litigation",
-    "outcome": "Trial"
-  },
-  {
-    "title": "Co. v. California",
-    "date": "",
-    "summary": "Kern County Land Co. v. California Union Ins. Co. Served as lead trial counsel in three trials for policyholder in “global” coverage case for historic environmental liabilities on seven lines of coverage, against over...",
-    "source": "McKool Smith",
-    "url": "https://www.mckoolsmith.com/practices-Insurance_Recovery_Litigation",
-    "outcome": "Trial"
-  },
-  {
-    "title": "Healthcare v. AIG",
-    "date": "",
-    "summary": "Law360 reports on Insurance Ruling for McKool Smith client Conduent State Healthcare v. AIG Speciality Insurance Co.08.30.2019",
-    "source": "McKool Smith",
-    "url": "https://www.mckoolsmith.com/practices-Insurance_Recovery_Litigation",
-    "outcome": "Update"
-  },
-  {
-    "title": "L.P. v. Citigroup",
-    "date": "",
-    "summary": "OCM Opportunities Fund III, L.P. v. Citigroup, Inc., et al.; Pacific Investment Management Co. LLC v. Citigroup, Inc. Pursued two actions in California state court against a number of Enron’s relationship banks for mo...",
-    "source": "McKool Smith",
-    "url": "https://www.mckoolsmith.com/practices-Financial_Litigation",
-    "outcome": "Update"
-  },
-  {
-    "title": "MTA v. Lazard",
-    "date": "",
-    "summary": "Los Angeles MTA v. Lazard Freres. Pursued claims on behalf of the Los Angeles Metropolitan Transportation Authority against Lazard Freres, a Wall Street investment bank, for breach of fiduciary duty and violations of ...",
-    "source": "McKool Smith",
-    "url": "https://www.mckoolsmith.com/practices-Financial_Litigation",
-    "outcome": "Update"
-  },
-  {
-    "title": "Partners v. Gleacher",
-    "date": "",
-    "summary": "Farallon Capital Partners v. Gleacher & Co., Inc., et al. Represented Farallon Capital Partners and Oaktree Capital Management in prosecuting securities fraud claims relating to our clients’ purchase of more than $30 ...",
-    "source": "McKool Smith",
-    "url": "https://www.mckoolsmith.com/practices-Financial_Litigation",
-    "outcome": "Update"
-  },
-  {
-    "title": "Vocalife v. Amazon",
-    "date": "",
-    "summary": "Law360 reports Chief U.S. District Judge Rodney Gilstrap denies Amazon's requested transfer and the case of McKool Smith client Vocalife v. Amazon will remain in the EDTX12.03.2019",
-    "source": "McKool Smith",
-    "url": "https://www.mckoolsmith.com/practices-Patent_Litigation",
-    "outcome": "Transfer"
-  },
-  {
-    "title": "Bartz v. Anthropic",
-    "date": "",
-    "summary": "AI Infringement Case Updates: July 28, 202507.28.20251. Bartz v. Anthropic: Major Victory for Plaintiffs Current Status: Judge William Alsup recently granted class certification for pirated books. Alsup ruled that ...",
-    "source": "McKool Smith",
-    "url": "https://www.mckoolsmith.com/newsroom-ailitigation",
-    "outcome": "Certification"
-  },
-  {
-    "title": "Universal v. Midjourney",
-    "date": "",
-    "summary": "AI Infringement Case Updates: June 23, 202506.23.20251. Disney & Universal v. Midjourney Background: A couple weeks ago, Disney and Universal filed suit for copyright infringement against Midjourney, an AI image ...",
-    "source": "McKool Smith",
-    "url": "https://www.mckoolsmith.com/newsroom-ailitigation",
-    "outcome": "Update"
-  },
-  {
-    "title": "Reddit v. Anthropic",
-    "date": "",
-    "summary": "AI Infringement Case Updates: June 16, 202506.16.20251. NEW CASE: Reddit v. Anthropic Background: Another big case joins the Tracker! Reddit, which has an ongoing generative AI licensing program, files state court cla...",
-    "source": "McKool Smith",
-    "url": "https://www.mckoolsmith.com/newsroom-ailitigation",
-    "outcome": "Update"
-  },
-  {
-    "title": "Texas v. Meta",
-    "date": "",
-    "summary": "Media Coverage: State of Texas v. Meta Platforms LLC., f/k/a Facebook, Inc.02.15.2022",
-    "source": "McKool Smith",
-    "url": "https://www.mckoolsmith.com/practices-Commercial_Litigation",
-    "outcome": "Update"
-  },
-  {
-    "title": "Kadrey v. Meta",
-    "date": "",
-    "summary": "As we reported last week, plaintiffs submitted a notice of authority referencing the Motion to Dismiss order in Kadrey v. Meta Platforms, Inc.",
-    "source": "McKool Smith",
-    "url": "https://www.mckoolsmith.com/newsroom-ailitigation-15",
-    "outcome": "Dismiss"
-  },
-  {
-    "title": "Wyble v. Gulf",
-    "date": "",
-    "summary": "Wyble v. Gulf South. Defended Gulf South, an interstate natural gas pipeline, against a class of landowners seeking billions of dollars in repairs, and to have a court-appointed master take control of the pipeline sys...",
-    "source": "McKool Smith",
-    "url": "https://www.mckoolsmith.com/practices-Class_Action_Litigation",
-    "outcome": "Summary judgment"
-  },
-  {
-    "title": "Thaler v. Perlmutter",
-    "date": "",
-    "summary": "Dallas Principal Avery Williams was quoted in IPWatchdog's article, \"D.C. Circuit Upholds Human Authorship Requirement in Thaler v. Perlmutter.\" The article discusses ...",
-    "source": "McKool Smith",
-    "url": "https://www.mckoolsmith.com/newsroom-news",
-    "outcome": "Update"
-  },
-  {
-    "title": "Davis v. OpenAI",
-    "date": "",
-    "summary": "2. Ziff Davis v. OpenAI",
-    "source": "McKool Smith",
-    "url": "https://www.mckoolsmith.com/newsroom-ailitigation-21",
-    "outcome": "Update"
-  },
-  {
-    "title": "USA v. Greenlaw",
-    "date": "",
-    "summary": "McKool Smith Principal Charles Fowler authored an article on the U.S. Court of Appeals for the Fifth Circuit’s recent denial of a petition to rehear USA v. Greenlaw, which ...",
+    "summary": "Background: This case is similar to the “In re OpenAI ChatGPT Litigation” class action below against OpenAI. Dallas Principal Robert Manley will participate in a panel discussion, \"War Stories and Lessons Learned That Will Help You in Your Next Trial,\" along with Northern District ...",
     "source": "McKool Smith",
     "url": "https://www.mckoolsmith.com/newsroom",
-    "outcome": "Update"
-  },
-  {
-    "title": "Kirschner v. JPMorgan",
-    "date": "",
-    "summary": "On March 9th, the Second Circuit Court of Appeals heard oral arguments in Kirschner v. JPMorgan Chase Bank on a significant issue of first impression: whether the syndicated ...",
-    "source": "McKool Smith",
-    "url": "https://www.mckoolsmith.com/newsroom",
-    "outcome": "Update"
-  },
-  {
-    "title": "LLC v. Dali",
-    "date": "",
-    "summary": "Commenting on USPTO Director Kathi Vidal’s precedential Director review decision regarding Fintiv and compelling merits in the case CommScope Techs LLC v. Dali ...",
-    "source": "McKool Smith",
-    "url": "https://www.mckoolsmith.com/newsroom",
-    "outcome": "Update"
-  },
-  {
-    "title": "Manufacturing v. Neapco",
-    "date": "",
-    "summary": "Commenting for IPWatchdog on the Solicitor General’s long-awaited recommendation that the Supreme Court grant review in American Axle & Manufacturing v. Neapco ...",
-    "source": "McKool Smith",
-    "url": "https://www.mckoolsmith.com/newsroom",
-    "outcome": "Update"
-  },
-  {
-    "title": "LLC v. Unified",
-    "date": "",
-    "summary": "McKool Smith principal Scott Hejny was quoted in Law360 article that pointed out another flaw in the Patent Trial and Appeal Board. In the recent Mobility Workx LLC v. Unified ...",
-    "source": "McKool Smith",
-    "url": "https://www.mckoolsmith.com/newsroom",
-    "outcome": "Trial"
-  },
-  {
-    "title": "LLC v. Oracle",
-    "date": "",
-    "summary": "McKool Smith has submitted an amicus brief to the U.S. Supreme Court in Google LLC v. Oracle America, Inc. on behalf Arthur R. Miller, the world-renowned professor at NYU ...",
-    "source": "McKool Smith",
-    "url": "https://www.mckoolsmith.com/newsroom",
-    "outcome": "Update"
-  },
-  {
-    "title": "HTC v. Ericsson",
-    "date": "",
-    "summary": "On May 23, 2019, the court issued a declaratory judgment in the case of HTC v. Ericsson, No. 18-cv-00243, pending in the United States District Court for the Eastern District ...",
-    "source": "McKool Smith",
-    "url": "https://www.mckoolsmith.com/newsroom",
-    "outcome": "Update"
-  },
-  {
-    "title": "Commil v. Cisco",
-    "date": "",
-    "summary": "The Federal Circuit addressed this case following vacatur and remand from the Supreme Court for further consideration in light of Commil v. Cisco. The issue for the Federal ...",
-    "source": "McKool Smith",
-    "url": "https://www.mckoolsmith.com/newsroom",
-    "outcome": "Remand"
-  },
-  {
-    "title": "Inc. v. ComplementSoft",
-    "date": "",
-    "summary": "In SAS Institute, Inc. v. ComplementSoft, LLC (Fed. Cir. June 10, 2016), the Federal Circuit vacated and remanded a PTAB finding of patentability due to a changed claim ...",
-    "source": "McKool Smith",
-    "url": "https://www.mckoolsmith.com/newsroom",
-    "outcome": "Remand"
-  },
-  {
-    "title": "Inc. v. Sandoz",
-    "date": "",
-    "summary": "On remand from the Supreme Court to determine the correct construction of the claim term “virtual machine” in light of Teva Pharm. USA, Inc. v. Sandoz, Inc., 135 U.S. 831 ...",
-    "source": "McKool Smith",
-    "url": "https://www.mckoolsmith.com/newsroom",
-    "outcome": "Remand"
-  },
-  {
-    "title": "Merck v. Gnosis",
-    "date": "",
-    "summary": "In a companion case to Merck v. Gnosis, decided on the same day, South Alabama makes essentially the same arguments why the PTAB erred by finding that the claims at issue would ...",
-    "source": "McKool Smith",
-    "url": "https://www.mckoolsmith.com/newsroom",
-    "outcome": "Update"
-  },
-  {
-    "title": "LLC v. Medtronic",
-    "date": "",
-    "summary": "In a companion case to Atlas IP, LLC v. Medtronic, Inc., Atlas appealed the district court’s grant of summary judgment of non-infringement to Medtronic. Atlas contended ...",
-    "source": "McKool Smith",
-    "url": "https://www.mckoolsmith.com/newsroom",
-    "outcome": "Summary judgment"
-  },
-  {
-    "title": "Inc. v. ContentGuard",
-    "date": "",
-    "summary": "Apple, Inc. v. ContentGuard Holdings Inc., CBM2015-00046, PTAB Paper 12 (June 3, 2015)",
-    "source": "McKool Smith",
-    "url": "https://www.mckoolsmith.com/newsroom",
-    "outcome": "Update"
-  },
-  {
-    "title": "Corp. v. Proxyconn",
-    "date": "",
-    "summary": "Microsoft Corp. v. Proxyconn Inc., 2014-1542, -1543, 2015 U.S. App. LEXIS 10081 (Fed. Cir. June 16, 2015)",
-    "source": "McKool Smith",
-    "url": "https://www.mckoolsmith.com/newsroom",
-    "outcome": "Update"
-  },
-  {
-    "title": "LLC v. PPC",
-    "date": "",
-    "summary": "Corning Optical Communications RF, LLC v. PPC Broadband, Inc., IPR2014-00736, PTAB Paper 37 (April 6, 2015)",
-    "source": "McKool Smith",
-    "url": "https://www.mckoolsmith.com/newsroom",
-    "outcome": "Update"
-  },
-  {
-    "title": "Inc. v. Limelight",
-    "date": "",
-    "summary": "Akamai Techs., Inc. v. Limelight Networks, Inc., Case Nos. 2009-1372, 2009-1380, 2009-1416, and 2009-1417 (May 13, 2015); Opinion by: Linn, joined by Prost; dissent ...",
-    "source": "McKool Smith",
-    "url": "https://www.mckoolsmith.com/newsroom",
-    "outcome": "Update"
-  },
-  {
-    "title": "Inc. v. Good",
-    "date": "",
-    "summary": "VMware Inc. v. Good Technology Software Inc., IPR2015-00027, 00030, and 00031 PTAB Paper 11 (’027 case) (March 6, 2015) (McKool Smith represents Good Technology)",
-    "source": "McKool Smith",
-    "url": "https://www.mckoolsmith.com/newsroom",
-    "outcome": "Update"
-  },
-  {
-    "title": "Harman v. Trinity",
-    "date": "",
-    "summary": "McKool Smith’s co-counsel victory in U.S. ex rel. Joshua Harman v. Trinity Industries Inc. et al has been recognized in The National Law Journal’s recent listing of ...",
-    "source": "McKool Smith",
-    "url": "https://www.mckoolsmith.com/newsroom",
-    "outcome": "Update"
-  },
-  {
-    "title": "Inc. v. U.S",
-    "date": "",
-    "summary": "Since inter partes review became available, the PTAB has granted only two motions to amend patent claims—once in Int’l Flavors & Fragrances Inc. v. U.S. Dept. of ...",
-    "source": "McKool Smith",
-    "url": "https://www.mckoolsmith.com/newsroom",
-    "outcome": "Update"
-  },
-  {
-    "title": "Corp. v. CLS",
-    "date": "",
-    "summary": "Applying the Supreme Court’s more recent framework set forth in Alice Corp. v. CLS Bank Int’l, 573 U.S. __, 134 S. Ct. 2347 (2014), the court held that the claim of the ...",
-    "source": "McKool Smith",
-    "url": "https://www.mckoolsmith.com/newsroom",
-    "outcome": "Update"
-  },
-  {
-    "title": "STC.UNM v. Intel",
-    "date": "",
-    "summary": "The Federal Circuit Court of Appeals’ recent decision in STC.UNM v. Intel Corp. provides important guidance regarding involuntary joinder of patent co-owners in the ...",
-    "source": "McKool Smith",
-    "url": "https://www.mckoolsmith.com/newsroom",
-    "outcome": "Update"
-  },
-  {
-    "title": "Inc. v. Broudo",
-    "date": "",
-    "summary": "In 2005, the U.S. Supreme Court issues a seven page opinion that reshaped the world of securities litigation. In Dura Pharmaceuticals, Inc. v. Broudo, the Supreme Court ...",
-    "source": "McKool Smith",
-    "url": "https://www.mckoolsmith.com/newsroom",
-    "outcome": "Update"
-  },
-  {
-    "title": "Apple v. Qualcomm",
-    "date": "",
-    "summary": "NewsDoug Cawley Discusses Key Takeaways From the Apple v. Qualcomm Rulings03.26.2019Dallas Principal Doug Cawley spoke with Bloomberg in several articles about The U.S. International Trade Commission ruling twice in a...",
-    "source": "McKool Smith",
-    "url": "https://www.mckoolsmith.com/newsroom",
-    "outcome": "Update"
-  },
-  {
-    "title": "Interpretation vs. Philips04.2016Effective",
-    "date": "",
-    "summary": "NewsClaim Construction: Broadest Reasonable Interpretation vs. Philips04.2016Effective May 2, 2016, patents expiring within 18 months of the filing of the petition may use a Philips-type claim construction, rather tha...",
-    "source": "McKool Smith",
-    "url": "https://www.mckoolsmith.com/newsroom",
-    "outcome": "Update"
-  },
-  {
-    "title": "Akamai v. Limelight",
-    "date": "",
-    "summary": "NewsCourt Resolved All Remaining Claim Construction and Damages Issues in the Akamai v. Limelight Case in Akamai’s Favor12.30.2015Following the en banc court’s reversal of the JMOL finding no infringement, the court r...",
-    "source": "McKool Smith",
-    "url": "https://www.mckoolsmith.com/newsroom",
-    "outcome": "Damages"
-  },
-  {
-    "title": "Alice v. CLS",
-    "date": "",
-    "summary": "NewsApplying Alice v. CLS Bank, the Court Reverses Itself and Holds that the Ultramercial Claims Are Unpatentable as Being Directed to Non-Patentable Subject Matter12.04.2014Applying the Supreme Court’s more recent fr...",
-    "source": "McKool Smith",
-    "url": "https://www.mckoolsmith.com/newsroom",
-    "outcome": "Update"
-  },
-  {
-    "title": "Corp. v. Synopsys",
-    "date": "",
-    "summary": "NewsMentor Graphics Corp. v. Synopsys, Inc.11.07.2014The Board denied petitioner’s motion to submit supplemental information containing the patent owner’s preliminary infringement contentions in underlying ...",
-    "source": "McKool Smith",
-    "url": "https://www.mckoolsmith.com/newsroom",
-    "outcome": "Update"
-  },
-  {
-    "title": "Inc. v. Courtesy",
-    "date": "",
-    "summary": "NewsHamilton Beach Brands, Inc. v. Courtesy Products, LLC11.06.2014Based on the AIA’s restrictive discovery rules, the Board denied a patent owner’s request for additional discovery of potential evidence regarding whe...",
-    "source": "McKool Smith",
-    "url": "https://www.mckoolsmith.com/newsroom",
-    "outcome": "Update"
-  },
-  {
-    "title": "Inc. v. Celgard",
-    "date": "",
-    "summary": "NewsMitsubishi Plastics, Inc. v. Celgard, LLC11.06.2014The Board frequently uses its rulings to instruct practitioners on proper PTAB practice. It recently explained that any objections to evidence submitted during a ...",
-    "source": "McKool Smith",
-    "url": "https://www.mckoolsmith.com/newsroom",
-    "outcome": "Update"
-  },
-  {
-    "title": "Corp. v. SSW",
-    "date": "",
-    "summary": "NewsSchott Gemtron Corp. v. SSW Holding Co.11.06.2014In an IPR dealing with the rare issue of analogous prior art in an obviousness analysis, the Board held in favor of the Patent Owner that a prior art reference was ...",
-    "source": "McKool Smith",
-    "url": "https://www.mckoolsmith.com/newsroom",
-    "outcome": "Update"
-  },
-  {
-    "title": "Stern v. Marshall",
-    "date": "",
-    "summary": "EventsHugh Ray to Review Stern v. Marshall at the 2012 Fifth Circuit Judicial Conference05.09.2012Principal Hugh Ray will be speaking at the 2012 Judicial Conference of the Fifth Circuit taking place May 6-9 at the El...",
-    "source": "McKool Smith",
-    "url": "https://www.mckoolsmith.com/newsroom",
-    "outcome": "Update"
-  },
-  {
-    "title": "Found. v. Goldsmith",
-    "date": "",
-    "summary": "Another amicus from the Copyright Alliance opposed Meta’s fair use defense, distinguishing the authority that Meta used in support of its argument based on the Supreme Court’s 2023 decision in Andy Warhol Found. v. Go...",
-    "source": "McKool Smith",
-    "url": "https://www.mckoolsmith.com/newsroom-ailitigation-18",
-    "outcome": "Fair use"
-  },
-  {
-    "title": "Center v. Mercy",
-    "date": "",
-    "summary": "University Ambulatory Surgery Center v. Mercy Hospital and Catholic Healthcare West. Represented defendants in an exclusive dealing, tying, attempted monopolization and unfair competition case involving provider syste...",
-    "source": "McKool Smith",
-    "url": "https://www.mckoolsmith.com/practices-56",
-    "outcome": "Summary judgment"
-  },
-  {
-    "title": "Barry v. Fortis",
-    "date": "",
-    "summary": "Brian Barry v. Fortis Health. Represented Fortis in a California state court class action and UCL (17200) matter alleging illegal use of database to calculate health insurance reimbursements. Prevailed on demurrer.",
-    "source": "McKool Smith",
-    "url": "https://www.mckoolsmith.com/practices-56",
-    "outcome": "Class action"
-  },
-  {
-    "title": "Lion v. GE",
-    "date": "",
-    "summary": "Red Lion v. GE Healthcare. Representation of Red Lion Medical Safety Inc. and 16 other plaintiffs in securing a $43.8 million (automatically trebled to $131.4 million) verdict against GE Healthcare in a jury trial con...",
-    "source": "McKool Smith",
-    "url": "https://www.mckoolsmith.com/practices-56",
-    "outcome": "Verdict"
-  },
-  {
-    "title": "In re Blue",
-    "date": "",
-    "summary": "Representing more than twenty companies that opted out of the $2.7 billion settlement of the In re Blue Cross Blue Shield Antitrust Litigation. In that matter the plaintiffs accused the Blue Cross Blue Shield Associat...",
-    "source": "McKool Smith",
-    "url": "https://www.mckoolsmith.com/practices-56",
-    "outcome": "Settle"
+    "outcome": "Class action",
+    "status": "Open/Active",
+    "takeaway": ""
   },
   {
     "title": "In re Facebook",
+    "headline": "In re Facebook",
     "date": "",
-    "summary": "Probably the worst news for Meta came last week, on January 8th, with Judge Chhabria’s ruling on several of Meta’s motions to seal. Meta previously requested that large portions of plaintiffs’ request for leave to fil...",
+    "summary": "Judge Chhabria admonished Meta, stating that nothing it wanted to seal was privileged, and its requests were “preposterous.” The Judge accused Meta of seeking to avoid bad publicity by filing the motions, and stated the concern that Meta is “starting to travel down a familiar road,” citing In re Facebook, Inc. Consumer Privacy User Profile Litigation.",
     "source": "McKool Smith",
     "url": "https://www.mckoolsmith.com/newsroom-ailitigation-5",
-    "outcome": "Class action"
+    "outcome": "Update",
+    "status": "Open/Active",
+    "takeaway": ""
   },
   {
-    "title": "Guild v. Google",
+    "title": "In re Blue",
+    "headline": "In re Blue",
     "date": "",
-    "summary": "The four “fair use” factors to be considered by the courts are: 1) the transformative character of the use and whether it is commercial; 2) the nature of the copyrighted work; 3) the portion of the copyrighted work us...",
+    "summary": "Representing more than twenty companies that opted out of the $2.7 billion settlement of the In re Blue Cross Blue Shield Antitrust Litigation. In that matter the plaintiffs accused the Blue Cross Blue Shield Association and the Blue Cross Blue Shield health insurance companies of engaging in territorial market allocation in violation of federal antitrust law.",
     "source": "McKool Smith",
-    "url": "https://www.mckoolsmith.com/newsroom-ailitigation-16",
-    "outcome": "Fair use"
-  },
-  {
-    "title": "LLC v. Lamar",
-    "date": "",
-    "summary": "Ultravision Technologies, LLC v. Lamar Advertising Co., et al. Representation of Ultravision in asserting patent, trade secret, and contract claims against supplier, distributor, and user of patented LED billboard lig...",
-    "source": "McKool Smith",
-    "url": "https://www.mckoolsmith.com/practices-Trade_Secrets_Restrictive_Covenant_Litigation",
-    "outcome": "Update"
-  },
-  {
-    "title": "Co. v. Calmare",
-    "date": "",
-    "summary": "The News Plaintiffs also filed reply briefing regarding their motion to strike affirmative licensing defenses by Microsoft. Microsoft previously argued that it was not required to identify any particular licenses that...",
-    "source": "McKool Smith",
-    "url": "https://www.mckoolsmith.com/newsroom-ailitigation-33",
-    "outcome": "Update"
+    "url": "https://www.mckoolsmith.com/practices-56",
+    "outcome": "Settle",
+    "status": "Settled",
+    "takeaway": "Parties continue to resolve AI/IP disputes without merits rulings."
   },
   {
     "title": "LED vs LCD",
+    "headline": "LED vs LCD",
     "date": "",
-    "summary": "LED vs LCD: There was a time when these terms could be considered separate, as some early LCD TVs did not use LEDs for backlighting, but they are now essentially interchangeable. Any non-OLED TV right now uses a combi...",
+    "summary": "LED vs LCD: There was a time when these terms could be considered separate, as some early LCD TVs did not use LEDs for backlighting, but they are now essentially interchangeable. Any non-OLED TV right now uses a combination of an LCD panel and LED illumination to create a picture. OLED TVs use an entirely different technology than LED TVs, able to light up or turn off each tiny pixel independently.",
     "source": "WIRED",
     "url": "https://www.wired.com/gallery/best-tvs/",
-    "outcome": "Update"
-  },
-  {
-    "title": "Man vs. Machine",
-    "date": "",
-    "summary": "Inside the Man vs. Machine Hackathon",
-    "source": "WIRED",
-    "url": "https://www.wired.com/category/business",
-    "outcome": "Update"
-  },
-  {
-    "title": "Bernstein v. Department",
-    "date": "",
-    "summary": "Cohn first rose to prominence as lead counsel in Bernstein v. Department of Justice, the 1990s case that overturned federal restrictions on publishing encryption code. As EFF’s legal director and later executive direc...",
-    "source": "WIRED",
-    "url": "https://www.wired.com/story/eff-cindy-cohn-stepping-down/#intcid=_wired-article-bottom-recirc_e321b9ac-0e57-4881-9942-b23d9e100f69_roberta-similarity1",
-    "outcome": "Update"
-  },
-  {
-    "title": "Jewel v. NSA",
-    "date": "",
-    "summary": "The fights that we've had around the NSA and national security, those are still works in progress. We were not successful with our big challenge to the NSA spying in Jewel v. NSA, although over the long arc of that ca...",
-    "source": "WIRED",
-    "url": "https://www.wired.com/story/eff-cindy-cohn-stepping-down/#intcid=_wired-article-bottom-recirc_e321b9ac-0e57-4881-9942-b23d9e100f69_roberta-similarity1",
-    "outcome": "Update"
+    "outcome": "Update",
+    "status": "Open/Active",
+    "takeaway": ""
   },
   {
     "title": "In re ChatGPT",
+    "headline": "In re ChatGPT",
     "date": "",
-    "summary": "In re ChatGPT Litigation: Tremblay v OpenAI (consolidated with Silverman v OpenAI and Chabon v OpenAI)",
+    "summary": "In re ChatGPT Litigation: Tremblay v OpenAI (consolidated with Silverman v OpenAI and Chabon v OpenAI) (1) Paul Tremblay & (2) Mona Awad v (1) OpenAI, Inc.; (2) OpenAI, L.P.; (3) OpenAI Gp, L.L.C., (4) OpenAI Opco, L.L.C. (5) OpenAI Startup Fund Gp I, L.L.C.; (6) OpenAI Startup Fund I, L.P.;(7) OpenAI Startup Fund Management, LLC",
     "source": "Mishcon de Reya LLP",
-    "url": "https://www.mishcon.com/generative-ai-intellectual-property-cases-and-policy-tracker#tab-3",
-    "outcome": "Update"
+    "url": "https://www.mishcon.com/generative-ai-intellectual-property-cases-and-policy-tracker#tab-5",
+    "outcome": "Update",
+    "status": "Open/Active",
+    "takeaway": ""
   },
   {
     "title": "In re Google",
+    "headline": "In re Google",
     "date": "",
-    "summary": "The case has been consolidated with Zhang v Google and named In re Google Generative AI Copyright Litigation. A consolidated complaint was filed in December 2024, bringing in new Plaintiffs. Google and Alphabet have f...",
+    "summary": "The case has been consolidated with Zhang v Google and named In re Google Generative AI Copyright Litigation. A consolidated complaint was filed in December 2024, bringing in new Plaintiffs. Google and Alphabet have filed a Motion to Dismiss the consolidated complaint and to strike the class allegations.",
     "source": "Mishcon de Reya LLP",
-    "url": "https://www.mishcon.com/generative-ai-intellectual-property-cases-and-policy-tracker#tab-3",
-    "outcome": "Dismiss"
+    "url": "https://www.mishcon.com/generative-ai-intellectual-property-cases-and-policy-tracker#tab-5",
+    "outcome": "Dismiss",
+    "status": "Recently filed",
+    "takeaway": "Pleadings must tie copying to cognizable harm; conclusory allegations risk dismissal."
   },
   {
     "title": "Transparency vs Privacy",
+    "headline": "Transparency vs Privacy",
     "date": "",
-    "summary": "Services Business Immigration Mergers and Acquisitions Construction Real Estate Development Planning and Environment Real Estate Finance Property Litigation Intellectual Property Civil Fraud Director and Shareholder D...",
+    "summary": "Meet the team Key issues Meet the team \"to do list\" Meet the team How we can help Meet the team Technology Politics and Law Public Consultation Responses Meet the team Official Secrets Act campaign Meet the team Investigations White Collar Crime and Investigations Meet the team Civil Fraud and Asset Recovery Investigations Meet the team Internal Investigations Meet the team Workplace Investigations Meet the team ESG Investigations Meet the team Serious and General Crime Meet the team Enforcement of Non-Performing Loans Community FATCA Background Information Meet the team Correspondence Meet the team Corporate Advisory: Singapore Mergers and Acquisitions: Singapore Private Wealth: Asia Privat",
     "source": "Mishcon de Reya LLP",
     "url": "https://www.mishcon.com/siteinformation/site_map",
-    "outcome": "Md"
+    "outcome": "Transfer",
+    "status": "Open/Active",
+    "takeaway": ""
   }
 ]
