@@ -1,9 +1,9 @@
-name: AI Court Cases Tracker
+name: track-cases
 
 on:
   workflow_dispatch:
   schedule:
-    - cron: "23 14 * * *"   # daily at 14:23 UTC (07:23 PT)
+    - cron: "17 */6 * * *"  # every 6 hours at :17 past
 
 permissions:
   contents: write
@@ -11,54 +11,34 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 25   # hard cap to prevent infinite runs
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Python 3.11
+      - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
-      - name: Install dependencies
+      - name: Install deps
         run: |
-          python -V
           python -m pip install --upgrade pip
-          pip install requests
+          pip install -r requirements.txt
 
-      # ✅ Preflight check: confirms CL_API_TOKEN is present
-      - name: Check CL_API_TOKEN is present
-        env:
-          CL_API_TOKEN: ${{ secrets.CL_API_TOKEN }}
-        run: |
-          if [ -z "${CL_API_TOKEN}" ]; then
-            echo "ERROR: CL_API_TOKEN is not being passed into the job."
-            echo "Fix: Repo → Settings → Secrets and variables → Actions → New repository secret → Name: CL_API_TOKEN"
-            exit 1
-          else
-            echo "OK: CL_API_TOKEN is set (value is masked)."
-          fi
-
-      # ✅ Unbuffered run so you see logs live in Actions
-      - name: Run tracker (unbuffered)
-        env:
-          CL_API_TOKEN: ${{ secrets.CL_API_TOKEN }}
-          PYTHONUNBUFFERED: "1"
+      - name: Run scraper (unbuffered)
         run: |
           set -x
           python -u case_tracker.py
 
-      # ✅ Commit docs/ if there are changes
       - name: Commit website changes (docs/)
         run: |
-          if [[ -n "$(git status --porcelain docs/)" ]]; then
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add docs/
-            git commit -m "Update site data (cases.json/index.html)"
-            git push
+          set -e
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
           else
-            echo "No changes in docs/ to commit."
+            git commit -m "Update cases.json and index.html"
+            git push
           fi
