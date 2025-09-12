@@ -1,9 +1,81 @@
-<!doctype html><meta charset="utf-8">
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
 <title>AI Court Cases Tracker</title>
-<h1>AI Court Cases Tracker</h1>
-<p>Site is initializing. Data will appear after the workflow runs.</p>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<style>
+  :root { --fg:#0f172a; --muted:#475569; --bg:#ffffff; --card:#f8fafc; --line:#e2e8f0; }
+  *{box-sizing:border-box}
+  body{font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; color:var(--fg); background:var(--bg); margin:24px;}
+  h1{margin:0 0 6px 0; font-size:28px; font-weight:750}
+  .sub{color:var(--muted); margin-bottom:16px}
+  .toolbar{display:flex; gap:12px; margin:10px 0 18px; flex-wrap:wrap}
+  input,select{padding:10px 12px; border:1px solid var(--line); border-radius:10px; font-size:14px}
+  .grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(340px,1fr)); gap:14px}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px; display:flex; flex-direction:column; gap:8px}
+  .title{font-weight:700}
+  .meta{font-size:12px; color:var(--muted)}
+  .outcome{font-weight:600}
+  .takeaway{border-top:1px dashed var(--line); padding-top:8px; font-size:14px}
+  a{color:#0ea5e9; text-decoration:none}
+  a:hover{text-decoration:underline}
+</style>
+</head>
+<body>
+  <h1>AI Court Cases Tracker</h1>
+  <div class="sub">De-duplicated case summaries across multiple public trackers. Updates via GitHub Actions.</div>
+  <div class="toolbar">
+    <input id="q" type="search" placeholder="Filter by case, outcome, source…"/>
+    <select id="sort">
+      <option value="title">Sort: Title</option>
+      <option value="date">Sort: Date</option>
+      <option value="source">Sort: Source</option>
+    </select>
+  </div>
+  <div id="list" class="grid"></div>
+
 <script>
-  fetch('cases.json', {cache:'no-store'}).then(r=>r.json()).then(data=>{
-    document.body.insertAdjacentHTML('beforeend', `<pre>${JSON.stringify(data,null,2)}</pre>`);
-  }).catch(()=>{});
+async function load() {
+  const res = await fetch('cases.json', {cache:'no-store'});
+  const data = await res.json();
+
+  const list = document.getElementById('list');
+  const q = document.getElementById('q');
+  const sortSel = document.getElementById('sort');
+
+  function render(filter='', sortBy='title') {
+    const f = filter.toLowerCase();
+    let items = data.filter(c => {
+      const hay = (c.title + ' ' + (c.outcome||'') + ' ' + (c.source||'') + ' ' + (c.summary||'') + ' ' + (c.date||'')).toLowerCase();
+      return !f || hay.includes(f);
+    });
+
+    items.sort((a,b)=>{
+      const A=(a[sortBy]||'').toString().toLowerCase();
+      const B=(b[sortBy]||'').toString().toLowerCase();
+      return A.localeCompare(B);
+    });
+
+    list.innerHTML = '';
+    items.forEach(c=>{
+      const el = document.createElement('div');
+      el.className = 'card';
+      el.innerHTML = `
+        <div class="title">${c.title}</div>
+        <div class="meta">${c.source || ''} • ${c.date || 'N/A'} • <span class="outcome">${c.outcome || 'Update'}</span> • <a href="${c.url || '#'}" target="_blank" rel="noopener">Source</a></div>
+        <div class="summary">${c.summary || 'Summary unavailable from source.'}</div>
+        <div class="takeaway"><strong>Key takeaway:</strong> Even where training may be argued as transformative, acquisition and market harm remain decisive issues. Track facts by case.</div>
+      `;
+      list.appendChild(el);
+    });
+  }
+
+  q.addEventListener('input', (e)=>render(e.target.value, sortSel.value));
+  sortSel.addEventListener('change', ()=>render(q.value, sortSel.value));
+  render();
+}
+load();
 </script>
+</body>
+</html>
