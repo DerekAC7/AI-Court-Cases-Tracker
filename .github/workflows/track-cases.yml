@@ -41,7 +41,7 @@ jobs:
             echo "OK: CL_API_TOKEN is set (value is masked)."
           fi
 
-      # ✅ Unbuffered run so you see logs as they happen
+      # ✅ Unbuffered run so you see logs live in Actions
       - name: Run tracker (unbuffered)
         env:
           CL_API_TOKEN: ${{ secrets.CL_API_TOKEN }}
