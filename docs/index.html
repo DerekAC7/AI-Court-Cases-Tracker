@@ -1,0 +1,9 @@
+<!doctype html><meta charset="utf-8">
+<title>AI Court Cases Tracker</title>
+<h1>AI Court Cases Tracker</h1>
+<p>Site is initializing. Data will appear after the workflow runs.</p>
+<script>
+  fetch('cases.json', {cache:'no-store'}).then(r=>r.json()).then(data=>{
+    document.body.insertAdjacentHTML('beforeend', `<pre>${JSON.stringify(data,null,2)}</pre>`);
+  }).catch(()=>{});
+</script>
