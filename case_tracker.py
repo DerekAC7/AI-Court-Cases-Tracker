@@ -27,7 +27,7 @@ from datetime import datetime
 from urllib.parse import urljoin
 
 import requests
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, NavigableString, Tag
 
 # ==============================
 # Config & Constants
@@ -37,7 +37,7 @@ DOCS_DIR = "docs"
 INDEX_PATH = os.path.join(DOCS_DIR, "index.html")
 JSON_PATH = os.path.join(DOCS_DIR, "cases.json")
 
-HEADERS = {"User-Agent": "AI-Cases-Tracker/16.1 (+GitHub Pages/Actions)"}
+HEADERS = {"User-Agent": "AI-Cases-Tracker/16.2 (+GitHub Pages/Actions)"}
 
 MCKOOL_INDEX = "https://www.mckoolsmith.com/newsroom-ailitigation"
 MCKOOL_BASE  = "https://www.mckoolsmith.com/"
@@ -282,46 +282,47 @@ def extract_as_of_date(article_soup: BeautifulSoup) -> str:
       3) Fallback: today's UTC date.
 
     The 'preface' is everything between the 'Current Edition...' header and the
-    first numbered case heading ("1. ..."). We avoid scanning the entire page so
-    we don't accidentally pick up dates embedded in case backgrounds.
+    first numbered case heading ("1. ..."). We collect BOTH element text and
+    bare text nodes so we don't miss lines like "09.07.2025".
     Always returns a string.
     """
     main = article_soup.find("main") or article_soup.find("article") or article_soup
 
-    # Locate the "Current Edition" header element
-    ce_text_node = main.find(string=re.compile(r"^\s*Current Edition", re.I))
-    if ce_text_node and getattr(ce_text_node, "parent", None):
-        start_el = ce_text_node.parent
-    else:
-        # Fallback: first heading in main
-        start_el = None
-        for h in main.find_all(re.compile(r"^h[1-6]$")):
-            start_el = h
-            break
-        if not start_el:
-            start_el = main
+    # Find the "Current Edition" header element
+    ce_node = main.find(string=re.compile(r"^\s*Current Edition", re.I))
+    start_el = ce_node.parent if ce_node and getattr(ce_node, "parent", None) else main
 
-    # Walk forward sibling-by-sibling until the first numbered heading
-    def is_numbered_heading(tag) -> bool:
-        if not getattr(tag, "name", None):
-            return False
-        if not re.match(r"^h[1-6]$", tag.name):
-            return False
+    # Helper to detect the first numbered case heading like "1. Something"
+    def is_numbered_heading(tag: Tag) -> bool:
+        if not isinstance(tag, Tag): return False
+        if not re.match(r"^h[1-6]$", tag.name): return False
         t = tag.get_text(" ", strip=True)
         return bool(re.match(r"^\s*\d+\.\s+", t))
 
-    preface_chunks, node, hops = [], getattr(start_el, "next_sibling", None), 0
-    while node and hops < 120:  # generous but bounded
+    # Build a tight "preface" by walking *elements and text nodes* after the header,
+    # stopping at the first numbered case heading.
+    pieces, hops = [], 0
+    for el in start_el.next_elements:  # includes strings AND tags in document order
         hops += 1
-        if hasattr(node, "name") and is_numbered_heading(node):
+        if hops > 200:  # safety bound
             break
-        if hasattr(node, "get_text"):
-            preface_chunks.append(node.get_text(" ", strip=True))
-        node = getattr(node, "next_sibling", None)
+        if isinstance(el, Tag) and is_numbered_heading(el):
+            break
+        # Skip the header element itself
+        if el is start_el:
+            continue
+        if isinstance(el, NavigableString):
+            s = str(el).strip()
+            if s:
+                pieces.append(s)
+        elif isinstance(el, Tag):
+            t = el.get_text(" ", strip=True)
+            if t:
+                pieces.append(t)
 
-    preface_text = " ".join([p for p in preface_chunks if p]).strip()
+    preface_text = " ".join(pieces).strip()
 
-    # 1) Prefer a numeric MM.DD.YYYY-style date with flexible separators in the preface
+    # 1) Numeric date with flexible separators (handles 09.07.2025 and similar)
     m = DATE_NUM_FLEX_PAT.search(preface_text)
     if m:
         mm, dd, yyyy = int(m.group(1)), int(m.group(2)), int(m.group(3))
@@ -341,7 +342,7 @@ def extract_as_of_date(article_soup: BeautifulSoup) -> str:
             except ValueError:
                 continue
 
-    # 3) Final fallback: today (UTC)
+    # 3) Fallback: today (UTC)
     return format_us_date(datetime.utcnow())
 
 def mckool_parse_latest():
