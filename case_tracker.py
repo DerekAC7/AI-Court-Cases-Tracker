@@ -418,56 +418,57 @@ def _parse_any_date_string(s: str) -> datetime | None:
 
 def extract_as_of_date(article_soup: BeautifulSoup) -> str:
     """
-    Strategy:
-    1) Look in the "preface" (content before the first numbered section like '1. ...')
-       for the first header-style date. McKool prints '09.07.2025' here.
-    2) If not found, look for text near 'Current Edition' and parse date in its siblings.
-    3) Fallback to the first reasonable date found anywhere.
-    4) Final fallback: today's UTC date.
+    Pull the edition date that McKool prints under the 'Current Edition...' header.
+    Preference order:
+      1) First numeric MM.DD.YYYY anywhere inside <main>.
+      2) Month-name date found in the 'preface' (before the first numbered section).
+      3) Month-name date anywhere in <main>.
+      4) Fallback: today's UTC date.
     """
     main = article_soup.find("main") or article_soup.find("article") or article_soup
 
-    # Build preface text up to before the first "N." heading
+    def fmt(dt: datetime) -> str:
+        return dt.strftime("%B %#d, %Y") if os.name == "nt" else dt.strftime("%B %-d, %Y")
+
+    # 1) Prefer the numeric line (e.g., "09.07.2025") anywhere in <main>
+    node = main.find(string=DATE_NUM_PAT)
+    if node:
+        m = DATE_NUM_PAT.search(str(node))
+        mm, dd, yyyy = int(m.group(1)), int(m.group(2)), int(m.group(3))
+        try:
+            return fmt(datetime(yyyy, mm, dd))
+        except ValueError:
+            pass  # fall through
+
+    # Build preface text (everything before the first numbered "1." heading)
     preface_chunks = []
     for child in list(main.children):
-        # If child is a numbered heading like "1. Bartz v. Anthropic", stop
         if getattr(child, "name", None) and re.match(r"^h[1-6]$", child.name or ""):
             hdr_text = child.get_text(" ", strip=True)
             if re.match(r"^\s*\d+\.\s+", hdr_text or ""):
                 break
-        # Otherwise accumulate text
         if hasattr(child, "get_text"):
             preface_chunks.append(child.get_text(" ", strip=True))
     preface_text = " ".join([p for p in preface_chunks if p]).strip()
 
-    # 1) Prefer numeric header date in preface
-    dt = _parse_any_date_string(preface_text)
-    if dt:
-        return _format_us_date(dt)
+    # 2) Month-name date in preface
+    m2 = DATE_WORD_PAT.search(preface_text or "")
+    if m2:
+        for fmt_try in ("%B %d, %Y", "%b %d, %Y"):
+            try:
+                return fmt(datetime.strptime(m2.group(0), fmt_try))
+            except ValueError:
+                continue
 
-    # 2) Search near "Current Edition"
-    ce_node = article_soup.find(string=re.compile(r"Current Edition", re.I))
-    if ce_node:
-        parent = ce_node.parent
-        search_nodes = [parent] + [parent.find_next_sibling() for _ in range(5)]
-        cur = parent
-        for _ in range(8):
-            if cur is None:
-                break
-            if hasattr(cur, "get_text"):
-                dt = _parse_any_date_string(cur.get_text(" ", strip=True))
-                if dt:
-                    return _format_us_date(dt)
-            cur = cur.next_sibling if hasattr(cur, "next_sibling") else None
-
-    # 3) Whole-document fallback (first match)
-    text = article_soup.get_text(" ", strip=True)
-    dt = _parse_any_date_string(text)
-    if dt:
-        return _format_us_date(dt)
-
-    # 4) Last resort: today (UTC)
-    return _format_us_date(datetime.utcnow())
+    # 3) Month-name date anywhere in <main>
+    main_text = main.get_text(" ", strip=True)
+    m3 = DATE_WORD_PAT.search(main_text or "")
+    if m3:
+        for fmt_try in ("%B %d, %Y", "%b %d, %Y"):
+            try:
+                return fmt(datetime.strptime(m3.group(0), fmt_try))
+            except ValueError:
+                continue
 
 def mckool_parse_latest():
     idx = fetch(MCKOOL_INDEX)
