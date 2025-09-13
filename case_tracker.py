@@ -418,55 +418,74 @@ def _parse_any_date_string(s: str) -> datetime | None:
 
 def extract_as_of_date(article_soup: BeautifulSoup) -> str:
     """
-    Pull the edition date that McKool prints under the 'Current Edition...' header.
-    Preference order:
-      1) First numeric MM.DD.YYYY anywhere inside <main>.
-      2) Month-name date found in the 'preface' (before the first numbered section).
-      3) Month-name date anywhere in <main>.
-      4) Fallback: today's UTC date.
+    Extract the edition date printed immediately under 'Current Edition...' on McKool.
+    Scope is limited to the preface between that header and the first numbered case.
+    Preference:
+      1) Numeric MM.DD.YYYY in the preface (e.g., 09.07.2025).
+      2) Month-name date in the preface (e.g., September 7, 2025).
+      3) Fallback: today's UTC date.
     """
     main = article_soup.find("main") or article_soup.find("article") or article_soup
 
     def fmt(dt: datetime) -> str:
         return dt.strftime("%B %#d, %Y") if os.name == "nt" else dt.strftime("%B %-d, %Y")
 
-    # 1) Prefer the numeric line (e.g., "09.07.2025") anywhere in <main>
-    node = main.find(string=DATE_NUM_PAT)
-    if node:
-        m = DATE_NUM_PAT.search(str(node))
+    # Find the "Current Edition" node and build a tight preface window after it
+    ce = main.find(string=re.compile(r"^\s*Current Edition", re.I))
+    if ce:
+        # Start from the element that contains the "Current Edition" text
+        start = ce.parent
+    else:
+        # Fallback: first heading in main
+        start = None
+        for h in main.find_all(re.compile(r"^h[1-6]$")):
+            start = h
+            break
+        if not start:
+            start = main
+
+    # Collect text from immediately after the 'Current Edition' header
+    # until the first heading that looks like "1. ..." (start of cases).
+    preface_chunks = []
+    node = start
+    # Move forward a bit to skip the header element itself
+    node = getattr(node, "next_sibling", None)
+
+    def is_numbered_heading(tag) -> bool:
+        if not getattr(tag, "name", None):
+            return False
+        if not re.match(r"^h[1-6]$", tag.name):
+            return False
+        t = tag.get_text(" ", strip=True)
+        return bool(re.match(r"^\s*\d+\.\s+", t))
+
+    # Traverse siblings; stop at first numbered case heading
+    steps = 0
+    while node and steps < 80:
+        steps += 1
+        if hasattr(node, "name") and is_numbered_heading(node):
+            break
+        if hasattr(node, "get_text"):
+            preface_chunks.append(node.get_text(" ", strip=True))
+        node = getattr(node, "next_sibling", None)
+
+    preface_text = " ".join([p for p in preface_chunks if p]).strip()
+
+    # 1) Prefer numeric MM.DD.YYYY in this tight preface window
+    m = DATE_NUM_PAT.search(preface_text)
+    if m:
         mm, dd, yyyy = int(m.group(1)), int(m.group(2)), int(m.group(3))
         try:
             return fmt(datetime(yyyy, mm, dd))
         except ValueError:
-            pass  # fall through
+            pass
 
-    # Build preface text (everything before the first numbered "1." heading)
-    preface_chunks = []
-    for child in list(main.children):
-        if getattr(child, "name", None) and re.match(r"^h[1-6]$", child.name or ""):
-            hdr_text = child.get_text(" ", strip=True)
-            if re.match(r"^\s*\d+\.\s+", hdr_text or ""):
-                break
-        if hasattr(child, "get_text"):
-            preface_chunks.append(child.get_text(" ", strip=True))
-    preface_text = " ".join([p for p in preface_chunks if p]).strip()
-
-    # 2) Month-name date in preface
-    m2 = DATE_WORD_PAT.search(preface_text or "")
+    # 2) Month-name date in the preface
+    m2 = DATE_WORD_PAT.search(preface_text)
     if m2:
         for fmt_try in ("%B %d, %Y", "%b %d, %Y"):
             try:
                 return fmt(datetime.strptime(m2.group(0), fmt_try))
-            except ValueError:
-                continue
-
-    # 3) Month-name date anywhere in <main>
-    main_text = main.get_text(" ", strip=True)
-    m3 = DATE_WORD_PAT.search(main_text or "")
-    if m3:
-        for fmt_try in ("%B %d, %Y", "%b %d, %Y"):
-            try:
-                return fmt(datetime.strptime(m3.group(0), fmt_try))
             except ValueError:
                 continue
 
