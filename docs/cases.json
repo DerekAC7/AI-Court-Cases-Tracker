@@ -1,18 +1,5 @@
 [
   {
-    "title": ". v. Anthropic",
-    "headline": ". v. Anthropic",
-    "summary": "<b>Summaries:</b> <b>. v. Anthropic</b> — Bartz\ncontinues to haunt Anthropic.\nA few weeks ago, Anthropic submitted an opposition to Plaintiffs’ motion seeking leave to amend its complaint, adding claims related to the torrenting of copyrighted work as well as several additional works. Plaintiffs’ likely seek to recreate some of the success seen by the Bartz plaintiffs in another case involving Anthropic. Anthropic has argued that this belated amendment should be disallowed. Last week, Plaintiffs submitted their reply brief supporting their motion to amend in which they argued that any delay in bringing these claims was attributable to discovery failures by Anthropic. The parties also submitted a joint discovery dispute statement regarding what Anthropic has called deficient damages disclosures by Plaintiffs.\nPlaintiffs also filed a motion to compel the production of the evidence related to torrenting that was produced in the\nBartz\ncase, arguing that “there is no question that Publishers’ lyrics are included in the 7 million books that Anthropic illegally downloaded.” Plaintiffs also ask for unredacted versions of briefing from\nBartz\n.",
-    "takeaway": "",
-    "music_lens": "Build evidentiary files on lyric/composition market harm (lost sync, sheet music, lyric licensing) and compel disclosure of training datasets and ingestion logs.",
-    "status": "Open/Active",
-    "outcome": "Update",
-    "source": "",
-    "url": "https://www.courtlistener.com/?q=.+v.+Anthropic+AND+%28court%3A%28california+northern%29%29&type=r&order_by=score%20desc",
-    "case_ref": "",
-    "date": "September 7, 2025"
-  },
-  {
     "title": "Bartz v. Anthropic",
     "headline": "Bartz v. Anthropic - rules AI training fair use.",
     "summary": "<b>Summaries:</b> <b>Bartz v. Anthropic</b> — Anthropic pays the largest known copyright settlement in history!\n2 weeks ago, we saw that the Bartz plaintiffs (book authors and rights-holders) and Anthropic had reached a proposed settlement, but we did not know any of the terms. Last Friday, the world found out that the proposed settlement is $1.5 Billion! There are roughly 500,000 copyrighted works subject to the settlement, resulting is about $3,000 per work. Although this is certainly an historic and watershed moment in AI training litigation, we need to put it in context. And, today is the day Judge Alsup is expected to approve the settlement.\nRecall that Judge Alsup’s summary judgment ruling didn’t fault Anthropic for training its AI on copyrighted works. Rather, Alsup found that pirating copyrighted works to create a general-purpose digital library for Anthropic to use however it wanted was not “fair use.” In another case decided that same week several weeks ago, Judge Vince Chhabria (in the same federal district) ruled that Meta’s acquisition of copyrighted materials through torrenting was not copyright infringement because the purpose of the acquisition was to train an AI system, which both Chhabria and Alsup found to be fair use. According to Alsup, Anthropic’s violation here is not training its AI, but taking hundreds of thousands of copyrighted works for whatever purpose it wanted. Arguably, if Anthropic had simply purchased the copyrighted works (likely for far less than $3,000 a copy) it would have been clear to train its AI however it chose — although, to be clear, Judge Chhabria would likely reach a different result.\nIt remains to be seen how or whether courts will try to synthesize Judge Chhabria’s ruling in\nKadrey\nwith Alsup’s ruling in\nBartz\n. But for now, the\nBartz\nauthors can claim a well-earned victory. Despite the complex background, we remain hopeful that this massive settlement will encourage other AI companies to compensate authors for the use of their copyrighted works. And we expect they will.<br><br><b>Key takeaway:</b> Fair-use outcomes may hinge on record-specific market-harm proof.",
@@ -52,15 +39,28 @@
     "date": "September 7, 2025"
   },
   {
-    "title": "Kadrey . v. Meta",
-    "headline": "Kadrey . v. Meta",
-    "summary": "<b>Summaries:</b> <b>Kadrey . v. Meta</b> — Judge Chhabria charts a course to summary judgment on copying and uploading of books\n. In the aftermath of Meta’s success on summary judgment regarding the use of books as training data, Plaintiffs have continued to litigate issues related to the distribution of pirated books by Meta in the course of torrenting them. Two weeks ago, the parties managed to agree on an expert discovery schedule, though they were unable to agree on a schedule for summary judgment briefing. This past Friday, Judge Chhabria adopted the parties’ proposed deadlines and set summary judgment briefing to begin about a week later, with the hearing set for February 12th next year.",
+    "title": "Kadrey v. Meta",
+    "headline": "Kadrey v. Meta",
+    "summary": "<b>Summaries:</b> <b>Kadrey v. Meta</b> — Judge Chhabria charts a course to summary judgment on copying and uploading of books\n. In the aftermath of Meta’s success on summary judgment regarding the use of books as training data, Plaintiffs have continued to litigate issues related to the distribution of pirated books by Meta in the course of torrenting them. Two weeks ago, the parties managed to agree on an expert discovery schedule, though they were unable to agree on a schedule for summary judgment briefing. This past Friday, Judge Chhabria adopted the parties’ proposed deadlines and set summary judgment briefing to begin about a week later, with the hearing set for February 12th next year.",
     "takeaway": "",
     "music_lens": "Fair-use win here hinged on record-specific market-harm showings. For compositions, build a damages narrative tied to substitution (lyrics, sheet music, sync) and document lost licensing opportunities to survive early motions.",
     "status": "Judgment",
     "outcome": "Summary Judgment",
     "source": "",
-    "url": "https://www.courtlistener.com/?q=Kadrey+.+v.+Meta&type=r&order_by=score%20desc",
+    "url": "https://www.courtlistener.com/?q=Kadrey+v.+Meta&type=r&order_by=score%20desc",
+    "case_ref": "",
+    "date": "September 7, 2025"
+  },
+  {
+    "title": "Plaintiffs v. Anthropic",
+    "headline": "Plaintiffs v. Anthropic",
+    "summary": "<b>Summaries:</b> <b>Plaintiffs v. Anthropic</b> — Bartz\ncontinues to haunt Anthropic.\nA few weeks ago, Anthropic submitted an opposition to Plaintiffs’ motion seeking leave to amend its complaint, adding claims related to the torrenting of copyrighted work as well as several additional works. Plaintiffs’ likely seek to recreate some of the success seen by the Bartz plaintiffs in another case involving Anthropic. Anthropic has argued that this belated amendment should be disallowed. Last week, Plaintiffs submitted their reply brief supporting their motion to amend in which they argued that any delay in bringing these claims was attributable to discovery failures by Anthropic. The parties also submitted a joint discovery dispute statement regarding what Anthropic has called deficient damages disclosures by Plaintiffs.\nPlaintiffs also filed a motion to compel the production of the evidence related to torrenting that was produced in the\nBartz\ncase, arguing that “there is no question that Publishers’ lyrics are included in the 7 million books that Anthropic illegally downloaded.” Plaintiffs also ask for unredacted versions of briefing from\nBartz\n.",
+    "takeaway": "",
+    "music_lens": "Build evidentiary files on lyric/composition market harm (lost sync, sheet music, lyric licensing) and compel disclosure of training datasets and ingestion logs.",
+    "status": "Open/Active",
+    "outcome": "Update",
+    "source": "",
+    "url": "https://www.courtlistener.com/?q=Plaintiffs+v.+Anthropic+AND+%28court%3A%28california+northern%29%29&type=r&order_by=score%20desc",
     "case_ref": "",
     "date": "September 7, 2025"
   },
