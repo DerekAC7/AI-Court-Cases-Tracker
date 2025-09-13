@@ -37,7 +37,7 @@ DOCS_DIR = "docs"
 INDEX_PATH = os.path.join(DOCS_DIR, "index.html")
 JSON_PATH = os.path.join(DOCS_DIR, "cases.json")
 
-HEADERS = {"User-Agent": "AI-Cases-Tracker/16.3 (+GitHub Pages/Actions)"}
+HEADERS = {"User-Agent": "AI-Cases-Tracker/16.4 (+GitHub Pages/Actions)"}
 
 MCKOOL_INDEX = "https://www.mckoolsmith.com/newsroom-ailitigation"
 MCKOOL_BASE  = "https://www.mckoolsmith.com/"
@@ -55,10 +55,11 @@ DATE_WORD_PAT = re.compile(
     re.I
 )
 
-# Flexible numeric header date used on McKool (accepts . / bullet / hyphen variants)
-# Matches things like: 09.07.2025, 9·7·2025, 09/07/2025, 09-07-2025, etc.
+# Flexible numeric header date used on McKool (accepts . / bullet / hyphen variants),
+# and tolerates optional whitespace around delimiters:
+# Matches: 09.07.2025, 09 . 07 . 2025, 9·7·2025, 09/07/2025, 09-07-2025, etc.
 DELIMS = r"\.\u2024\u2219\u00B7\u2027\u30FB/\-\u2010\u2011\u2012\u2013\u2014"
-DATE_NUM_FLEX_PAT = re.compile(rf"(\d{{1,2}})[{DELIMS}](\d{{1,2}})[{DELIMS}](20\d{{2}})")
+DATE_NUM_FLEX_PAT = re.compile(rf"(\d{{1,2}})\s*[{DELIMS}]\s*(\d{{1,2}})\s*[{DELIMS}]\s*(20\d{{2}})")
 
 # ==============================
 # Helpers
@@ -276,17 +277,19 @@ def extract_as_of_date(article_soup: BeautifulSoup) -> str:
     """
     Extract the edition date printed under the 'Current Edition...' header.
 
-    STRONG locality: only look at the header's immediate next siblings (strings or tags),
+    STRICT locality: scan the header's immediate next siblings (strings or tags),
     and stop at the first numbered case heading like "1. Something".
 
     Preference:
-      1) First numeric date near the header (MM.DD.YYYY with flexible separators).
-      2) Month-name date near the header (e.g., September 7, 2025).
+      1) The FIRST numeric date in DOM order (MM.DD.YYYY with flexible separators).
+         We test each sibling *as we go* and return immediately on first hit.
+      2) If (and only if) no numeric date is found in this narrow band, look for a
+         month-name date within the SAME band.
       3) Fallback: today's UTC date.
     """
     main = article_soup.find("main") or article_soup.find("article") or article_soup
 
-    # Find the "Current Edition" header element (e.g., <h1>Current Edition: ...</h1>)
+    # Locate the "Current Edition" header element (e.g., <h1>Current Edition: ...</h1>)
     ce_node = main.find(string=re.compile(r"^\s*Current Edition", re.I))
     start_el = ce_node.parent if ce_node and getattr(ce_node, "parent", None) else main
 
@@ -297,37 +300,44 @@ def extract_as_of_date(article_soup: BeautifulSoup) -> str:
         t = tag.get_text(" ", strip=True)
         return bool(re.match(r"^\s*\d+\.\s+", t))
 
-    # Collect ONLY immediate next siblings (not whole subtree), up to first numbered heading
-    pieces = []
+    # 1) Walk immediate siblings in DOM order; try to extract a NUMERIC date per node
+    sibling_texts = []  # we also accumulate for the month-name fallback (step 2)
     hops = 0
     for sib in start_el.next_siblings:
         hops += 1
-        if hops > 30:       # very small locality window is enough for the date line
+        if hops > 50:  # tight locality window
             break
         if isinstance(sib, Tag) and is_numbered_heading(sib):
-            break
+            break  # stop at first numbered case heading
+
+        # Gather candidate strings from this sibling, preserving order
+        strings = []
         if isinstance(sib, NavigableString):
             s = str(sib).strip()
             if s:
-                pieces.append(s)
+                strings.append(s)
         elif isinstance(sib, Tag):
-            t = sib.get_text(" ", strip=True)
-            if t:
-                pieces.append(t)
+            for s in sib.stripped_strings:
+                s = s.strip()
+                if s:
+                    strings.append(s)
 
-    preface_text = " ".join(pieces).strip()
+        # Test each string IMMEDIATELY for NUMERIC date (return on first hit)
+        for s in strings:
+            m = DATE_NUM_FLEX_PAT.search(s)
+            if m:
+                mm, dd, yyyy = int(m.group(1)), int(m.group(2)), int(m.group(3))
+                try:
+                    return format_us_date(datetime(yyyy, mm, dd))
+                except ValueError:
+                    # keep scanning
+                    pass
 
-    # 1) Numeric date with flexible separators (handles 09.07.2025 and similar)
-    m = DATE_NUM_FLEX_PAT.search(preface_text)
-    if m:
-        mm, dd, yyyy = int(m.group(1)), int(m.group(2)), int(m.group(3))
-        try:
-            return format_us_date(datetime(yyyy, mm, dd))
-        except ValueError:
-            pass
+        sibling_texts.extend(strings)
 
-    # 2) Month-name date near the header
-    m2 = DATE_WORD_PAT.search(preface_text)
+    # 2) Month-name fallback restricted to the SAME locality band (not the whole page)
+    joined_local = " ".join(sibling_texts)
+    m2 = DATE_WORD_PAT.search(joined_local)
     if m2:
         raw = m2.group(0)
         for fmt_try in ("%B %d, %Y", "%b %d, %Y"):
