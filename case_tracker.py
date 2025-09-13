@@ -1,7 +1,20 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Key Generative AI Infringement Cases in Media and Entertainment — 
+Key Generative AI Infringement Cases in Media and Entertainment — McKool-only edition
+- Pulls the latest McKool weekly edition (newsroom-ailitigation-XX)
+- Extracts the edition date printed near 'Current Edition...' in numeric form (e.g., 09.07.2025)
+- Cleans captions and reconstructs explicit right-side pairs (e.g., "Microsoft & OpenAI"),
+  removing stray "et al." and preserving "v." with a period.
+- Builds a de-duped, clean list of cases with:
+    • Headline
+    • Bold <b>Summaries:</b> + optional <b>Key takeaway:</b>
+    • Music-publisher expert lens (deterministic, tailored)
+    • Link labeled “Source →” to a CourtListener search for the caption
+- Outputs to GitHub Pages:
+    • docs/index.html
+    • docs/cases.json
+
 Requires:
   pip install requests beautifulsoup4
 """
@@ -26,7 +39,7 @@ DOCS_DIR = "docs"
 INDEX_PATH = os.path.join(DOCS_DIR, "index.html")
 JSON_PATH = os.path.join(DOCS_DIR, "cases.json")
 
-HEADERS = {"User-Agent": "AI-Cases-Tracker/19.0 (+GitHub Pages/Actions)"}
+HEADERS = {"User-Agent": "AI-Cases-Tracker/20.0 (+GitHub Pages/Actions)"}
 
 MCKOOL_INDEX = "https://www.mckoolsmith.com/newsroom-ailitigation"
 MCKOOL_BASE  = "https://www.mckoolsmith.com/"
@@ -46,6 +59,26 @@ DATE_NUM_FLEX_PAT = re.compile(
 )
 DATE_NUM_FULL_LINE = re.compile(
     rf"^\s*(\d{{1,2}})\s*[{DELIMS}]\s*(\d{{1,2}})\s*[{DELIMS}]\s*(20\d{{2}})\s*$"
+)
+
+# Parties dictionaries for caption refinement
+KNOWN_DEFENDANTS = [
+    "Microsoft", "OpenAI", "Anthropic", "Meta", "Midjourney", "Stability AI",
+    "Perplexity", "Ross Intelligence", "Google", "Alphabet", "Amazon",
+    "Udio", "Uncharted Labs", "Suno", "LAION", "Reddit", "Thomson Reuters",
+    "Getty Images", "Disney", "Warner Bros. Discovery", "Microsoft Corporation",
+    "OpenAI, Inc.", "The Walt Disney Company", "Universal", "Paramount", "Sony"
+]
+KNOWN_PLAINTIFFS = [
+    "The New York Times", "Dow Jones", "Daily News", "Authors Guild",
+    "Center for Investigative Reporting", "Ziff Davis", "Basbanes",
+    "UMG Recordings", "Universal", "Concord Music Group", "Getty Images",
+    "Warner Bros. Discovery", "Disney", "Reddit"
+]
+
+SUFFIX_PAT = re.compile(
+    r"\b(inc\.?|corp\.?|corporation|llc|l\.l\.c\.|llp|l\.l\.p\.|co\.?|ltd\.?|plc|s\.?a\.?)\b\.?",
+    re.I
 )
 
 # ==============================
@@ -68,55 +101,127 @@ def fetch(url: str) -> str:
         r.raise_for_status()
     raise RuntimeError(f"Failed to fetch {url}")
 
-def _clean_party_label(p: str, default_label: str) -> str:
-    """Normalize a single party label and avoid lone 'et al.' results."""
-    s = (p or "").strip()
-    s = re.sub(r"^[,;]+|[,;]+$", "", s)
+def shorten_party(name: str) -> str:
+    """Remove corporate suffixes and tidy spaces/punctuation."""
+    s = (name or "").strip()
+    # Drop commas around suffixes like ', Inc.' cleanly
+    s = re.sub(r"\s*,\s*", ", ", s)
+    s = re.sub(SUFFIX_PAT, "", s)
+    # Remove leftover double spaces / trailing commas
     s = re.sub(r"\s+", " ", s).strip()
-    if re.fullmatch(r"(?i)et\.?\s*al\.?", s):
-        return default_label
-    # Collapse repeated 'et al.'
-    s = re.sub(r"(?i)\bet\.?\s*al\.?(?:\s*et\.?\s*al\.?)+", "et al.", s)
+    s = re.sub(r",\s*$", "", s)
     return s
+
+def find_named_parties_in_text(text: str, candidates: list[str]) -> list[str]:
+    """Return candidates found in text, ordered by first occurrence."""
+    t = text or ""
+    hits = []
+    for name in candidates:
+        m = re.search(re.escape(name), t, re.I)
+        if m:
+            hits.append((m.start(), name))
+    hits.sort(key=lambda x: x[0])
+    # Deduplicate case-insensitively while preserving order
+    seen_lower = set()
+    ordered = []
+    for _, nm in hits:
+        key = nm.lower()
+        if key not in seen_lower:
+            seen_lower.add(key)
+            ordered.append(nm)
+    return ordered
+
+def _split_parties(side: str) -> list[str]:
+    # Split by ',', ' & ', ' and ' but keep short tokens; drop lone et al token.
+    parts = re.split(r"\s*,\s*|\s+&\s+|\s+and\s+", (side or "").strip(), flags=re.I)
+    parts = [p for p in parts if p and not re.fullmatch(r"(?i)et\.?\s*al\.?", p.strip())]
+    return parts
 
 def compress_caption(caption: str) -> str:
     """
-    Normalize captions into 'Lead et al. v Lead et al.' and strip trailing 'Background'.
-    Prevents outputs like 'et al et al v Perplexity'.
+    Base normalizer: keep left/right, remove doubled 'et al.' and trailing 'Background'.
+    DO NOT append 'et al.' automatically; we’ll refine later.
+    Ensure ' v. ' with a period.
     """
-    cap = re.sub(r"\(\d+\)\s*", "", caption or "")
-    m = re.search(r"\s+v\.?\s+", cap, flags=re.I)
+    cap = caption or ""
+    # Normalize 'v' with period in the final render
+    cap = re.sub(r"\s+v\.?\s+", " v. ", cap, flags=re.I)
+
+    m = re.search(r"\s+v\.\s+", cap, flags=re.I)
     if not m:
         return cap.strip()
-
     left_raw, right_raw = cap[:m.start()], cap[m.end():]
 
-    def first_party(side: str, default_label: str) -> str:
-        parts = re.split(r"\s*,\s*| & | and |;|\s{2,}", side)
-        lead = parts[0].strip() if parts and parts[0] else side.strip()
-        lead = _clean_party_label(lead, default_label)
-        if not lead:
-            lead = default_label
-        return lead
+    # Remove trailing "Background" noise
+    left_raw = re.sub(r"(?i)\s*\bbackground\b\s*$", "", left_raw).strip()
+    right_raw = re.sub(r"(?i)\s*\bbackground\b\s*$", "", right_raw).strip()
 
-    def many(side: str) -> bool:
-        return bool(re.search(r"(?i)\bet\.?\s*al\.?|,|\band\b|&", side)) or len(side) > 60
+    # Remove lone 'et al.' tokens
+    left_raw = re.sub(r"(?i)\bet\.?\s*al\.?\b", "", left_raw).strip()
+    right_raw = re.sub(r"(?i)\bet\.?\s*al\.?\b", "", right_raw).strip()
 
-    L = first_party(left_raw, "Plaintiffs")
-    R = first_party(right_raw, "Defendants")
+    left = shorten_party(left_raw)
+    right = shorten_party(right_raw)
 
-    if many(left_raw) and not re.search(r"(?i)\bet\.?\s*al\.?$", L):
-        L = f"{L} et al."
-    if many(right_raw) and not re.search(r"(?i)\bet\.?\s*al\.?$", R):
-        R = f"{R} et al."
+    # Guard against blanks
+    if not left:
+        left = "Plaintiffs"
+    if not right:
+        right = "Defendants"
 
-    # Remove doubled 'et al.' and stray 'background'
-    L = re.sub(r"(?i)\bet\.?\s*al\.?\s*et\.?\s*al\.?$", "et al.", L)
-    R = re.sub(r"(?i)\bet\.?\s*al\.?\s*et\.?\s*al\.?$", "et al.", R)
-    L = re.sub(r"(?i)\s*\bbackground\b\s*$", "", L)
-    R = re.sub(r"(?i)\s*\bbackground\b\s*$", "", R)
+    return f"{left} v. {right}"
 
-    return f"{L} v {R}"
+def refine_caption(caption: str, block_text: str) -> str:
+    """
+    If a side is overly generic (or originally had 'et al.'), try to:
+      - Enumerate up to two named parties found in the block text (from known lists),
+      - Prefer concise 'A & B' on the right side for well-known pairs (e.g., Microsoft & OpenAI),
+      - Keep 'v.' with the period.
+    """
+    cap = caption or ""
+    m = re.search(r"\s+v\.\s+", cap, flags=re.I)
+    if not m:
+        return cap
+    left, right = cap[:m.start()].strip(), cap[m.end():].strip()
+
+    # Determine if right side needs refinement:
+    right_parts = _split_parties(right)
+    needs_refine_right = (
+        len(right_parts) == 0 or               # empty/was stripped
+        len(right_parts) > 2 or                # overly long list
+        re.search(r"(?i)\bet\.?\s*al\.?\b", right) is not None
+    )
+
+    # If needed, rebuild right from text using known defendants
+    if needs_refine_right:
+        found_defs = find_named_parties_in_text(block_text, KNOWN_DEFENDANTS)
+        if len(found_defs) >= 2:
+            # Take the first two unique hits; shorten
+            right = " & ".join(shorten_party(x) for x in found_defs[:2])
+        elif len(found_defs) == 1:
+            right = shorten_party(found_defs[0])
+        # else keep original right (already set)
+
+    # Optionally refine left if too generic
+    needs_refine_left = (
+        left.lower() in ("plaintiffs", "petitioners") or
+        re.search(r"(?i)\bet\.?\s*al\.?\b", left) is not None
+    )
+    if needs_refine_left:
+        found_pls = find_named_parties_in_text(block_text, KNOWN_PLAINTIFFS)
+        if found_pls:
+            left = shorten_party(found_pls[0])
+
+    left = shorten_party(left)
+    right = shorten_party(right)
+
+    # Final cleanup: avoid accidental duplication like "OpenAI & OpenAI"
+    if " & " in right:
+        a, b = [p.strip() for p in right.split(" & ", 1)]
+        if a.lower() == b.lower():
+            right = a
+
+    return f"{left} v. {right}"
 
 def smart_sentence(ctx: str) -> str:
     sents = re.split(r"(?<=[.!?])\s+", ctx or "")
@@ -264,7 +369,7 @@ def extract_as_of_date(article_soup: BeautifulSoup, raw_html: str) -> str:
     """
     Extract the McKool edition date in numeric form (e.g., 09.07.2025).
     To avoid false picks (e.g., 'July 7, 2023' mentioned in case backgrounds),
-    we **only** accept numeric dd[sep]dd[sep]yyyy and prefer:
+    we **only** accept numeric dd{sep}dd{sep}yyyy and prefer:
       1) First numeric date within 1200 chars after 'Current Edition' in raw HTML.
       2) Otherwise, the first numeric date in the first 3000 chars of the page text.
       3) Otherwise, the first numeric date anywhere in the raw HTML.
@@ -352,12 +457,15 @@ def mckool_parse_latest():
 
     items = []
     for (_num, caption_line, block_text) in sections:
-        # Normalize caption to "Lead et al. v Lead et al."
-        raw_caption = re.sub(r"\s+v\.\s+", " v ", caption_line, flags=re.I)
-        raw_caption = re.sub(r"\s+v\s+", " v ", raw_caption, flags=re.I)
+        # Normalize caption to "Left v. Right" (keep period in v.)
+        raw_caption = re.sub(r"\s+v\.\s+", " v. ", caption_line, flags=re.I)
+        raw_caption = re.sub(r"\s+v\s+", " v. ", raw_caption, flags=re.I)
+
         mcap = CAPTION_PAT.search(raw_caption)
-        caption = compress_caption(mcap.group(0)) if mcap else raw_caption.strip()
-        caption = re.sub(r"(?i)\s*\bbackground\b\s*$", "", caption)
+        base_caption = compress_caption(mcap.group(0) if mcap else raw_caption.strip())
+
+        # Refine parties using text context (rebuild pairs like 'Microsoft & OpenAI')
+        caption = refine_caption(base_caption, block_text)
 
         # Pull labeled segments
         status_match = re.search(r"(?is)\bCurrent Status:\s*(.+?)(?:\n[A-Z][A-Za-z &]{2,30}:\s*|\Z)", block_text)
@@ -572,6 +680,119 @@ def ensure_docs(as_of: str):
         f.write("")
     with open(INDEX_PATH, "w", encoding="utf-8") as f:
         f.write(build_index_html(as_of))
+
+def mckool_parse_latest():
+    idx = fetch(MCKOOL_INDEX)
+    latest_url = mckool_find_latest_url(idx)
+    print(f"[McKool] latest URL picked: {latest_url}", flush=True)
+    article_html = fetch(latest_url)
+
+    soup = BeautifulSoup(article_html, "html.parser")
+    main = soup.find("main") or soup.find("article") or soup
+    as_of_date = extract_as_of_date(soup, article_html) or format_us_date(datetime.utcnow())
+
+    def text_of(node):
+        return html.unescape(node.get_text("\n", strip=True))
+
+    # Prefer numbered headings "1. Title"
+    sections = []
+    headings = main.find_all(re.compile(r"^h[1-6]$"))
+    for h in headings:
+        title = text_of(h)
+        m = re.match(r"^\s*(\d+)\.\s*(.+)$", title)
+        if not m:
+            continue
+        num = m.group(1)
+        caption_line = m.group(2).strip()
+
+        # Collect the block until the next numbered heading
+        block_parts = []
+        sib = h.next_sibling
+        while sib:
+            if getattr(sib, "name", None) and re.match(r"^h[1-6]$", sib.name):
+                t2 = text_of(sib)
+                if re.match(r"^\s*\d+\.\s+", t2):
+                    break
+            if hasattr(sib, "get_text"):
+                block_parts.append(text_of(sib))
+            sib = getattr(sib, "next_sibling", None)
+        block_text = "\n".join([p for p in block_parts if p]).strip()
+        sections.append((num, caption_line, block_text))
+
+    # Fallback: line split
+    if not sections:
+        text = text_of(main)
+        raw_blocks = re.split(r"(?m)^\s*(\d+)\.\s+", text)
+        for i in range(1, len(raw_blocks), 2):
+            num = raw_blocks[i]
+            body = raw_blocks[i+1]
+            if not body:
+                continue
+            lines = body.split("\n")
+            caption_line = lines[0].strip()
+            block_text = "\n".join(lines[1:]).strip()
+            sections.append((num, caption_line, block_text))
+
+    print(f"[McKool] section count: {len(sections)}  url={latest_url}", flush=True)
+
+    items = []
+    for (_num, caption_line, block_text) in sections:
+        # Normalize caption to "Left v. Right" (keep period in v.)
+        raw_caption = re.sub(r"\s+v\.\s+", " v. ", caption_line, flags=re.I)
+        raw_caption = re.sub(r"\s+v\s+", " v. ", raw_caption, flags=re.I)
+
+        mcap = CAPTION_PAT.search(raw_caption)
+        base_caption = compress_caption(mcap.group(0) if mcap else raw_caption.strip())
+
+        # Refine parties using text context (rebuild pairs like 'Microsoft & OpenAI')
+        caption = refine_caption(base_caption, block_text)
+
+        # Pull labeled segments
+        status_match = re.search(r"(?is)\bCurrent Status:\s*(.+?)(?:\n[A-Z][A-Za-z &]{2,30}:\s*|\Z)", block_text)
+        background_match = re.search(r"(?is)\bBackground:\s*(.+?)(?:\n[A-Z][A-Za-z &]{2,30}:\s*|\Z)", block_text)
+        status_text = (status_match.group(1).strip() if status_match else "")
+        background_text = (background_match.group(1).strip() if background_match else "")
+
+        lead = status_text or background_text or smart_sentence(block_text)
+        status, outcome = infer_status_outcome(status_text + " " + background_text)
+        headline = headline_for(caption, status_text + " " + background_text)
+
+        # Optional generic key takeaway (short, neutral)
+        generic_takeaway = ""
+        t = (status_text + " " + background_text).lower()
+        if "fair use" in t and ("judgment" in t or "summary judgment" in t):
+            generic_takeaway = "Fair-use outcomes may hinge on record-specific market-harm proof."
+        elif "settlement" in t or "settled" in t:
+            generic_takeaway = "Settlement figures are emerging benchmarks for per-work valuation."
+        elif "injunction" in t:
+            generic_takeaway = "Injunctive relief can impose output filters and retraining constraints."
+
+        pub_lens = music_publisher_lens(caption, status_text, background_text)
+
+        # Bold "Summaries:" and caption
+        summary_html = f"<b>Summaries:</b> <b>{html.escape(caption)}</b> — {html.escape(lead)}"
+        if generic_takeaway:
+            summary_html += "<br><br><b>Key takeaway:</b> " + html.escape(generic_takeaway)
+
+        # Link to original filings via CourtListener search
+        src_url = courtlistener_search_url(caption, hint_text=status_text + " " + background_text)
+
+        items.append({
+            "title": caption,
+            "headline": headline,
+            "summary": summary_html,
+            "takeaway": "",
+            "music_lens": pub_lens,
+            "status": status,
+            "outcome": outcome,
+            "source": "",
+            "url": src_url,
+            "case_ref": "",
+            "date": as_of_date
+        })
+
+    print(f"[McKool] built {len(items)} items; as_of={as_of_date}", flush=True)
+    return items, as_of_date
 
 def run():
     print("[tracker] pulling latest McKool edition (publisher-focused)", flush=True)
