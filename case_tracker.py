@@ -3,7 +3,7 @@
 """
 Key Generative AI Infringement Cases in Media and Entertainment — McKool-only edition
 - Pulls the latest McKool weekly edition (newsroom-ailitigation-XX)
-- Extracts the edition date printed under 'Current Edition...' (e.g., 09.07.2025)
+- Extracts the edition date printed directly under 'Current Edition...' (e.g., 09.07.2025)
 - Builds a de-duped, clean list of cases with:
     • Headline
     • Bold <b>Summaries:</b> + optional <b>Key takeaway:</b>
@@ -37,7 +37,7 @@ DOCS_DIR = "docs"
 INDEX_PATH = os.path.join(DOCS_DIR, "index.html")
 JSON_PATH = os.path.join(DOCS_DIR, "cases.json")
 
-HEADERS = {"User-Agent": "AI-Cases-Tracker/16.2 (+GitHub Pages/Actions)"}
+HEADERS = {"User-Agent": "AI-Cases-Tracker/16.3 (+GitHub Pages/Actions)"}
 
 MCKOOL_INDEX = "https://www.mckoolsmith.com/newsroom-ailitigation"
 MCKOOL_BASE  = "https://www.mckoolsmith.com/"
@@ -276,47 +276,42 @@ def extract_as_of_date(article_soup: BeautifulSoup) -> str:
     """
     Extract the edition date printed under the 'Current Edition...' header.
 
-    Preference:
-      1) First numeric date in the preface (MM.DD.YYYY with flexible separators).
-      2) Month-name date in the preface (e.g., September 7, 2025).
-      3) Fallback: today's UTC date.
+    STRONG locality: only look at the header's immediate next siblings (strings or tags),
+    and stop at the first numbered case heading like "1. Something".
 
-    The 'preface' is everything between the 'Current Edition...' header and the
-    first numbered case heading ("1. ..."). We collect BOTH element text and
-    bare text nodes so we don't miss lines like "09.07.2025".
-    Always returns a string.
+    Preference:
+      1) First numeric date near the header (MM.DD.YYYY with flexible separators).
+      2) Month-name date near the header (e.g., September 7, 2025).
+      3) Fallback: today's UTC date.
     """
     main = article_soup.find("main") or article_soup.find("article") or article_soup
 
-    # Find the "Current Edition" header element
+    # Find the "Current Edition" header element (e.g., <h1>Current Edition: ...</h1>)
     ce_node = main.find(string=re.compile(r"^\s*Current Edition", re.I))
     start_el = ce_node.parent if ce_node and getattr(ce_node, "parent", None) else main
 
-    # Helper to detect the first numbered case heading like "1. Something"
+    # helper: numbered heading "1. Title"
     def is_numbered_heading(tag: Tag) -> bool:
         if not isinstance(tag, Tag): return False
         if not re.match(r"^h[1-6]$", tag.name): return False
         t = tag.get_text(" ", strip=True)
         return bool(re.match(r"^\s*\d+\.\s+", t))
 
-    # Build a tight "preface" by walking *elements and text nodes* after the header,
-    # stopping at the first numbered case heading.
-    pieces, hops = [], 0
-    for el in start_el.next_elements:  # includes strings AND tags in document order
+    # Collect ONLY immediate next siblings (not whole subtree), up to first numbered heading
+    pieces = []
+    hops = 0
+    for sib in start_el.next_siblings:
         hops += 1
-        if hops > 200:  # safety bound
+        if hops > 30:       # very small locality window is enough for the date line
             break
-        if isinstance(el, Tag) and is_numbered_heading(el):
+        if isinstance(sib, Tag) and is_numbered_heading(sib):
             break
-        # Skip the header element itself
-        if el is start_el:
-            continue
-        if isinstance(el, NavigableString):
-            s = str(el).strip()
+        if isinstance(sib, NavigableString):
+            s = str(sib).strip()
             if s:
                 pieces.append(s)
-        elif isinstance(el, Tag):
-            t = el.get_text(" ", strip=True)
+        elif isinstance(sib, Tag):
+            t = sib.get_text(" ", strip=True)
             if t:
                 pieces.append(t)
 
@@ -331,7 +326,7 @@ def extract_as_of_date(article_soup: BeautifulSoup) -> str:
         except ValueError:
             pass
 
-    # 2) Month-name date in the preface
+    # 2) Month-name date near the header
     m2 = DATE_WORD_PAT.search(preface_text)
     if m2:
         raw = m2.group(0)
@@ -630,11 +625,9 @@ def run():
         print(f"[McKool] ERROR: {e}", flush=True)
         items, as_of = [], format_us_date(datetime.utcnow())
 
-    # Safety: ensure we always have a human-readable date string
     if not as_of:
         as_of = format_us_date(datetime.utcnow())
 
-    # Sort & write
     items = sorted(items, key=lambda x: x["title"].lower())
     ensure_docs(as_of)
     with open(JSON_PATH, "w", encoding="utf-8") as f:
