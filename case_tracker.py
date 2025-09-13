@@ -1,18 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Key Generative AI Infringement Cases in Media and Entertainment — McKool-only edition
-- Pulls the latest McKool weekly edition (newsroom-ailitigation-XX)
-- Extracts the edition date printed near 'Current Edition...' in numeric form (e.g., 09.07.2025)
-- Builds a de-duped, clean list of cases with:
-    • Headline
-    • Bold <b>Summaries:</b> + optional <b>Key takeaway:</b>
-    • Music-publisher expert lens (deterministic, tailored)
-    • Link labeled “Source →” to a CourtListener search for the caption
-- Outputs to GitHub Pages:
-    • docs/index.html
-    • docs/cases.json
-
+Key Generative AI Infringement Cases in Media and Entertainment — 
 Requires:
   pip install requests beautifulsoup4
 """
