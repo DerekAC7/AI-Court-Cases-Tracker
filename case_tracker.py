@@ -5,15 +5,7 @@ Key Generative AI Infringement Cases in Media and Entertainment — McKool-only 
 with publisher-specific expert takeaways, docket/source linking to original filings
 (via CourtListener search URL), and an "as of <date>" subtitle pulled from McKool.
 
-What it does
-- Finds the NEWEST McKool Smith weekly page (newsroom-ailitigation-XX)
-- Parses each numbered case block (1., 2., …)
-- Extracts the page date and shows it as "as of <date>" under the main heading
-- Builds bold HTML summaries with:
-    • Key takeaway (generic, when inferable from the text)
-    • Music lens (publisher-focused, expert/actionable)
-- Replaces “source: …” with a link to the original docket/filings:
-    • CourtListener search URL tailored to the caption (deterministic URL; no scraping/API)
+Fix: robust header date extraction ("09.07.2025" under 'Current Edition').
 
 Output
 - docs/index.html
@@ -37,25 +29,27 @@ from urllib.parse import urljoin
 DOCS_DIR = "docs"
 JSON_PATH = os.path.join(DOCS_DIR, "cases.json")
 
-HEADERS = {"User-Agent": "AI-Cases-Tracker/14.0 (+GitHub Pages/Actions)"}
+HEADERS = {"User-Agent": "AI-Cases-Tracker/15.0 (+GitHub Pages/Actions)"}
 
 CAPTION_PAT = re.compile(
     r"\b([A-Z][A-Za-z0-9\.\-’'& ]{1,90})\s+v\.?\s+([A-Z][A-Za-z0-9\.\-’'& ]{1,90})\b",
     re.I
 )
 
-DATE_PAT = re.compile(
+# Month-name like "September 12, 2025"
+DATE_WORD_PAT = re.compile(
     r"\b(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|"
     r"Sep(?:t\.?|tember)|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\s+\d{1,2},\s+20\d{2}\b",
     re.I
 )
+# Numeric like "09.07.2025" (McKool header)
+DATE_NUM_PAT = re.compile(r"\b(\d{1,2})\.(\d{1,2})\.(20\d{2})\b")
 
 # -----------------------
 # UI (index.html) — main title + dynamic "as of <date>" subtitle
 # -----------------------
 
 def build_index_html(as_of: str) -> str:
-    # CSS includes .sub for the subtitle line
     return f"""<!doctype html>
 <html lang="en">
 <head>
@@ -206,7 +200,6 @@ def fetch(url: str) -> str:
 # -----------------------
 
 def _clean_party_label(p: str, default_label: str) -> str:
-    """Normalize a single party label and avoid lone 'et al.' results."""
     s = (p or "").strip()
     s = re.sub(r"^[,;]+|[,;]+$", "", s)
     s = re.sub(r"\s+", " ", s).strip()
@@ -216,7 +209,6 @@ def _clean_party_label(p: str, default_label: str) -> str:
     return s
 
 def compress_caption(caption: str) -> str:
-    """Turn messy captions into clean 'Lead et al. v Lead et al.'"""
     cap = re.sub(r"\(\d+\)\s*", "", caption or "")
     m = re.search(r"\s+v\.?\s+", cap, flags=re.I)
     if not m:
@@ -370,7 +362,7 @@ def music_publisher_lens(caption: str, status_text: str, background_text: str) -
     return ("Build evidentiary files on lyric/composition market harm (lost sync, sheet music, lyric licensing) and compel disclosure of training datasets and ingestion logs.")
 
 # -----------------------
-# McKool Smith: fetch latest edition and parse numbered items + "as of" date
+# McKool: fetch latest edition, parse numbered items + accurate "as of" date
 # -----------------------
 
 MCKOOL_INDEX = "https://www.mckoolsmith.com/newsroom-ailitigation"
@@ -396,26 +388,86 @@ def mckool_find_latest_url(index_html: str) -> str:
             return urljoin(MCKOOL_BASE, a["href"].strip())
     return MCKOOL_INDEX
 
+def _format_us_date(dt: datetime) -> str:
+    # Cross-platform day without leading zero
+    return dt.strftime("%B %#d, %Y") if os.name == "nt" else dt.strftime("%B %-d, %Y")
+
+def _parse_any_date_string(s: str) -> datetime | None:
+    s = s.strip()
+    # Try numeric MM.DD.YYYY
+    m = DATE_NUM_PAT.search(s)
+    if m:
+        mm, dd, yyyy = int(m.group(1)), int(m.group(2)), int(m.group(3))
+        try:
+            return datetime(yyyy, mm, dd)
+        except ValueError:
+            return None
+    # Try Month D, YYYY
+    m2 = DATE_WORD_PAT.search(s)
+    if m2:
+        try:
+            return datetime.strptime(m2.group(0), "%B %d, %Y")
+        except ValueError:
+            # Some sites use abbreviated months like "Sept."
+            for fmt in ("%b %d, %Y",):
+                try:
+                    return datetime.strptime(m2.group(0), fmt)
+                except ValueError:
+                    pass
+    return None
+
 def extract_as_of_date(article_soup: BeautifulSoup) -> str:
     """
-    Try to read a human-friendly date (e.g., 'September 12, 2025') from the page header.
-    Fallback to today's date if not found.
+    Strategy:
+    1) Look in the "preface" (content before the first numbered section like '1. ...')
+       for the first header-style date. McKool prints '09.07.2025' here.
+    2) If not found, look for text near 'Current Edition' and parse date in its siblings.
+    3) Fallback to the first reasonable date found anywhere.
+    4) Final fallback: today's UTC date.
     """
-    # Check likely header nodes first
-    for sel in ["h1", "h2", ".article__header", "header", "main"]:
-        node = article_soup.select_one(sel)
-        if node:
-            text = node.get_text(" ", strip=True)
-            m = DATE_PAT.search(text or "")
-            if m:
-                return m.group(0)
-    # Whole document scan (first date we see)
+    main = article_soup.find("main") or article_soup.find("article") or article_soup
+
+    # Build preface text up to before the first "N." heading
+    preface_chunks = []
+    for child in list(main.children):
+        # If child is a numbered heading like "1. Bartz v. Anthropic", stop
+        if getattr(child, "name", None) and re.match(r"^h[1-6]$", child.name or ""):
+            hdr_text = child.get_text(" ", strip=True)
+            if re.match(r"^\s*\d+\.\s+", hdr_text or ""):
+                break
+        # Otherwise accumulate text
+        if hasattr(child, "get_text"):
+            preface_chunks.append(child.get_text(" ", strip=True))
+    preface_text = " ".join([p for p in preface_chunks if p]).strip()
+
+    # 1) Prefer numeric header date in preface
+    dt = _parse_any_date_string(preface_text)
+    if dt:
+        return _format_us_date(dt)
+
+    # 2) Search near "Current Edition"
+    ce_node = article_soup.find(string=re.compile(r"Current Edition", re.I))
+    if ce_node:
+        parent = ce_node.parent
+        search_nodes = [parent] + [parent.find_next_sibling() for _ in range(5)]
+        cur = parent
+        for _ in range(8):
+            if cur is None:
+                break
+            if hasattr(cur, "get_text"):
+                dt = _parse_any_date_string(cur.get_text(" ", strip=True))
+                if dt:
+                    return _format_us_date(dt)
+            cur = cur.next_sibling if hasattr(cur, "next_sibling") else None
+
+    # 3) Whole-document fallback (first match)
     text = article_soup.get_text(" ", strip=True)
-    m = DATE_PAT.search(text or "")
-    if m:
-        return m.group(0)
-    # Fallback: today's date
-    return datetime.utcnow().strftime("%B %-d, %Y") if os.name != "nt" else datetime.utcnow().strftime("%B %#d, %Y")
+    dt = _parse_any_date_string(text)
+    if dt:
+        return _format_us_date(dt)
+
+    # 4) Last resort: today (UTC)
+    return _format_us_date(datetime.utcnow())
 
 def mckool_parse_latest():
     idx = fetch(MCKOOL_INDEX)
@@ -453,7 +505,7 @@ def mckool_parse_latest():
         block_text = "\n".join([p for p in block_parts if p]).strip()
         sections.append((num, caption_line, block_text))
 
-    # Fallback: line-based split on "N. "
+    # Fallback: line-based split
     if not sections:
         text = text_of(main)
         raw_blocks = re.split(r"(?m)^\s*(\d+)\.\s+", text)
@@ -485,11 +537,14 @@ def mckool_parse_latest():
         status_text = (status_match.group(1).strip() if status_match else "")
         background_text = (background_match.group(1).strip() if background_match else "")
 
+        # Lead sentence(s)
         lead = status_text or background_text or smart_sentence(block_text)
 
+        # Infer status/outcome/headline/takeaway
         status, outcome = infer_status_outcome(status_text + " " + background_text)
         headline = headline_for(caption, status_text + " " + background_text)
 
+        # Generic Key takeaway (optional, brief)
         generic_takeaway = ""
         t = (status_text + " " + background_text).lower()
         if "fair use" in t and ("judgment" in t or "summary judgment" in t):
@@ -499,12 +554,15 @@ def mckool_parse_latest():
         elif "injunction" in t:
             generic_takeaway = "Injunctive relief can impose output filters and retraining constraints."
 
+        # Publisher expert lens
         pub_lens = music_publisher_lens(caption, status_text, background_text)
 
+        # Build summary HTML (with bold “Summaries:”)
         summary_html = f"<b>Summaries:</b> <b>{html.escape(caption)}</b> — {html.escape(lead)}"
         if generic_takeaway:
             summary_html += "<br><br><b>Key takeaway:</b> " + html.escape(generic_takeaway)
 
+        # Link to original filings (CourtListener search URL built from caption)
         src_url = courtlistener_search_url(caption, hint_text=status_text + " " + background_text)
 
         items.append({
@@ -518,7 +576,7 @@ def mckool_parse_latest():
             "source": "",
             "url": src_url,
             "case_ref": "",
-            "date": as_of_date  # store for reference if you want
+            "date": as_of_date
         })
 
     print(f"[McKool] built {len(items)} items; as_of={as_of_date}", flush=True)
@@ -563,9 +621,11 @@ def run():
         items, as_of = mckool_parse_latest()
     except Exception as e:
         print(f"[McKool] ERROR: {e}", flush=True)
-        items, as_of = [], datetime.utcnow().strftime("%B %-d, %Y") if os.name != "nt" else datetime.utcnow().strftime("%B %#d, %Y")
+        # UTC today fallback
+        as_of = (datetime.utcnow().strftime("%B %#d, %Y") if os.name == "nt"
+                 else datetime.utcnow().strftime("%B %-d, %Y"))
+        items = []
 
-    # Sort & write
     items = sorted(items, key=lambda x: x["title"].lower())
     ensure_docs(as_of)
     with open(JSON_PATH, "w", encoding="utf-8") as f:
