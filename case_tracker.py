@@ -37,7 +37,7 @@ DOCS_DIR = "docs"
 INDEX_PATH = os.path.join(DOCS_DIR, "index.html")
 JSON_PATH = os.path.join(DOCS_DIR, "cases.json")
 
-HEADERS = {"User-Agent": "AI-Cases-Tracker/16.0 (+GitHub Pages/Actions)"}
+HEADERS = {"User-Agent": "AI-Cases-Tracker/16.1 (+GitHub Pages/Actions)"}
 
 MCKOOL_INDEX = "https://www.mckoolsmith.com/newsroom-ailitigation"
 MCKOOL_BASE  = "https://www.mckoolsmith.com/"
@@ -55,8 +55,10 @@ DATE_WORD_PAT = re.compile(
     re.I
 )
 
-# Numeric header date used on McKool, e.g., "09.07.2025"
-DATE_NUM_PAT = re.compile(r"\b(\d{1,2})\.(\d{1,2})\.(20\d{2})\b")
+# Flexible numeric header date used on McKool (accepts . / bullet / hyphen variants)
+# Matches things like: 09.07.2025, 9·7·2025, 09/07/2025, 09-07-2025, etc.
+DELIMS = r"\.\u2024\u2219\u00B7\u2027\u30FB/\-\u2010\u2011\u2012\u2013\u2014"
+DATE_NUM_FLEX_PAT = re.compile(rf"(\d{{1,2}})[{DELIMS}](\d{{1,2}})[{DELIMS}](20\d{{2}})")
 
 # ==============================
 # Helpers
@@ -273,26 +275,33 @@ def mckool_find_latest_url(index_html: str) -> str:
 def extract_as_of_date(article_soup: BeautifulSoup) -> str:
     """
     Extract the edition date printed under the 'Current Edition...' header.
+
     Preference:
-      1) First numeric MM.DD.YYYY anywhere inside <main> (e.g., 09.07.2025).
-      2) Month-name date in the preface (between 'Current Edition...' and first numbered case).
-      3) Month-name date anywhere in <main>.
-      4) Fallback: today's UTC date.
+      1) First numeric date in the preface (MM.DD.YYYY with flexible separators).
+      2) Month-name date in the preface (e.g., September 7, 2025).
+      3) Fallback: today's UTC date.
+
+    The 'preface' is everything between the 'Current Edition...' header and the
+    first numbered case heading ("1. ..."). We avoid scanning the entire page so
+    we don't accidentally pick up dates embedded in case backgrounds.
     Always returns a string.
     """
     main = article_soup.find("main") or article_soup.find("article") or article_soup
 
-    # 1) Numeric anywhere in <main>
-    text_main = main.get_text(" ", strip=True)
-    m = DATE_NUM_PAT.search(text_main)
-    if m:
-        try:
-            dt = datetime(int(m.group(3)), int(m.group(1)), int(m.group(2)))
-            return format_us_date(dt)
-        except ValueError:
-            pass
+    # Locate the "Current Edition" header element
+    ce_text_node = main.find(string=re.compile(r"^\s*Current Edition", re.I))
+    if ce_text_node and getattr(ce_text_node, "parent", None):
+        start_el = ce_text_node.parent
+    else:
+        # Fallback: first heading in main
+        start_el = None
+        for h in main.find_all(re.compile(r"^h[1-6]$")):
+            start_el = h
+            break
+        if not start_el:
+            start_el = main
 
-    # Build 'preface' (from 'Current Edition' down to but not including first '1.' heading)
+    # Walk forward sibling-by-sibling until the first numbered heading
     def is_numbered_heading(tag) -> bool:
         if not getattr(tag, "name", None):
             return False
@@ -301,20 +310,28 @@ def extract_as_of_date(article_soup: BeautifulSoup) -> str:
         t = tag.get_text(" ", strip=True)
         return bool(re.match(r"^\s*\d+\.\s+", t))
 
-    ce = main.find(string=re.compile(r"^\s*Current Edition", re.I))
-    start_el = ce.parent if ce else main
     preface_chunks, node, hops = [], getattr(start_el, "next_sibling", None), 0
-    while node and hops < 80:
+    while node and hops < 120:  # generous but bounded
         hops += 1
         if hasattr(node, "name") and is_numbered_heading(node):
             break
         if hasattr(node, "get_text"):
             preface_chunks.append(node.get_text(" ", strip=True))
         node = getattr(node, "next_sibling", None)
+
     preface_text = " ".join([p for p in preface_chunks if p]).strip()
 
-    # 2) Month-name date in preface
-    m2 = DATE_WORD_PAT.search(preface_text or "")
+    # 1) Prefer a numeric MM.DD.YYYY-style date with flexible separators in the preface
+    m = DATE_NUM_FLEX_PAT.search(preface_text)
+    if m:
+        mm, dd, yyyy = int(m.group(1)), int(m.group(2)), int(m.group(3))
+        try:
+            return format_us_date(datetime(yyyy, mm, dd))
+        except ValueError:
+            pass
+
+    # 2) Month-name date in the preface
+    m2 = DATE_WORD_PAT.search(preface_text)
     if m2:
         raw = m2.group(0)
         for fmt_try in ("%B %d, %Y", "%b %d, %Y"):
@@ -324,18 +341,7 @@ def extract_as_of_date(article_soup: BeautifulSoup) -> str:
             except ValueError:
                 continue
 
-    # 3) Month-name date anywhere in main
-    m3 = DATE_WORD_PAT.search(text_main or "")
-    if m3:
-        raw = m3.group(0)
-        for fmt_try in ("%B %d, %Y", "%b %d, %Y"):
-            try:
-                dt = datetime.strptime(raw, fmt_try)
-                return format_us_date(dt)
-            except ValueError:
-                continue
-
-    # 4) Fallback: today (UTC)
+    # 3) Final fallback: today (UTC)
     return format_us_date(datetime.utcnow())
 
 def mckool_parse_latest():
@@ -402,8 +408,8 @@ def mckool_parse_latest():
         caption = re.sub(r"(?i)\s*\bbackground\b\s*$", "", caption)
 
         # Pull labeled segments
-        status_match = re.search(r"(?is)\bCurrent Status:\s*(.+?)(?:\n[A-Z][A-Za-z ]{2,20}:\s*|\Z)", block_text)
-        background_match = re.search(r"(?is)\bBackground:\s*(.+?)(?:\n[A-Z][A-Za-z ]{2,20}:\s*|\Z)", block_text)
+        status_match = re.search(r"(?is)\bCurrent Status:\s*(.+?)(?:\n[A-Z][A-Za-z &]{2,30}:\s*|\Z)", block_text)
+        background_match = re.search(r"(?is)\bBackground:\s*(.+?)(?:\n[A-Z][A-Za-z &]{2,30}:\s*|\Z)", block_text)
         status_text = (status_match.group(1).strip() if status_match else "")
         background_text = (background_match.group(1).strip() if background_match else "")
 
