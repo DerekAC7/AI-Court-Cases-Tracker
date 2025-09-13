@@ -3,7 +3,7 @@
 """
 Key Generative AI Infringement Cases in Media and Entertainment — McKool-only edition
 - Pulls the latest McKool weekly edition (newsroom-ailitigation-XX)
-- Extracts the edition date printed directly under 'Current Edition...' (e.g., 09.07.2025)
+- Extracts the edition date printed beside/under 'Current Edition...' (e.g., 09.07.2025)
 - Builds a de-duped, clean list of cases with:
     • Headline
     • Bold <b>Summaries:</b> + optional <b>Key takeaway:</b>
@@ -37,7 +37,7 @@ DOCS_DIR = "docs"
 INDEX_PATH = os.path.join(DOCS_DIR, "index.html")
 JSON_PATH = os.path.join(DOCS_DIR, "cases.json")
 
-HEADERS = {"User-Agent": "AI-Cases-Tracker/17.0 (+GitHub Pages/Actions)"}
+HEADERS = {"User-Agent": "AI-Cases-Tracker/18.0 (+GitHub Pages/Actions)"}
 
 MCKOOL_INDEX = "https://www.mckoolsmith.com/newsroom-ailitigation"
 MCKOOL_BASE  = "https://www.mckoolsmith.com/"
@@ -55,8 +55,8 @@ DATE_WORD_PAT = re.compile(
     re.I
 )
 
-# Flexible numeric header date used on McKool (accepts . / bullet / hyphen variants),
-# and tolerates optional whitespace around delimiters:
+# Flexible numeric header date used on McKool; accepts . / bullet / hyphen variants,
+# tolerates optional whitespace around delimiters:
 # Matches: 09.07.2025, 09 . 07 . 2025, 9·7·2025, 09/07/2025, 09-07-2025, etc.
 DELIMS = r"\.\u2024\u2219\u00B7\u2027\u30FB/\-\u2010\u2011\u2012\u2013\u2014"
 DATE_NUM_FULL_LINE = re.compile(
@@ -278,23 +278,27 @@ def mckool_find_latest_url(index_html: str) -> str:
             return urljoin(MCKOOL_BASE, a["href"].strip())
     return MCKOOL_INDEX
 
-def extract_as_of_date(article_soup: BeautifulSoup) -> str:
+def extract_as_of_date(article_soup: BeautifulSoup, raw_html: str) -> str:
     """
-    Get the edition date printed directly under the 'Current Edition...' heading.
-    Accepts 09.07.2025 / 9·7·2025 / 09/07/2025 etc. Returns 'Month D, YYYY'.
+    Get the edition date printed with/under the 'Current Edition...' heading.
     Strategy:
-      1) Search INSIDE the heading element itself (handles <h1> with <br>09.07.2025).
-      2) Then walk next elements (not only siblings), stopping at first numbered '1.' heading.
-      3) Month-name fallback restricted to this header band only.
-      4) Final fallback: today's UTC (should rarely trigger).
+      1) Search INSIDE the heading element itself (handles inline <br/>09.07.2025).
+      2) Build a tight 'header band' from up to ~12 short visible nodes after the heading.
+         - Accept numeric date even if it's not a full line (e.g., '09.07.2025  Print PDF').
+      3) Month-name fallback restricted to that same header band.
+      4) As a belt-and-suspenders last resort, search the raw HTML for
+         'Current Edition ...' followed shortly by a numeric date.
+      5) Final fallback: today's UTC.
     """
+    def fmt(mm, dd, yyyy) -> str:
+        return format_us_date(datetime(int(yyyy), int(mm), int(dd)))
+
     main = article_soup.find("main") or article_soup.find("article") or article_soup
 
-    # Prefer the *heading element* whose text contains 'Current Edition'
+    # Prefer the element containing 'Current Edition'
     current_h = None
-    for h in main.find_all(True):  # any tag; some sites wrap the text oddly
-        text = h.get_text(" ", strip=True).lower()
-        if "current edition" in text:
+    for h in main.find_all(True):  # any tag; robust to odd wrappers
+        if "current edition" in h.get_text(" ", strip=True).lower():
             current_h = h
             break
     if not current_h:
@@ -306,61 +310,89 @@ def extract_as_of_date(article_soup: BeautifulSoup) -> str:
     for ln in head_lines:
         m = DATE_NUM_FULL_LINE.match(ln)
         if m:
-            mm, dd, yyyy = map(int, m.groups())
             try:
-                return format_us_date(datetime(yyyy, mm, dd))
+                return fmt(*m.groups())
+            except ValueError:
+                pass
+        # Also allow inline numeric date on the same line
+        m2 = DATE_NUM_FLEX_PAT.search(ln)
+        if m2:
+            try:
+                return fmt(*m2.groups())
             except ValueError:
                 pass
 
     # Helper: first numbered case heading like "1. Title"
     def is_numbered_heading(tag: Tag) -> bool:
-        if not isinstance(tag, Tag): return False
-        if not re.match(r"^h[1-6]$", tag.name): return False
+        if not isinstance(tag, Tag):
+            return False
+        if not re.match(r"^h[1-6]$", tag.name):
+            return False
         return bool(re.match(r"^\s*\d+\.\s+", tag.get_text(" ", strip=True)))
 
-    # 2) Walk forward through *next elements* until first numbered heading
-    band_texts = []
-    hops = 0
+    # 2) Build a tight header band from the next few short visible nodes
+    band_parts = []
+    seen = 0
     for el in current_h.next_elements:
-        hops += 1
-        if hops > 300:  # safety
-            break
+        # Stop when we hit the first numbered heading
         if isinstance(el, Tag) and is_numbered_heading(el):
             break
         if isinstance(el, Tag):
             if el.name in ("script", "style", "noscript", "svg"):
                 continue
-        s = ""
-        if isinstance(el, NavigableString):
-            s = str(el).strip()
-            if not s:
-                continue
-            # quick full-line check
-            m = DATE_NUM_FULL_LINE.match(s)
-            if m:
-                mm, dd, yyyy = map(int, m.groups())
-                try:
-                    return format_us_date(datetime(yyyy, mm, dd))
-                except ValueError:
-                    pass
-        elif isinstance(el, Tag):
             s = el.get_text(" ", strip=True)
-        if s:
-            band_texts.append(s)
+        elif isinstance(el, NavigableString):
+            s = str(el).strip()
+        else:
+            s = ""
+        if not s:
+            continue
+        band_parts.append(s)
+        seen += 1
+        if seen >= 12:  # tight band
+            break
 
-    # 3) Month-name fallback but ONLY within the header band we collected
-    joined_local = " ".join(band_texts)
-    m2 = DATE_WORD_PAT.search(joined_local)
-    if m2:
-        raw = m2.group(0)
+    # First, try full-line numeric on each short snippet
+    for s in band_parts:
+        m = DATE_NUM_FULL_LINE.match(s)
+        if m:
+            try:
+                return fmt(*m.groups())
+            except ValueError:
+                pass
+    # Then allow inline numeric date anywhere in the small band
+    for s in band_parts:
+        m = DATE_NUM_FLEX_PAT.search(s)
+        if m:
+            try:
+                return fmt(*m.groups())
+            except ValueError:
+                pass
+
+    # 3) Month-name fallback within the same band
+    band_join = " ".join(band_parts)
+    m_word = DATE_WORD_PAT.search(band_join)
+    if m_word:
+        raw = m_word.group(0)
         for fmt_try in ("%B %d, %Y", "%b %d, %Y"):
             try:
-                dt = datetime.strptime(raw, fmt_try)
-                return format_us_date(dt)
+                return format_us_date(datetime.strptime(raw, fmt_try))
             except ValueError:
                 continue
 
-    # 4) Final fallback: today (UTC)
+    # 4) Raw HTML rescue: find "Current Edition" then nearest numeric date after it
+    try:
+        m_anchor = re.search(r"current\s+edition.*?", raw_html, re.I | re.S)
+        if m_anchor:
+            start = m_anchor.start()
+            tail = raw_html[start:start + 2000]  # small window after the header
+            m_num = DATE_NUM_FLEX_PAT.search(tail)
+            if m_num:
+                return fmt(*m_num.groups())
+    except Exception:
+        pass
+
+    # 5) Final fallback: today (UTC)
     return format_us_date(datetime.utcnow())
 
 def mckool_parse_latest():
@@ -371,7 +403,7 @@ def mckool_parse_latest():
 
     soup = BeautifulSoup(article_html, "html.parser")
     main = soup.find("main") or soup.find("article") or soup
-    as_of_date = extract_as_of_date(soup) or format_us_date(datetime.utcnow())
+    as_of_date = extract_as_of_date(soup, article_html) or format_us_date(datetime.utcnow())
 
     def text_of(node):
         return html.unescape(node.get_text("\n", strip=True))
