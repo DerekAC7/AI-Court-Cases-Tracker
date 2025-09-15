@@ -2,7 +2,7 @@
   {
     "title": "Bartz v. Anthropic",
     "headline": "Bartz v. Anthropic - rules AI training fair use.",
-    "summary": "<b>Summaries:</b> <b>Bartz v. Anthropic</b> — Anthropic pays the largest known copyright settlement in history!\n2 weeks ago, we saw that the Bartz plaintiffs (book authors and rights-holders) and Anthropic had reached a proposed settlement, but we did not know any of the terms. Last Friday, the world found out that the proposed settlement is $1.5 Billion! There are roughly 500,000 copyrighted works subject to the settlement, resulting is about $3,000 per work. Although this is certainly an historic and watershed moment in AI training litigation, we need to put it in context. And, today is the day Judge Alsup is expected to approve the settlement.\nRecall that Judge Alsup’s summary judgment ruling didn’t fault Anthropic for training its AI on copyrighted works. Rather, Alsup found that pirating copyrighted works to create a general-purpose digital library for Anthropic to use however it wanted was not “fair use.” In another case decided that same week several weeks ago, Judge Vince Chhabria (in the same federal district) ruled that Meta’s acquisition of copyrighted materials through torrenting was not copyright infringement because the purpose of the acquisition was to train an AI system, which both Chhabria and Alsup found to be fair use. According to Alsup, Anthropic’s violation here is not training its AI, but taking hundreds of thousands of copyrighted works for whatever purpose it wanted. Arguably, if Anthropic had simply purchased the copyrighted works (likely for far less than $3,000 a copy) it would have been clear to train its AI however it chose — although, to be clear, Judge Chhabria would likely reach a different result.\nIt remains to be seen how or whether courts will try to synthesize Judge Chhabria’s ruling in\nKadrey\nwith Alsup’s ruling in\nBartz\n. But for now, the\nBartz\nauthors can claim a well-earned victory. Despite the complex background, we remain hopeful that this massive settlement will encourage other AI companies to compensate authors for the use of their copyrighted works. And we expect they will.<br><br><b>Key takeaway:</b> Fair-use outcomes may hinge on record-specific market-harm proof.",
+    "summary": "<b>Summaries:</b> <b>Bartz v. Anthropic</b> — Anthropic chooses to pay the largest known copyright settlement in history — but so far, the Court won’t let them!\nA few weeks ago, we saw that the Bartz plaintiffs (book authors and rights-holders) and Anthropic had reached a proposed settlement of $1.5 Billion. There are roughly 500,000 copyrighted works subject to the settlement, resulting is about $3,000 per work. Although this is certainly an historic and watershed moment in AI training litigation, we need to put it in context. But last week, Judge Alsup refused to approve the settlement. The Judge instead demanded more information about the settlement. So will it happen? Won’t it? Stay tuned for more.\nBut recall that Judge Alsup’s summary judgment ruling didn’t fault Anthropic for training its AI on copyrighted works. Rather, Alsup found that pirating copyrighted works to create a general-purpose digital library for Anthropic to use however it wanted was not “fair use.” In another case decided that same week several weeks ago, Judge Vince Chhabria (in the same federal district) ruled that Meta’s acquisition of copyrighted materials through torrenting was not copyright infringement because the purpose of the acquisition was to train an AI system, which both Chhabria and Alsup found to be fair use. According to Alsup, Anthropic’s violation here is not training its AI, but taking hundreds of thousands of copyrighted works for whatever purpose it wanted. Arguably, if Anthropic had simply purchased the copyrighted works (likely for far less than $3,000 a copy) it would have been clear to train its AI however it chose — although, to be clear, Judge Chhabria would likely reach a different result.<br><br><b>Key takeaway:</b> Fair-use outcomes may hinge on record-specific market-harm proof.",
     "takeaway": "",
     "music_lens": "Settlement magnitude (~$3k/work) is a valuation anchor. Push provenance audits and disclosure of acquisition sources; leverage Bartz’s acquisition-vs-training split to frame composition claims and negotiations.",
     "status": "Judgment",
@@ -10,7 +10,7 @@
     "source": "",
     "url": "https://www.courtlistener.com/?q=Bartz+v.+Anthropic&type=r&order_by=score%20desc",
     "case_ref": "",
-    "date": "September 7, 2025"
+    "date": "September 15, 2025"
   },
   {
     "title": "Disney & Universal v. Midjourney",
@@ -23,7 +23,7 @@
     "source": "",
     "url": "https://www.courtlistener.com/?q=Disney+%26+Universal+v.+Midjourney&type=r&order_by=score%20desc",
     "case_ref": "",
-    "date": "September 7, 2025"
+    "date": "September 15, 2025"
   },
   {
     "title": "Getty Images v. Midjourney and Stability AI",
@@ -36,7 +36,20 @@
     "source": "",
     "url": "https://www.courtlistener.com/?q=Getty+Images+v.+Midjourney+and+Stability+AI+AND+%28court%3A%28california+northern%29%29&type=r&order_by=score%20desc",
     "case_ref": "",
-    "date": "September 7, 2025"
+    "date": "September 15, 2025"
+  },
+  {
+    "title": "Hendrix v. Apple - MAJOR NEW CASE ALERT",
+    "headline": "Hendrix v. Apple - MAJOR NEW CASE ALERT",
+    "summary": "<b>Summaries:</b> <b>Hendrix v. Apple - MAJOR NEW CASE ALERT</b> — Another group of authors take a bite at Apple — the first AI copyright infringement case against Tim Cook and his Cupertino crew!\nLast week saw the filing of another class action lawsuit by book authors against companies developing LLM-based tools. This case targets Apple for work that it has done training its family of OpenELM models, which are hosted on HuggingFace and which Apple has discussed in published papers. The Plaintiffs in this class allege similar theories to those in prior cases: that the training of the OpenELM models was based on illicitly obtained books from the books3 database. Their complaint alleged only one cause of action: direct copyright infringement under 17 U.S.C. § 501. Check back in the coming weeks as this new matter develops.",
+    "takeaway": "",
+    "music_lens": "Build evidentiary files on lyric/composition market harm (lost sync, sheet music, lyric licensing) and compel disclosure of training datasets and ingestion logs.",
+    "status": "Open/Active",
+    "outcome": "Update",
+    "source": "",
+    "url": "https://www.courtlistener.com/?q=Hendrix+v.+Apple+-+MAJOR+NEW+CASE+ALERT&type=r&order_by=score%20desc",
+    "case_ref": "",
+    "date": "September 15, 2025"
   },
   {
     "title": "Kadrey v. Meta",
@@ -49,20 +62,20 @@
     "source": "",
     "url": "https://www.courtlistener.com/?q=Kadrey+v.+Meta&type=r&order_by=score%20desc",
     "case_ref": "",
-    "date": "September 7, 2025"
+    "date": "September 15, 2025"
   },
   {
     "title": "Plaintiffs v. Anthropic",
-    "headline": "Plaintiffs v. Anthropic",
-    "summary": "<b>Summaries:</b> <b>Plaintiffs v. Anthropic</b> — Bartz\ncontinues to haunt Anthropic.\nA few weeks ago, Anthropic submitted an opposition to Plaintiffs’ motion seeking leave to amend its complaint, adding claims related to the torrenting of copyrighted work as well as several additional works. Plaintiffs’ likely seek to recreate some of the success seen by the Bartz plaintiffs in another case involving Anthropic. Anthropic has argued that this belated amendment should be disallowed. Last week, Plaintiffs submitted their reply brief supporting their motion to amend in which they argued that any delay in bringing these claims was attributable to discovery failures by Anthropic. The parties also submitted a joint discovery dispute statement regarding what Anthropic has called deficient damages disclosures by Plaintiffs.\nPlaintiffs also filed a motion to compel the production of the evidence related to torrenting that was produced in the\nBartz\ncase, arguing that “there is no question that Publishers’ lyrics are included in the 7 million books that Anthropic illegally downloaded.” Plaintiffs also ask for unredacted versions of briefing from\nBartz\n.",
+    "headline": "Plaintiffs v. Anthropic - settlement ($1.5 billion).",
+    "summary": "<b>Summaries:</b> <b>Plaintiffs v. Anthropic</b> — The dispute over adding\nBartz\nclaims continues.\nAs we discussed previously, Plaintiffs have attempted to amend their complaint to add claims directed to torrenting activities like those that prompted Anthropic to enter into a $1.5 billion settlement agreement in\nBartz\nv. Anthropic\n. Last week, Plaintiffs submitted their reply brief supporting their motion to amend in which they argued that any delay in bringing these claims was attributable to discovery failures by Anthropic. The parties also submitted a joint discovery dispute statement regarding what Anthropic has called deficient damages disclosures by Plaintiffs.<br><br><b>Key takeaway:</b> Settlement figures are emerging benchmarks for per-work valuation.",
     "takeaway": "",
-    "music_lens": "Build evidentiary files on lyric/composition market harm (lost sync, sheet music, lyric licensing) and compel disclosure of training datasets and ingestion logs.",
-    "status": "Open/Active",
-    "outcome": "Update",
+    "music_lens": "Use settlement figures to benchmark per-work valuation; pursue early settlement conferences backed by provenance audits and catalog-specific damages models.",
+    "status": "Settled",
+    "outcome": "Settlement",
     "source": "",
     "url": "https://www.courtlistener.com/?q=Plaintiffs+v.+Anthropic+AND+%28court%3A%28california+northern%29%29&type=r&order_by=score%20desc",
     "case_ref": "",
-    "date": "September 7, 2025"
+    "date": "September 15, 2025"
   },
   {
     "title": "Plaintiffs v. Perplexity AI",
@@ -75,7 +88,7 @@
     "source": "",
     "url": "https://www.courtlistener.com/?q=Plaintiffs+v.+Perplexity+AI+AND+%28court%3A%28new+york+southern%29%29&type=r&order_by=score%20desc",
     "case_ref": "",
-    "date": "September 7, 2025"
+    "date": "September 15, 2025"
   },
   {
     "title": "Reddit v. Anthropic",
@@ -88,7 +101,7 @@
     "source": "",
     "url": "https://www.courtlistener.com/?q=Reddit+v.+Anthropic+AND+%28court%3A%28california+northern%29%29&type=r&order_by=score%20desc",
     "case_ref": "",
-    "date": "September 7, 2025"
+    "date": "September 15, 2025"
   },
   {
     "title": "Sarah Andersen v. Stability AI",
@@ -101,12 +114,12 @@
     "source": "",
     "url": "https://www.courtlistener.com/?q=Sarah+Andersen+v.+Stability+AI&type=r&order_by=score%20desc",
     "case_ref": "",
-    "date": "September 7, 2025"
+    "date": "September 15, 2025"
   },
   {
     "title": "SDNY Multi-District Litigation",
-    "headline": "SDNY Multi-District Litigation - motion to dismiss briefing.",
-    "summary": "<b>Summaries:</b> <b>SDNY Multi-District Litigation</b> — The parties exchange discovery salvos\n. The last two weeks brought several discovery motions between the MDL parties. Ziff Davis filed its reply memorandum of law opposing OpenAI’s motion to dismiss. OpenAI has alleged that Ziff Davis’ robots.txt (includes information to inform web crawlers of whether a site owner permits scraping) was not a sufficient technological measure to give rise to a DMCA claim. OpenAI also argued that Ziff Davis’ unjust enrichment claims were preempted and that its trademark claims were not sufficiently plead. Ziff Davis maintained that its claims regarding circumvention of its robots.txt configuration were actionable under the DMCA; that its unjust enrichment claims involved non-copyright interests, avoiding pre-emption; and that it had sufficiently alleged the fame of its trademarks to establish a claim of trademark infringement.\nOpenAI and Microsoft also filed reply briefs in support of their motions to strike portions of the class plaintiffs’ complaint. They contend that the addition of models other than GPT-3, GPT-3.5, GPT-4, and GPT-4 Turbo is improper and that the case should be limited to the originally-plead models. Additionally, they argue that the addition of copyright claims based on the downloading of copyrighted materials (rather than their use for model training) should be disallowed.\nFinally, the class plaintiffs filed a motion seeking in camera review of a number of OpenAI documents, arguing that they were improperly withheld as privileged. Though the motion is heavily redacted, it is evident that the class plaintiffs are challenging whether these documents served the primary purpose of obtaining legal advice in order for work product privilege to attach. OpenAI has also filed a reply opposing the class plaintiffs’ motion.",
+    "headline": "SDNY Multi-District Litigation",
+    "summary": "<b>Summaries:</b> <b>SDNY Multi-District Litigation</b> — Denial stayed and discovery letter briefs galore\n. This week, the Denial Plaintiffs, OpenAI, and Microsoft submitted a joint stipulation to stay their case during the pendency of the multi-district litigation. The Court adopted their stipulation and proposed order.\nThe start of depositions by the News Plaintiffs this week brought a slew of discovery dispute letters to the Court (some courts use a simple letter instead of formal briefs to resolve basic discovery issues). Among these letters were motions by OpenAI and Microsoft to compel various Plaintiffs to produce documents relating to their allegations of market harm. The News Plaintiffs also submitted letters asking that the Court facilitate discovery into documents on which Defendants might rely for their affirmative defenses as well as for copies of Common Crawl documents craped from Plaintiffs’ websites. The News Plaintiffs additionally submitted a letter brief seeking documents related to so-called “pink-slime entities’” reliance on OpenAI’s tools to produce AI-generated and misinformation-laden news articles. Ziff Davis also got involved, submitting a letter brief asking that OpenAI be compelled to identify custodians and search terms for ESI discovery and alleging that OpenAI was withholding discovery pending its motion to stay. Several more letter briefs were so heavily redacted that we had trouble figuring out what they were trying to accomplish.\nIt seems likely that the parties will resolve many of these disputes without the need for court intervention. In fact, by the end of the week the parties had already resolved he “pink slime entities” dispute on which the News Plaintiffs moved earlier in the week. Check back soon as depositions continue to ramp up.",
     "takeaway": "",
     "music_lens": "Coordinate with aligned plaintiffs; file amicus on market-harm factors relevant to compositions. Track scheduling to time publisher filings with key expert discovery milestones.",
     "status": "Open/Active",
@@ -114,7 +127,7 @@
     "source": "",
     "url": "https://www.courtlistener.com/?q=SDNY+Multi-District+Litigation+AND+%28court%3A%28new+york+southern%29%29&type=r&order_by=score%20desc",
     "case_ref": "",
-    "date": "September 7, 2025"
+    "date": "September 15, 2025"
   },
   {
     "title": "The New York Times v. Microsoft & OpenAI",
@@ -127,7 +140,7 @@
     "source": "",
     "url": "https://www.courtlistener.com/?q=The+New+York+Times+v.+Microsoft+%26+OpenAI+AND+%28court%3A%28new+york+southern%29%29&type=r&order_by=score%20desc",
     "case_ref": "",
-    "date": "September 7, 2025"
+    "date": "September 15, 2025"
   },
   {
     "title": "Thomson Reuters v. Ross Intelligence",
@@ -140,7 +153,7 @@
     "source": "",
     "url": "https://www.courtlistener.com/?q=Thomson+Reuters+v.+Ross+Intelligence&type=r&order_by=score%20desc",
     "case_ref": "",
-    "date": "September 7, 2025"
+    "date": "September 15, 2025"
   },
   {
     "title": "UMG Recordings v. Suno",
@@ -153,7 +166,7 @@
     "source": "",
     "url": "https://www.courtlistener.com/?q=UMG+Recordings+v.+Suno&type=r&order_by=score%20desc",
     "case_ref": "",
-    "date": "September 7, 2025"
+    "date": "September 15, 2025"
   },
   {
     "title": "UMG Recordings v. Uncharted Labs",
@@ -166,7 +179,7 @@
     "source": "",
     "url": "https://www.courtlistener.com/?q=UMG+Recordings+v.+Uncharted+Labs+AND+%28court%3A%28new+york+southern%29%29&type=r&order_by=score%20desc",
     "case_ref": "",
-    "date": "September 7, 2025"
+    "date": "September 15, 2025"
   },
   {
     "title": "Warner Bros. Discovery v. Midjourney",
@@ -179,6 +192,6 @@
     "source": "",
     "url": "https://www.courtlistener.com/?q=Warner+Bros.+Discovery+v.+Midjourney&type=r&order_by=score%20desc",
     "case_ref": "",
-    "date": "September 7, 2025"
+    "date": "September 15, 2025"
   }
 ]
