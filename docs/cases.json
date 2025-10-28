@@ -2,7 +2,7 @@
   {
     "title": "Bartz v. Anthropic",
     "headline": "Bartz v. Anthropic - rules AI training fair use.",
-    "summary": "<b>Summaries:</b> <b>Bartz v. Anthropic</b> — Anthropic chooses to pay the largest known copyright settlement in history.\nA few weeks ago, we saw that the Bartz plaintiffs (book authors and rights-holders) and Anthropic had reached a proposed settlement of $1.5 Billion — the largest in U.S. copyright history. There are roughly 500,000 copyrighted works subject to the settlement, resulting is about $3,000 per work.\nRecall that Judge Alsup’s summary judgment ruling didn’t fault Anthropic for training its AI on copyrighted works. Rather, Alsup found that pirating copyrighted works to create a general-purpose digital library for Anthropic to use however it wanted was not “fair use.” In another case decided at that same time, Judge Vince Chhabria (in the same federal district) ruled that Meta’s acquisition of copyrighted materials through torrenting was not copyright infringement because the purpose of the acquisition was to train an AI system, which both Chhabria and Alsup found to be fair use. According to Alsup, Anthropic’s violation here is not training its AI, but taking hundreds of thousands of copyrighted works for whatever purpose it wanted. Arguably, if Anthropic had simply purchased the copyrighted works (likely for far less than $3,000 a copy) it would have been clear to train its AI however it chose — although, to be clear, Judge Chhabria would likely reach a different result.<br><br><b>Key takeaway:</b> Fair-use outcomes may hinge on record-specific market-harm proof.",
+    "summary": "<b>Summaries:</b> <b>Bartz v. Anthropic</b> — Anthropic recently chose to pay the largest known copyright settlement in history.\nSeveral weeks ago, we saw that the Bartz plaintiffs (book authors and rights-holders) and Anthropic had reached a proposed settlement of $1.5 Billion — the largest in U.S. copyright history. There are roughly 500,000 copyrighted works subject to the settlement, resulting is about $3,000 per work.\nRecall that Judge Alsup’s summary judgment ruling didn’t fault Anthropic for training its AI on copyrighted works. Rather, Alsup found that pirating copyrighted works to create a general-purpose digital library for Anthropic to use however it wanted was not “fair use.” In another case decided at that same time, Judge Vince Chhabria (in the same federal district) ruled that Meta’s acquisition of copyrighted materials through torrenting was not copyright infringement because the purpose of the acquisition was to train an AI system, which both Chhabria and Alsup found to be fair use. According to Alsup, Anthropic’s violation here is not training its AI, but taking hundreds of thousands of copyrighted works for whatever purpose it wanted. Arguably, if Anthropic had simply purchased the copyrighted works (likely for far less than $3,000 a copy) it would have been clear to train its AI however it chose — although, to be clear, Judge Chhabria would likely reach a different result.<br><br><b>Key takeaway:</b> Fair-use outcomes may hinge on record-specific market-harm proof.",
     "takeaway": "",
     "music_lens": "Settlement magnitude (~$3k/work) is a valuation anchor. Push provenance audits and disclosure of acquisition sources; leverage Bartz’s acquisition-vs-training split to frame composition claims and negotiations.",
     "status": "Judgment",
@@ -10,12 +10,12 @@
     "source": "",
     "url": "https://www.courtlistener.com/?q=Bartz+v.+Anthropic&type=r&order_by=score%20desc",
     "case_ref": "",
-    "date": "October 20, 2025"
+    "date": "October 27, 2025"
   },
   {
     "title": "Disney & Universal v. Midjourney",
     "headline": "Disney & Universal v. Midjourney",
-    "summary": "<b>Summaries:</b> <b>Disney &amp; Universal v. Midjourney</b> — The parties request more time (again) to confer on discovery\n. The parties had submitted a second joint stipulation for the extension of time to file a Rule 26(f) to October 22nd. The parties state that they have continued to productively meet and confer in the meantime.",
+    "summary": "<b>Summaries:</b> <b>Disney &amp; Universal v. Midjourney</b> — The parties file their joint Rule 26(f) report\n. Last week, the parties filed their joint Rule 26(f) report after a few extensions. The report included schedule suggestions by the parties in which Disney requested a non-expert discovery cut-off for August 17th, 2026, with all motions to be filed by December 21st, 2026. Midjourney did not agree and asked instead for dates approximately 3 months later than those requested by Disney.",
     "takeaway": "",
     "music_lens": "Visual-art rulings on inducement and output similarity can carry over: document AI outputs that recreate lyric structure/phrases to support composition claims and push for output filtering obligations.",
     "status": "Open/Active",
@@ -23,12 +23,12 @@
     "source": "",
     "url": "https://www.courtlistener.com/?q=Disney+%26+Universal+v.+Midjourney&type=r&order_by=score%20desc",
     "case_ref": "",
-    "date": "October 20, 2025"
+    "date": "October 27, 2025"
   },
   {
     "title": "Disney v. Minimax and Hailuo AI",
     "headline": "Disney v. Minimax and Hailuo AI",
-    "summary": "<b>Summaries:</b> <b>Disney v. Minimax and Hailuo AI</b> — No major substantive developments this past week\n.",
+    "summary": "<b>Summaries:</b> <b>Disney v. Minimax and Hailuo AI</b> — No major substantive developments this past week.",
     "takeaway": "",
     "music_lens": "Build evidentiary files on lyric/composition market harm (lost sync, sheet music, lyric licensing) and compel disclosure of training datasets and ingestion logs.",
     "status": "Open/Active",
@@ -36,7 +36,7 @@
     "source": "",
     "url": "https://www.courtlistener.com/?q=Disney+v.+Minimax+and+Hailuo+AI&type=r&order_by=score%20desc",
     "case_ref": "",
-    "date": "October 20, 2025"
+    "date": "October 27, 2025"
   },
   {
     "title": "Getty Images v. Midjourney and Stability AI",
@@ -49,12 +49,12 @@
     "source": "",
     "url": "https://www.courtlistener.com/?q=Getty+Images+v.+Midjourney+and+Stability+AI+AND+%28court%3A%28california+northern%29%29&type=r&order_by=score%20desc",
     "case_ref": "",
-    "date": "October 20, 2025"
+    "date": "October 27, 2025"
   },
   {
     "title": "Hendrix v. Apple",
     "headline": "Hendrix v. Apple",
-    "summary": "<b>Summaries:</b> <b>Hendrix v. Apple</b> — Motion filed to consolidate cases\n. As the parties work behind the scenes ahead of the initial case management conference, which is set for December 8th, Plaintiffs in another action against Apple have filed a motion to relate their case to this one. Susana Martinez-Conde and Stephen Macknick have also filed suit against Apple for related claims and this week asked that the Court consolidate the cases. Both Hendrix and Apple supported the consolidation, so it is likely that the request will be granted.",
+    "summary": "<b>Summaries:</b> <b>Hendrix v. Apple</b> — No major substantive developments this past week\n. As discussed last week, the parties agreed to relate the present case to another one filed against Apple by Susana Martinez-Conde and Stephen Macknick. Last week, the Court accepted the relation of cases. Additionally, Apple has requested an extension of 35 days to file its Answer, which would move the new date to December 5th.",
     "takeaway": "",
     "music_lens": "Build evidentiary files on lyric/composition market harm (lost sync, sheet music, lyric licensing) and compel disclosure of training datasets and ingestion logs.",
     "status": "Open/Active",
@@ -62,12 +62,12 @@
     "source": "",
     "url": "https://www.courtlistener.com/?q=Hendrix+v.+Apple&type=r&order_by=score%20desc",
     "case_ref": "",
-    "date": "October 20, 2025"
+    "date": "October 27, 2025"
   },
   {
     "title": "Kadrey v. Meta",
     "headline": "Kadrey v. Meta",
-    "summary": "<b>Summaries:</b> <b>Kadrey v. Meta</b> — No major substantive developments this past week\n. Two weeks ago, Judge Chhabria accepted the parties’ proposed extension to the schedule. Based on the new schedule, Plaintiffs’ expert reports will be due November 14th with Summary Judgment concluding on April 2nd, 2026. This week saw no docket activity, check back next week as expert discovery continues.",
+    "summary": "<b>Summaries:</b> <b>Kadrey v. Meta</b> — No major substantive developments this past week\n. Three weeks ago, Judge Chhabria accepted the parties’ proposed extension to the schedule. Based on the new schedule, Plaintiffs’ expert reports will be due November 14th with Summary Judgment concluding on April 2nd, 2026. This week saw no docket activity, check back next week as expert discovery continues.",
     "takeaway": "",
     "music_lens": "Fair-use win here hinged on record-specific market-harm showings. For compositions, build a damages narrative tied to substitution (lyrics, sheet music, sync) and document lost licensing opportunities to survive early motions.",
     "status": "Judgment",
@@ -75,20 +75,20 @@
     "source": "",
     "url": "https://www.courtlistener.com/?q=Kadrey+v.+Meta&type=r&order_by=score%20desc",
     "case_ref": "",
-    "date": "October 20, 2025"
+    "date": "October 27, 2025"
   },
   {
     "title": "Plaintiffs v. Anthropic",
-    "headline": "Plaintiffs v. Anthropic - rules AI training fair use.",
-    "summary": "<b>Summaries:</b> <b>Plaintiffs v. Anthropic</b> — Discovery rulings (and no sanctions)\n.\nAs discussed last week,\nthe Court was not happy with the parties’ numerous new discovery motions and had ordered them to show cause as to why they should not be sanctioned for failing to meet and confer. Following the show cause hearing, the Court chose instead to rule on the motions, agreeing with Anthropic that Plaintiffs could not ask questions regarding the use of torrenting by Anthropic (though they are permitted to ask questions about what datasets were used for training). The Court also denied Plaintiffs access to deposition transcripts from\nBartz\n, though it ordered the production of exhibits and declarations attached to summary judgment briefing in that case.\nThe Court also ordered that custodial productions by Anthropic begin this week and be completed by October 27th, allowing Plaintiffs to name categories of documents to be prioritized. Finally, the Court ordered that Plaintiffs provide information to Anthropic regarding its investigative procedures when prompting models and collecting outputs which it uses to support its infringement allegations.\nIn closing, the Court reminded the parties of their meet and confer obligations, stating that the Order to Show Cause may be reinstated should they again fail to adhere to them.<br><br><b>Key takeaway:</b> Fair-use outcomes may hinge on record-specific market-harm proof.",
+    "headline": "Plaintiffs v. Anthropic",
+    "summary": "<b>Summaries:</b> <b>Plaintiffs v. Anthropic</b> — Anthropic’s answer accuses Concord of attacking Claude\n.\nLast week, Anthropic filed its answer to Concord’s first amended complaint, in which it raised\ntwenty\naffirmative defenses. Many of these defenses had been raised in\nBartz v. Anthropic\n(which is discussed below), while others are new, including the addition of a “Copyright Misuse/Unclean Hands” defense alleging that Concord has “attacked Claude in an effort to cause it to reproduce their works and have publicized their successful attacks, demonstrating to others how to attempt to cause Clause to regurgitate Plaintiffs’ works.” It’s an aggressive posture, and stands out a bit from the rote recitations of other common affirmative defenses like waiver, estoppel, and laches. We will be interested to see if the “attacking Claude” defense goes anywhere.",
     "takeaway": "",
-    "music_lens": "Anticipate fair-use defenses: center evidence on market substitution for compositions (lyrics/sheet music) rather than separate 'training-license' markets.",
-    "status": "Judgment",
-    "outcome": "Summary Judgment",
+    "music_lens": "Build evidentiary files on lyric/composition market harm (lost sync, sheet music, lyric licensing) and compel disclosure of training datasets and ingestion logs.",
+    "status": "Open/Active",
+    "outcome": "Update",
     "source": "",
     "url": "https://www.courtlistener.com/?q=Plaintiffs+v.+Anthropic+AND+%28court%3A%28california+northern%29%29&type=r&order_by=score%20desc",
     "case_ref": "",
-    "date": "October 20, 2025"
+    "date": "October 27, 2025"
   },
   {
     "title": "Plaintiffs v. Perplexity AI",
@@ -101,12 +101,12 @@
     "source": "",
     "url": "https://www.courtlistener.com/?q=Plaintiffs+v.+Perplexity+AI+AND+%28court%3A%28new+york+southern%29%29&type=r&order_by=score%20desc",
     "case_ref": "",
-    "date": "October 20, 2025"
+    "date": "October 27, 2025"
   },
   {
     "title": "Reddit v. Anthropic",
     "headline": "Reddit v. Anthropic",
-    "summary": "<b>Summaries:</b> <b>Reddit v. Anthropic</b> — No major substantive developments this past week\n. This case has been removed to the Northern District of California after it was originally filed in California state court. Reddit has requested that the case be remanded to state court, which Anthropic unsurprisingly opposes. Two weeks ago, previously-assigned Judge Susan Illston recused herself from the matter, which was then reassigned to Judge Trina Thompson. Given this reassignment, deadlines in the matter have been pushed back, with initial case management conference now set for December 18th and the hearing on Reddit’s motion to remand set for January 27th, 2026.",
+    "summary": "<b>Summaries:</b> <b>Reddit v. Anthropic</b> — No major substantive developments this past week\n. This case has been removed to the Northern District of California after it was originally filed in California state court. Reddit has requested that the case be remanded to state court, which Anthropic unsurprisingly opposes. Three weeks ago, previously-assigned Judge Susan Illston recused herself from the matter, which was then reassigned to Judge Trina Thompson. Given this reassignment, deadlines in the matter have been pushed back, with initial case management conference now set for December 18th and the hearing on Reddit’s motion to remand set for January 27th. This week, the parties jointly requested that the case management conference be continued to a future date, which the Court rejected.",
     "takeaway": "",
     "music_lens": "TOS/robots-based claims highlight enforceable access controls. Harden publisher lyric-site terms and robots.txt, and preserve access logs to support contract/DMCA 1201 theories against unlicensed scrapers.",
     "status": "Open/Active",
@@ -114,12 +114,12 @@
     "source": "",
     "url": "https://www.courtlistener.com/?q=Reddit+v.+Anthropic+AND+%28court%3A%28california+northern%29%29&type=r&order_by=score%20desc",
     "case_ref": "",
-    "date": "October 20, 2025"
+    "date": "October 27, 2025"
   },
   {
     "title": "Sarah Andersen v. Stability AI",
     "headline": "Sarah Andersen v. Stability AI - dismisses AI/IP claims.",
-    "summary": "<b>Summaries:</b> <b>Sarah Andersen v. Stability AI</b> — No major substantive developments this past week\n. This week, the parties submitted a joint status update indicating that the various Defendants had run search terms and produced responsive documents, which Plaintiffs are in the process of reviewing. Plaintiffs indicated that they intended to seek additional custodians, search terms, and clarification of responses to their document requests.",
+    "summary": "<b>Summaries:</b> <b>Sarah Andersen v. Stability AI</b> — No major substantive developments this past week\n. The parties recently submitted a joint status update indicating that the various Defendants had run search terms and produced responsive documents, which Plaintiffs are in the process of reviewing. Plaintiffs indicated that they intended to seek additional custodians, search terms, and clarification of responses to their document requests.",
     "takeaway": "",
     "music_lens": "Visual-art rulings on inducement and output similarity can carry over: document AI outputs that recreate lyric structure/phrases to support composition claims and push for output filtering obligations.",
     "status": "Dismissed",
@@ -127,12 +127,12 @@
     "source": "",
     "url": "https://www.courtlistener.com/?q=Sarah+Andersen+v.+Stability+AI&type=r&order_by=score%20desc",
     "case_ref": "",
-    "date": "October 20, 2025"
+    "date": "October 27, 2025"
   },
   {
     "title": "SDNY Multi-District Litigation",
     "headline": "SDNY Multi-District Litigation",
-    "summary": "<b>Summaries:</b> <b>SDNY Multi-District Litigation</b> — Discovery motions continue\n. Last week saw another flood of discovery letter motions submitted, mostly by Defendants. OpenAI moved to compel\nThe New York Times\nto produce “any outputs which The Times alleges infringe its asserted works or cause market harm,” essentially, any outputs that\nThe Times\nwould allege resulted in direct or indirect copyright infringement.\nThe Times\nresponded later in the week, stating that OpenAI should have such outputs in its possession already “at least if they hadn’t been deleted,” a reference to OpenAI’s consistent efforts to continue with scheduled deletion of chat outputs. Nonetheless,\nThe Times\nstated that it would — once its inspection of logs had been completed — identify infringing outputs that it intends to rely on at trial.\nOpenAI also filed an objection to an earlier ruling which denied them access to records of\nThe Times\n’ internal use of LLMs. The objection argues that such records are crucial to rebutting\nThe Times\n’ expected arguments against the transformative use of LLMs (fair use factor one) and in support of market harm caused by LLMs (fair use factor four). OpenAI requested oral argument on their objection.\nOpenAI further moved to compel the production of documents related to Ziff Davis’ training of internally-developed AI models, pointing to documents showing that CNET (one of the named plaintiffs) had developed an “internally designed AI engine” for writing articles. Ziff Davis responded by stating that they were still conferring regarding production of such documents and that OpenAI’s motion was premature.\nThe News Plaintiffs countered with their own set of motions.\nThe Times\nhas continued demanding that Microsoft produce any licenses on which it intends to rely for its express license defense. All News Plaintiffs also joined in a motion demanding that OpenAI produce 20 million records of ChatGPT-consumer chat logs from December 2022 to November 2024. Additionally,\nThe Times\nmoved to limit Defendants to no more than five depositions of its witnesses per month, citing potential for prejudice.",
+    "summary": "<b>Summaries:</b> <b>SDNY Multi-District Litigation</b> — OpenAI slams\nThe New York Times\nfor demanding 20 million ChatGPT logs as Discovery motions continue in advance of October 29th conference\n. With an upcoming discovery conference on the horizon, the parties have continued filing numerous motions on discovery issues. Last week, OpenAI had some harsh criticism for\nThe Times\n’ recent request for 20 million records of ChatGPT-consumer chat logs from December 2022 to November 2024, accusing\nThe Times\nof disregard for the privacy rights of third-party individuals.\nIn other developments, Microsoft filed a response opposing\nThe Times’\ncontinued effort to obtain information on its express license defenses. Defendants also filed opposition to\nThe Times\n’ request for a “presumptive limit” on five depositions per month, stating that it was unnecessary for the Court to wade into the minutiae of deposition scheduling.\nOpenAI has also opposed the Class Plaintiffs’ recent interrogatories which support infringement claims based on the download of copyrighted materials (evidently to position themselves for a finding like the one in\nBartz v. Anthropic,\nwhich is discussed below). OpenAI is attempting to avoid answering these interrogatories on the basis of untimeliness and argues that the information can be obtained via deposition.\nOpenAI and Microsoft have also filed a response to\nThe Times\n’ letter seeking protective order which would prevent them from asking about\nThe Times\n’ own internal use of LLMs. Defendants claim that this information is relevant to fair use factors 1 and 4 as well as to damages.",
     "takeaway": "",
     "music_lens": "Coordinate with aligned plaintiffs; file amicus on market-harm factors relevant to compositions. Track scheduling to time publisher filings with key expert discovery milestones.",
     "status": "Open/Active",
@@ -140,7 +140,7 @@
     "source": "",
     "url": "https://www.courtlistener.com/?q=SDNY+Multi-District+Litigation+AND+%28court%3A%28new+york+southern%29%29&type=r&order_by=score%20desc",
     "case_ref": "",
-    "date": "October 20, 2025"
+    "date": "October 27, 2025"
   },
   {
     "title": "The New York Times v. Microsoft & OpenAI",
@@ -153,7 +153,7 @@
     "source": "",
     "url": "https://www.courtlistener.com/?q=The+New+York+Times+v.+Microsoft+%26+OpenAI+AND+%28court%3A%28new+york+southern%29%29&type=r&order_by=score%20desc",
     "case_ref": "",
-    "date": "October 20, 2025"
+    "date": "October 27, 2025"
   },
   {
     "title": "Thomson Reuters v. Ross Intelligence",
@@ -166,12 +166,12 @@
     "source": "",
     "url": "https://www.courtlistener.com/?q=Thomson+Reuters+v.+Ross+Intelligence&type=r&order_by=score%20desc",
     "case_ref": "",
-    "date": "October 20, 2025"
+    "date": "October 27, 2025"
   },
   {
     "title": "UMG Recordings v. Suno",
     "headline": "UMG Recordings v. Suno - motion to dismiss briefing.",
-    "summary": "<b>Summaries:</b> <b>UMG Recordings v. Suno</b> — No major substantive developments this past week\n. UMG Recordings is pursuing the same amendments in this matter as it did in\nUMG Recordings v. Uncharted Labs\n. Two weeks ago, Suno submitted an opposition to the Motion for Leave to Amend with the same contents as the Motion to Dismiss submitted by Uncharted Labs last week. UMG Recordings had recently submitted a memorandum of law in support of its motion for leave to amend, arguing that good cause existed for granting their motion and that Suno would not be prejudiced, though they did not address the distinction between access and copy controls raised by Suno.",
+    "summary": "<b>Summaries:</b> <b>UMG Recordings v. Suno</b> — UMG files reply in support of their motion for leave to amend\n. UMG Recordings is pursuing the same amendments in this matter as it did in\nUMG Recordings v. Uncharted Labs\n. Last week, UMG filed a reply in support of its motion for leave to amend its complaint which made essentially the same arguments as its motion to dismiss response in\nUMG v. Uncharted Labs\n. Suno has filed a motion for leave to file a sur-reply.",
     "takeaway": "",
     "music_lens": "Label-led pleadings focus on sound recordings; monitor discovery for training-data disclosures. If lyrics or compositions appear in ingestion logs, be prepared to assert composition-specific claims and request preservation of training artifacts.",
     "status": "Open/Active",
@@ -179,25 +179,25 @@
     "source": "",
     "url": "https://www.courtlistener.com/?q=UMG+Recordings+v.+Suno&type=r&order_by=score%20desc",
     "case_ref": "",
-    "date": "October 20, 2025"
+    "date": "October 27, 2025"
   },
   {
     "title": "UMG Recordings v. Uncharted Labs",
-    "headline": "UMG Recordings v. Uncharted Labs - dismisses AI/IP claims.",
-    "summary": "<b>Summaries:</b> <b>UMG Recordings v. Uncharted Labs</b> — No major substantive developments this past week\n. Most recently, UMG Recordings filed its Amended Complaint to add a third claim for circumvention of technological measures. Uncharted Labs has moved to dismiss the new claim, arguing that the difference between “access controls” (which seek to prevent improper access) and “copy controls” (which seek to prevent downloading and copying of material that is otherwise accessible) under 17 U.S.C. § 1201 bar this claim. According to Uncharted Labs, the already-asserted copyright claims are the appropriate vehicle to address unauthorized copying, and the new § 1201 claims should be dismissed.",
+    "headline": "UMG Recordings v. Uncharted Labs - motion to dismiss briefing.",
+    "summary": "<b>Summaries:</b> <b>UMG Recordings v. Uncharted Labs</b> — UMG files opposition to motion to dismiss new claim\n. After UMG Recordings filed its Amended Complaint to add a third claim for circumvention of technological measures, Uncharted Labs has moved to dismiss. Their argument was that the difference between “access controls” (which seek to prevent improper access) and “copy controls” (which seek to prevent downloading and copying of material that is otherwise accessible) under 17 U.S.C. § 1201 bar this claim. UMG argued that “access controls” do not only cover absolute controls on access but also extend to limitations on access that reach “how or under what conditions a user may access copyrighted content.” UMG essentially argues that because YouTube’s rolling cipher serves to prevent the access of YouTube videos outside of YouTube’s preferred applications, it is an access control rather than a copy prevention mechanism. It’s an interesting argument. YouTube is definitely concerned about apps like Vanced that basically mirror YouTube (without the advertisements). The rolling cyper addresses exactly that point. We’ll see what the Court thinks of the distinction.",
     "takeaway": "",
     "music_lens": "Label-led pleadings focus on sound recordings; monitor discovery for training-data disclosures. If lyrics or compositions appear in ingestion logs, be prepared to assert composition-specific claims and request preservation of training artifacts.",
-    "status": "Dismissed",
-    "outcome": "Dismissal",
+    "status": "Open/Active",
+    "outcome": "Update",
     "source": "",
     "url": "https://www.courtlistener.com/?q=UMG+Recordings+v.+Uncharted+Labs+AND+%28court%3A%28new+york+southern%29%29&type=r&order_by=score%20desc",
     "case_ref": "",
-    "date": "October 20, 2025"
+    "date": "October 27, 2025"
   },
   {
     "title": "Warner Bros. Discovery v. Midjourney",
     "headline": "Warner Bros. Discovery v. Midjourney",
-    "summary": "<b>Summaries:</b> <b>Warner Bros. Discovery v. Midjourney</b> — Scheduling conference set\n. Last week, Midjourney filed its answer, raising fair use as its first affirmative defense and otherwise reciting the same defenses seen in the\nDisney v. Midjourney\ncase (including an unclean hands defense). Last week, the Court also issued an order setting Rule 16(b)/26(f) scheduling conference with a report due November 21st and indicating that a hearing would be held if the parties deemed it necessary.",
+    "summary": "<b>Summaries:</b> <b>Warner Bros. Discovery v. Midjourney</b> — Scheduling conference set\n. A couple weeks ago, Midjourney filed its answer, raising fair use as its first affirmative defense and otherwise reciting the same defenses seen in the\nDisney v. Midjourney\ncase (including an unclean hands defense). Last week, the Court issued an order setting Rule 16(b)/26(f) scheduling conference with a report due November 21st and indicating that a hearing would be held if the parties deemed it necessary.",
     "takeaway": "",
     "music_lens": "Outputs mimicking protected characters strengthen arguments that AI can reproduce protected expression. For lyrics/compositions, pursue evidence that prompts yield lyric-like outputs and prepare injunctive relief asks tied to output filters.",
     "status": "Open/Active",
@@ -205,6 +205,6 @@
     "source": "",
     "url": "https://www.courtlistener.com/?q=Warner+Bros.+Discovery+v.+Midjourney&type=r&order_by=score%20desc",
     "case_ref": "",
-    "date": "October 20, 2025"
+    "date": "October 27, 2025"
   }
 ]
