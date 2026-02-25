@@ -10,25 +10,12 @@
     "source": "",
     "url": "https://www.courtlistener.com/?q=and+Warner+Bros+v.+Midjourney&type=r&order_by=score%20desc",
     "case_ref": "",
-    "date": "February 16, 2026"
-  },
-  {
-    "title": "Concord Music Group v. Anthropic",
-    "headline": "Concord Music Group v. Anthropic",
-    "summary": "<b>Summaries:</b> <b>Concord Music Group v. Anthropic</b> — No major substantive developments this past week.\nSeveral weeks ago, the Court ordered Plaintiffs to respond to Anthropic’s motion for relief from the Magistrate Judge’s order regarding investigative prompts and outputs. Anthropic had previously requested an order that Plaintiffs must produce the prompts which they used to investigate Claude’s ability to output lyrics. Magistrate Judge Susan van Keulen took a middle path in ruling on this motion, ordering the production of post-suit investigatory prompts and denying access to pre-suit prompts. Anthropic’s motion for relief argued that, in order to mount an effective defense, they needed to be able to distinguish prompts which were crafted by Plaintiffs from those which were the result of disinterested third parties.\nLast week, Plaintiffs submitted their response, arguing that Anthropic can already distinguish prompts from third parties from those crafted by Plaintiffs because they had already produced the prompt-output pairs from their pre- and post-suit investigations. Accordingly, they argue, there is no need to reveal their usernames and account information. In any event, they argued that the additional discovery that Anthropic requested was privileged as work product.\nAlso last week, the Court related the\nConcord Music Group, Inc. et al. v. Anthropic PBC, Dario Amodei, and Benjamin Mann\ncase to this one this week, finding (unsurprisingly, given the same parties’ involvement) that the two cases involved common legal and discovery issues.\nThis week included no notable new filings.",
-    "takeaway": "",
-    "music_lens": "Music-lyrics ingestion dispute: demand cross-use of Bartz discovery on torrenting and any overlap with lyric corpora. Seek unredacted dataset inventories and negotiate protective orders that allow publisher-side experts to inspect samples.",
-    "status": "Open/Active",
-    "outcome": "Update",
-    "source": "",
-    "url": "https://www.courtlistener.com/?q=Concord+Music+Group+v.+Anthropic&type=r&order_by=score%20desc",
-    "case_ref": "",
-    "date": "February 16, 2026"
+    "date": "February 24, 2026"
   },
   {
     "title": "Disney v. MiniMax & Hailuo AI",
     "headline": "Disney v. MiniMax & Hailuo AI",
-    "summary": "<b>Summaries:</b> <b>Disney v. MiniMax &amp; Hailuo AI</b> — No major substantive developments this past week\n. Months ago, Disney, Universal, and Warner Bros. filed suit against AI companies offering video generation products. The complaint is similar to the one filed by Disney against Midjourney and has been assigned to Judge Stanley Blumenfeld and Magistrate Judge Charles Eick.\nThis case has seen little recent activity. Last week, Disney submitted a status report in which it reemphasized its ongoing effort to serve defendants under the Hague Convention. The report also explained that Disney has been unsuccessful in locating a registered business in China for MiniMax and believes that it may be a “doing business as” name. Disney believes the most efficient approach is to wait until other defendants appear through counsel so that it can determine the proper identity of the various defendants. This week, however, included no significant new filings.",
+    "summary": "<b>Summaries:</b> <b>Disney v. MiniMax &amp; Hailuo AI</b> — No major substantive developments this past week\n. Months ago, Disney, Universal, and Warner Bros. filed suit against AI companies offering video generation products. The complaint is similar to the one filed by Disney against Midjourney and has been assigned to Judge Stanley Blumenfeld and Magistrate Judge Charles Eick.\nThis case has seen little recent activity. In late January, Disney submitted a status report in which it reemphasized its ongoing effort to serve defendants under the Hague Convention. The report also explained that Disney has been unsuccessful in locating a registered business in China for MiniMax and believes that it may be a “doing business as” name. Disney believes the most efficient approach is to wait until other defendants appear through counsel so that it can determine the proper identity of the various defendants. This week, however, included no significant new filings.",
     "takeaway": "",
     "music_lens": "Build evidentiary files on lyric/composition market harm (lost sync, sheet music, lyric licensing) and compel disclosure of training datasets and ingestion logs.",
     "status": "Open/Active",
@@ -36,12 +23,12 @@
     "source": "",
     "url": "https://www.courtlistener.com/?q=Disney+v.+MiniMax+%26+Hailuo+AI&type=r&order_by=score%20desc",
     "case_ref": "",
-    "date": "February 16, 2026"
+    "date": "February 24, 2026"
   },
   {
     "title": "Hendrix v. Apple",
     "headline": "Hendrix v. Apple",
-    "summary": "<b>Summaries:</b> <b>Hendrix v. Apple</b> — The parties file an amended complaint\n. As discussed last year, the parties and the Court agreed to relate the present case to another case filed against Apple by Susana Martinez-Conde and Stephen Macknick. More recently, the Court accepted another request to relate a case by Tasha Alexander against Apple. Based on a hearing held last week, the Court appointed William Dreher from Keller Rohrback and Rohit Nath from Susman Godfrey as interim co-lead counsel. This appointment will be in effect for one year, through the end of January 2027, with reappointment submissions scheduled for the last Friday of December.\nThis past week, the parties filed an amended complaint which included additional factual allegations regarding the ways in which Apple integrates its models into its products and the manner in which these models have impaired the market for Plaintiffs’ works. These later additions are likely setup for exactly the argument that Kadrey’s Judge Chhabria suggested the plaintiffs in that case should have made to overcome the fair use defense raised by Meta. In particular, the Hendrix class members discuss the manner in which generative AI outputs compete with human authors’ work product based on a 2025 working paper.",
+    "summary": "<b>Summaries:</b> <b>Hendrix v. Apple</b> — No major substantive developments this past week\n. As discussed last year, the parties and the Court agreed to relate the present case to another case filed against Apple by Susana Martinez-Conde and Stephen Macknick. More recently, the Court accepted another request to relate a case by Tasha Alexander against Apple. Based on a hearing held last week, the Court appointed William Dreher from Keller Rohrback and Rohit Nath from Susman Godfrey as interim co-lead counsel. This appointment will be in effect for one year, through the end of January 2027, with reappointment submissions scheduled for the last Friday of December.\nLast week the parties filed an amended complaint which included additional factual allegations regarding the ways in which Apple integrates its models into its products and the manner in which these models have impaired the market for Plaintiffs’ works. These later additions are likely setup for exactly the argument that Kadrey’s Judge Chhabria suggested the plaintiffs in that case should have made to overcome the fair use defense raised by Meta. In particular, the Hendrix class members discuss the manner in which generative AI outputs compete with human authors’ work product based on a 2025 working paper.\nThis week saw no new filings.",
     "takeaway": "",
     "music_lens": "Build evidentiary files on lyric/composition market harm (lost sync, sheet music, lyric licensing) and compel disclosure of training datasets and ingestion logs.",
     "status": "Open/Active",
@@ -49,25 +36,38 @@
     "source": "",
     "url": "https://www.courtlistener.com/?q=Hendrix+v.+Apple&type=r&order_by=score%20desc",
     "case_ref": "",
-    "date": "February 16, 2026"
+    "date": "February 24, 2026"
   },
   {
-    "title": "Plaintiffs v. Meta",
-    "headline": "Plaintiffs v. Meta",
-    "summary": "<b>Summaries:</b> <b>Plaintiffs v. Meta</b> — Meta files supplemental briefing opposing Plaintiffs’ motion to amend their complaint.",
+    "title": "Plaintiffs v. Anthropic",
+    "headline": "Plaintiffs v. Anthropic",
+    "summary": "<b>Summaries:</b> <b>Plaintiffs v. Anthropic</b> — No major substantive developments this past week.\nSeveral weeks ago, the Court ordered Plaintiffs to respond to Anthropic’s motion for relief from the Magistrate Judge’s order regarding investigative prompts and outputs. Anthropic had previously requested an order that Plaintiffs must produce the prompts which they used to investigate Claude’s ability to output lyrics. Magistrate Judge Susan van Keulen took a middle path in ruling on this motion, ordering the production of post-suit investigatory prompts and denying access to pre-suit prompts. Anthropic’s motion for relief argued that, in order to mount an effective defense, they needed to be able to distinguish prompts which were crafted by Plaintiffs from those which were the result of disinterested third parties. Although the parties have submitted additional briefing on the topic, no order has been entered yet and this past week saw no significant new filings.",
     "takeaway": "",
     "music_lens": "Build evidentiary files on lyric/composition market harm (lost sync, sheet music, lyric licensing) and compel disclosure of training datasets and ingestion logs.",
     "status": "Open/Active",
     "outcome": "Update",
     "source": "",
+    "url": "https://www.courtlistener.com/?q=Plaintiffs+v.+Anthropic&type=r&order_by=score%20desc",
+    "case_ref": "",
+    "date": "February 24, 2026"
+  },
+  {
+    "title": "Plaintiffs v. Meta",
+    "headline": "Plaintiffs v. Meta - certifies class in AI/IP case.",
+    "summary": "<b>Summaries:</b> <b>Plaintiffs v. Meta</b> — Plaintiffs say “no harm, no foul” in arguing for amended pleadings despite inexcusable delay\n. The Kadrey Plaintiffs have moved to amend their complaint to add contributory infringement and uploading-based claims. Plaintiffs also asked for concurrent briefing on summary judgment regarding liability as well as for class certification. Meta instead wanted to stay the case until the court rules on summary judgment motions. Last week, Judge Chhabria denied the request for a stay and asked for additional briefing due from Meta (on February 13th) and Plaintiffs (on February 20th).\nThis week, Plaintiffs filed their supplemental briefing in which they argued that despite the Court’s finding that their delay in amending their complaint was “inexcusable,” the amendment should still be permitted because Meta would not be prejudiced and because the delay was not the result of bad faith on Plaintiffs’ part. We’ll see if the court feels generous, but the court’s previous ruling that Plaintiffs’ delay was inexcusable doesn’t bode well.\nIn other news, the newly added Plaintiff, Entrepreneur Media, LLC, filed a statement regarding case scheduling. Entrepreneur explained that their need for discovery regarding torrenting an uploading—the same discovery that the Kadrey Plaintiffs have requested—would not be well-served by the current discovery cut-off, which is tailored to the Kadrey Plaintiffs’ distribution claims. Although Entrepreneur only lightly touched on the dispute between the Kadrey Plaintiffs and Meta, it is possible that addition to the case favors a more permissive ruling with respect to the existing plaintiffs.",
+    "takeaway": "",
+    "music_lens": "Build evidentiary files on lyric/composition market harm (lost sync, sheet music, lyric licensing) and compel disclosure of training datasets and ingestion logs.",
+    "status": "Class certified",
+    "outcome": "Class Certification",
+    "source": "",
     "url": "https://www.courtlistener.com/?q=Plaintiffs+v.+Meta&type=r&order_by=score%20desc",
     "case_ref": "",
-    "date": "February 16, 2026"
+    "date": "February 24, 2026"
   },
   {
     "title": "Reddit v. Anthropic",
     "headline": "Reddit v. Anthropic",
-    "summary": "<b>Summaries:</b> <b>Reddit v. Anthropic</b> — No major substantive developments this past week\n. As discussed previously, the main dispute in this case is presently whether it should be removed to federal court from California state court. There have been no new developments this week, but three weeks ago the Court issued a series of questions to both parties to assist with deciding that issue. Those questions included whether Reddit’s content falls within the subject matter of copyright under 17 U.S.C. §§ 102-103 and requests for legal precedent to clarify issues related to various common law claims raised by Reddit.\nThe following week, Reddit and Anthropic both submitted answers to the Court’s questions. Reddit clarified the nature of its dispute, explaining that although much of Reddit’s content—namely the posts, images, and comments users submit to Reddit—is subject to copyright, not all of the information Anthropic is alleged to have scraped is copyrightable. This non-copyrightable information includes factual information such as usernames, upvote/downvote counts, and the nesting of posts and comments. According to Reddit, it is this non-copyrightable information that is especially valuable to Anthropic because it represents statistical information about user preferences (e.g., via upvotes and downvotes). Reddit explained that its claims of breach of contract still reach non-copyrightable information because Anthropic was obligated not to scrape anything from Reddit.\nAnthropic appeared to dispute some of Reddit’s allegations regarding copyright, stating that a repository of online content (e.g., the link-sharing aspect of Reddit’s posts) may not fall within the Copyright Act’s protections. Additionally, Anthropic disputed whether any contract existed with Reddit, stating that Reddit’s User Agreement is only hyperlinked on the website but that users are not required to view it, which would be insufficient to establish an enforceable browse-wrap contract.",
+    "summary": "<b>Summaries:</b> <b>Reddit v. Anthropic</b> — No major substantive developments this past week\n. As discussed previously, the main dispute in this case is presently whether it should be removed to federal court from California state court. There have been no new developments this week, but three weeks ago the Court issued a series of questions to both parties to assist with deciding that issue. Those questions included whether Reddit’s content falls within the subject matter of copyright under 17 U.S.C. §§ 102-103 and requests for legal precedent to clarify issues related to various common law claims raised by Reddit.\nThe following week, Reddit and Anthropic both submitted answers to the Court’s questions. Reddit clarified the nature of its dispute, explaining that although much of Reddit’s content—namely the posts, images, and comments users submit to Reddit—is subject to copyright, not all of the information Anthropic is alleged to have scraped is copyrightable. This non-copyrightable information includes factual information such as usernames, upvote/downvote counts, and the nesting of posts and comments. According to Reddit, it is this non-copyrightable information that is especially valuable to Anthropic because it represents statistical information about user preferences (e.g., via upvotes and downvotes). Reddit explained that its claims of breach of contract still reach non-copyrightable information because Anthropic was obligated not to scrape anything from Reddit.\nAnthropic appeared to dispute some of Reddit’s allegations regarding copyright, stating that a repository of online content (e.g., the link-sharing aspect of Reddit’s posts) may not fall within the Copyright Act’s protections. Additionally, Anthropic disputed whether any contract existed with Reddit, stating that Reddit’s User Agreement is only hyperlinked on the website but that users are not required to view it, which would be insufficient to establish an enforceable browsewrap contract.",
     "takeaway": "",
     "music_lens": "TOS/robots-based claims highlight enforceable access controls. Harden publisher lyric-site terms and robots.txt, and preserve access logs to support contract/DMCA 1201 theories against unlicensed scrapers.",
     "status": "Open/Active",
@@ -75,12 +75,12 @@
     "source": "",
     "url": "https://www.courtlistener.com/?q=Reddit+v.+Anthropic&type=r&order_by=score%20desc",
     "case_ref": "",
-    "date": "February 16, 2026"
+    "date": "February 24, 2026"
   },
   {
     "title": "Sarah Andersen v. Stability AI",
     "headline": "Sarah Andersen v. Stability AI",
-    "summary": "<b>Summaries:</b> <b>Sarah Andersen v. Stability AI</b> — No major substantive developments this past week\n. As discussed previously, the Andersen Plaintiffs are attempting to add additional allegations to their complaint targeting direct infringement by several defendants, and a hearing on this issue has been set for February 25th. Two weeks ago, Plaintiffs further requested an approximately four-month extension on currently scheduled deadlines, perhaps to provide themselves more runway with which to evaluate these new claims should they be permitted to add them. Defendants have opposed this motion.\nAdditionally, the Court rebuffed Plaintiffs two weeks ago on several discovery issues, denying their request that Midjourney be compelled to provide more detailed answers to interrogatories regarding their training process and requiring Plaintiffs to produce expert reports, deposition transcripts, and discovery from the related\nIn re Google\nlitigation. Last week, however, the Court granted Plaintiffs additional time until February 18th to make those documents available.\nThis week included few notable new filings, though the parties did submit a joint status update indicating that discovery was continuing as expected, with the close of fact discovery scheduled for June 1st.",
+    "summary": "<b>Summaries:</b> <b>Sarah Andersen v. Stability AI</b> — Status conference held, but no significant developments\n. This week, the parties attended a Discovery Status Conference to discuss ongoing disputes. These disputes included efforts to obtain training data from Stability and the designation of additional document custodians by Midjourney. Additionally, Defendants have alleged that Plaintiffs’ identification of first publication dates for the works in dispute were deficient. The Court ordered the parties to continue meeting and conferring, although it set deadlines for late February and early March for the parties to file briefing if a resolution could not be reached.",
     "takeaway": "",
     "music_lens": "Visual-art rulings on inducement and output similarity can carry over: document AI outputs that recreate lyric structure/phrases to support composition claims and push for output filtering obligations.",
     "status": "Open/Active",
@@ -88,12 +88,12 @@
     "source": "",
     "url": "https://www.courtlistener.com/?q=Sarah+Andersen+v.+Stability+AI&type=r&order_by=score%20desc",
     "case_ref": "",
-    "date": "February 16, 2026"
+    "date": "February 24, 2026"
   },
   {
     "title": "SDNY Multi-District Litigation",
     "headline": "SDNY Multi-District Litigation",
-    "summary": "<b>Summaries:</b> <b>SDNY Multi-District Litigation</b> — Court grants Plaintiffs’ motion to compel: Plaintiffs fish for more non-training uses of their works.\nThe multi-district litigation continues to be mired in a variety of discovery disputes. This past week, on February 11th, the Court held a discovery status conference in which it decided a number of current issues. A selection of issues addressed is presented below:\nThe Court directed Defendants to file responses to Plaintiffs’ questions regarding Project Giraffe (OpenAI’s internal tool for blocking copyright-infringing outputs) by February 12th, adding that Plaintiffs could file a new motion to compel the following day if any document requests remained. Additionally, the Court granted Class Plaintiffs’ request for\nin camera\nreview of clawed-back and redacted documents.\nFurther, the Court assessed the Class Plaintiffs’ motion for additional discovery regarding copies of pirated material that messages indicate was being used for purposes other than training. Effectively, messages appear to indicate that OpenAI employees downloaded material from shadow libraries not only for training but also to use as part of their work. The Court instructed the parties to meet and confer regarding these materials and directed Class Plaintiffs to file a new motion to compel if necessary, adding that it would assess costs if such a motion was necessary.",
+    "summary": "<b>Summaries:</b> <b>SDNY Multi-District Litigation</b> — Second verse, same as the first – more discovery disputes\n. In yet another week of discovery disputes, Ziff Davis filed a status report alongside OpenAI regarding their ongoing efforts to obtain responses to their interrogatories, search results for their content in OpenAI’s training data, and production of training data using the Databricks or Snowflakes tools (which Ziff says it became aware of through deposition testimony). OpenAI sent their own letter arguing that Ziff’s request amounted to a burdensome, months-long engineering project because it involved either searching their entire training data set or, alternatively, setting up a new training data inspection environment. OpenAI noted that prior searches performed for News Plaintiffs did not involve its entire training set.\nSeparately, Microsoft submitted a letter arguing that Class Plaintiffs should not be permitted to obtain financial records of Microsoft’s entire suite of M365 products. According to Microsoft, there is little connection between the M365 products and the copyright claims at issue. Plaintiffs’ request is unsurprising given Microsoft’s statement early this year that the “Microsoft 365 (Office) app is now called the Microsoft 365 Copilot app” to reflect Microsoft’s integration of LLMs into its suite of products.\nOther letters filed this week included an objection by OpenAI to Plaintiffs’ efforts to obtain access to the journal of OpenAI co-founder Greg Brockman and OpenAI’s continued opposition to Plaintiffs’ push for materials related to Project Giraffe (OpenAI’s internal efforts to prevent its products from reproducing copyright-infringing training contents).",
     "takeaway": "",
     "music_lens": "Coordinate with aligned plaintiffs; file amicus on market-harm factors relevant to compositions. Track scheduling to time publisher filings with key expert discovery milestones.",
     "status": "Open/Active",
@@ -101,12 +101,12 @@
     "source": "",
     "url": "https://www.courtlistener.com/?q=SDNY+Multi-District+Litigation&type=r&order_by=score%20desc",
     "case_ref": "",
-    "date": "February 16, 2026"
+    "date": "February 24, 2026"
   },
   {
     "title": "UMG Recordings v. Suno",
     "headline": "UMG Recordings v. Suno",
-    "summary": "<b>Summaries:</b> <b>UMG Recordings v. Suno</b> — Status conference rescheduled for March\n. This case has been in the same position as\nUMG Recordings v. Uncharted Labs\nfor some time. Various plaintiffs have stipulated to dismissal, leaving Sony still in the case. Since then, updates have been few and far between. Last week, Magistrate Judge Paul Levenson scheduled a status conference for February 11th which may provide more insight into the current status of the case, but that conference has been rescheduled for March 12th as of last.",
+    "summary": "<b>Summaries:</b> <b>UMG Recordings v. Suno</b> — No major substantive developments this past week\n. This case has been in the same position as\nUMG Recordings v. Uncharted Labs\nfor some time. Various plaintiffs have stipulated to dismissal, leaving Sony still in the case. Since then, updates have been few and far between. Last week, Magistrate Judge Paul Levenson scheduled a status conference for February 11th which may provide more insight into the current status of the case, but that conference has been rescheduled for March 12th as of the last update.",
     "takeaway": "",
     "music_lens": "Label-led pleadings focus on sound recordings; monitor discovery for training-data disclosures. If lyrics or compositions appear in ingestion logs, be prepared to assert composition-specific claims and request preservation of training artifacts.",
     "status": "Open/Active",
@@ -114,7 +114,7 @@
     "source": "",
     "url": "https://www.courtlistener.com/?q=UMG+Recordings+v.+Suno&type=r&order_by=score%20desc",
     "case_ref": "",
-    "date": "February 16, 2026"
+    "date": "February 24, 2026"
   },
   {
     "title": "UMG Recordings v. Uncharted Labs",
@@ -127,6 +127,6 @@
     "source": "",
     "url": "https://www.courtlistener.com/?q=UMG+Recordings+v.+Uncharted+Labs&type=r&order_by=score%20desc",
     "case_ref": "",
-    "date": "February 16, 2026"
+    "date": "February 24, 2026"
   }
 ]
