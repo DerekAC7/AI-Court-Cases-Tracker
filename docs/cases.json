@@ -2,7 +2,7 @@
   {
     "title": "and Warner Bros v. Midjourney",
     "headline": "and Warner Bros v. Midjourney",
-    "summary": "<b>Summaries:</b> <b>and Warner Bros v. Midjourney</b> — As discussed recently, Midjourney filed a motion seeking documents related to the development of Disney’s own Generative AI development and its in-house use of such technologies.",
+    "summary": "<b>Summaries:</b> <b>and Warner Bros v. Midjourney</b> — No major substantive developments this past week\n. As discussed recently, Midjourney filed a motion seeking documents related to the development of Disney’s own Generative AI development and its in-house use of such technologies. In response, Disney argued that in-house development and use of AI tools was irrelevant to any claim or defense in the case, accusing Midjourney of attempting to distract from its own unlawful behavior. The Court set an informal discovery videoconference for May 12th, but nothing has resulted from that hearing yet.",
     "takeaway": "",
     "music_lens": "Outputs mimicking protected characters strengthen arguments that AI can reproduce protected expression. For lyrics/compositions, pursue evidence that prompts yield lyric-like outputs and prepare injunctive relief asks tied to output filters.",
     "status": "Open/Active",
@@ -10,12 +10,12 @@
     "source": "",
     "url": "https://www.courtlistener.com/?q=and+Warner+Bros+v.+Midjourney&type=r&order_by=score%20desc",
     "case_ref": "",
-    "date": "May 5, 2026"
+    "date": "May 18, 2026"
   },
   {
     "title": "Disney v. MiniMax & Hailuo AI",
     "headline": "Disney v. MiniMax & Hailuo AI - dismisses AI/IP claims.",
-    "summary": "<b>Summaries:</b> <b>Disney v. MiniMax &amp; Hailuo AI</b> — No major substantive developments this past week\n. few weeks ago, Defendants filed two motions to dismiss Disney’s claims. The first motion concerns MiniMax and Shanghai Xiyu Jizhi Technology (“SXJT”). According to the motion, MiniMax is not a legal entity at all (it is, apparently, a brand name) and thus a Court cannot exercise jurisdiction over it. With respect to SXJT, the motion argues that the Court does not have personal jurisdiction because SXJT is a Chinese company and has not directed any of its activities to the United States. Instead, according to the motion, any US contacts stem from Nanonoble.\nThe second motion concerns Nanonoble and argues failure to state a claim. Its first major argument is that Disney has not demonstrated that it has registered copyrights on its characters (as opposed to the works in which those characters appear) and, further, that Disney has failed to demonstrate that it even could copyright those characters under Ninth Circuit law. Second, the motion argues that any copying related to Disney’s direct infringement claim did not occur in the United States because the associated models are trained in China. Third, the motion argues that Disney’s secondary infringement claims should be dismissed because (among other reasons) their contributory infringement claims fail the\nCox Communications, Inc.\nrequirement that a service be tailored to infringement or that a Defendant affirmatively induced infringement. With respect to induced infringement, Nanonoble argues that Disney failed to plausibly allege that they actively encouraged any users to infringe Disney’s works.\nThis week, Disney filed opposition to Defendants’ motions, arguing that it had adequately plead secondary liability and that Defendants’ vague arguments regarding extraterritorial copying did not merit dismissal.",
+    "summary": "<b>Summaries:</b> <b>Disney v. MiniMax &amp; Hailuo AI</b> — No major substantive developments this past week\n. few weeks ago, Defendants filed two motions to dismiss Disney’s claims. The first motion concerns MiniMax and Shanghai Xiyu Jizhi Technology (“SXJT”). According to the motion, MiniMax is not a legal entity at all (it is, apparently, a brand name) and thus a Court cannot exercise jurisdiction over it. With respect to SXJT, the motion argues that the Court does not have personal jurisdiction because SXJT is a Chinese company and has not directed any of its activities to the United States. Instead, according to the motion, any US contacts stem from Nanonoble.\nThe second motion concerns Nanonoble and argues failure to state a claim. Its first major argument is that Disney has not demonstrated that it has registered copyrights on its characters (as opposed to the works in which those characters appear) and, further, that Disney has failed to demonstrate that it even could copyright those characters under Ninth Circuit law. Second, the motion argues that any copying related to Disney’s direct infringement claim did not occur in the United States because the associated models are trained in China. Third, the motion argues that Disney’s secondary infringement claims should be dismissed because (among other reasons) their contributory infringement claims fail the\nCox Communications, Inc.\nrequirement that a service be tailored to infringement or that a Defendant affirmatively induced infringement. With respect to induced infringement, Nanonoble argues that Disney failed to plausibly allege that they actively encouraged any users to infringe Disney’s works.\nTwo weeks ago, Disney filed opposition to Defendants’ motions, arguing that it had adequately plead secondary liability and that Defendants’ vague arguments regarding extraterritorial copying did not merit dismissal. This week, Defendants filed their replies regarding their motions, which largely double down on existing arguments.",
     "takeaway": "",
     "music_lens": "Build evidentiary files on lyric/composition market harm (lost sync, sheet music, lyric licensing) and compel disclosure of training datasets and ingestion logs.",
     "status": "Dismissed",
@@ -23,12 +23,12 @@
     "source": "",
     "url": "https://www.courtlistener.com/?q=Disney+v.+MiniMax+%26+Hailuo+AI&type=r&order_by=score%20desc",
     "case_ref": "",
-    "date": "May 5, 2026"
+    "date": "May 18, 2026"
   },
   {
     "title": "Hendrix v. Apple",
     "headline": "Hendrix v. Apple",
-    "summary": "<b>Summaries:</b> <b>Hendrix v. Apple</b> — No major substantive developments this past week\n. Early in February, the parties filed an amended consolidated complaint which included additional factual allegations regarding the ways in which Apple integrates its models into its products and the manner in which these models have impaired the market for Plaintiffs’ works. About a month ago, Apple filed an answer in which it admitted that its models were trained on copyrighted works but which largely disclaimed Plaintiffs’ allegations as conclusory or simply reciting text from sources which speak for themselves. This week, however, saw no notable filings on the docket.",
+    "summary": "<b>Summaries:</b> <b>Hendrix v. Apple</b> — Case referred to magistrate judge Ajay Krishnan for discovery\n. This case has seen little movement since Plaintiffs filed their consolidated complaint followed by Apple filing their answer. This week, the Court referred the case to Magistrate Judge Ajay S. Krishnan for discovery, which may indicate that further discovery activity is in the future.",
     "takeaway": "",
     "music_lens": "Build evidentiary files on lyric/composition market harm (lost sync, sheet music, lyric licensing) and compel disclosure of training datasets and ingestion logs.",
     "status": "Open/Active",
@@ -36,38 +36,38 @@
     "source": "",
     "url": "https://www.courtlistener.com/?q=Hendrix+v.+Apple&type=r&order_by=score%20desc",
     "case_ref": "",
-    "date": "May 5, 2026"
+    "date": "May 18, 2026"
   },
   {
     "title": "Plaintiffs v. Anthropic",
-    "headline": "Plaintiffs v. Anthropic - rules AI training fair use.",
-    "summary": "<b>Summaries:</b> <b>Plaintiffs v. Anthropic</b> — More\namicus\nbriefs incoming.\nWith both parties’ summary judgment motions in, more motions for leave to file\namicus\nbriefs in support of Anthropic have arrived on the docket. The briefs, if they are permitted, will come from (1) “copyright law professors,” (2) Chamber of Progress and Engine Advocacy, (3) The Electronic Frontier Foundation, and (4) The Computer and Communications Industry Association, AI Progress, Inc., and NetChoice, LLC.\nAmong other things, the amicus briefs claim that adopting a market-dilution argument to find no fair use for GAI training would violate the first Amendment. The argument is twofold. First, the professors argue that—in the context of this case—dilution would discriminate based on content, i.e., song lyrics. They also argue that dilution would divide people into two categories: those who generate lyrics “the old-fashioned way” and (2) those who use an LLM to do it and claim that discriminating between the two is impermissible.\nWe struggle to see the merit in these arguments. There is no reason that dilution would discriminate on the kind of content, like song lyrics. The professors clearly knew this since they cited\nKadrey\n, which relates to books, not song lyrics. Likewise,\nof course\ncopyright divides people into two groups to accomplish its purpose (i.e., “those who actually made the artistic work” and “those who did not and so require a license to copy it”). We find it unlikely that a First Amendment-based restriction on how copyright can apply to AI would be consistent with existing copyright law.<br><br><b>Key takeaway:</b> Fair-use outcomes may hinge on record-specific market-harm proof.",
-    "takeaway": "",
-    "music_lens": "Anticipate fair-use defenses: center evidence on market substitution for compositions (lyrics/sheet music) rather than separate 'training-license' markets.",
-    "status": "Judgment",
-    "outcome": "Summary Judgment",
-    "source": "",
-    "url": "https://www.courtlistener.com/?q=Plaintiffs+v.+Anthropic&type=r&order_by=score%20desc",
-    "case_ref": "",
-    "date": "May 5, 2026"
-  },
-  {
-    "title": "Plaintiffs v. Meta",
-    "headline": "Plaintiffs v. Meta",
-    "summary": "<b>Summaries:</b> <b>Plaintiffs v. Meta</b> — No major substantive developments this past week.\nAs discussed in the past weeks, Plaintiffs were given permission to file an amended complaint added contributory infringement claims based on Meta’s torrenting activities. Last week, Meta filed its answer to that Amended Complaint. Last week, Plaintiffs refiled unredacted versions of several past pleadings as ordered by the Court, including their briefing and letters related to their motion for leave to amend. The unredacted portions of these documents largely involve minor details of Meta’s torrenting activities which motivated Plaintiffs’ contributory infringement claim. This week included no notable new filings.",
+    "headline": "Plaintiffs v. Anthropic",
+    "summary": "<b>Summaries:</b> <b>Plaintiffs v. Anthropic</b> — More\namicus\nbriefs incoming.\nThe past two weeks have involved no notable new filings. The most recent major event was the filing of several\namicus\nbriefs in support of Anthropic. The briefs, if they are accepted by the Court, will come from (1) “copyright law professors,” (2) Chamber of Progress and Engine Advocacy, (3) The Electronic Frontier Foundation, and (4) The Computer and Communications Industry Association, AI Progress, Inc., and NetChoice, LLC.\nAlthough each proposed amicus brief addresses a variety of fair use issues, each one includes a section directly taking on the question of market dilution. In particular, the copyright professors argue that the proposed market dilution theory, if adopted by courts as a means for maintaining infringement, would constitute a violation of the First Amendment. The argument is twofold. First, the professors argue that—in the context of this case—dilution would discriminate based on content, i.e., song lyrics. They also argue that dilution would divide people into two categories: those who generate lyrics “the old-fashioned way” and (2) those who use an LLM to do it and claim that discriminating between the two is impermissible. These arguments appear, on their face, questionable. Dilution is not related to lyrical content, as the professors were no doubt aware since they cited\nKadrey\n, which relates to books. Likewise, copyright law inherently divides people into two groups to accomplish its purpose (i.e., “those who actually made the artistic work” and “those who did not and so require a license to copy it”). It does not appear likely that a First Amendment-based restriction on how copyright can apply to AI would be consistent with existing copyright law.",
     "takeaway": "",
     "music_lens": "Build evidentiary files on lyric/composition market harm (lost sync, sheet music, lyric licensing) and compel disclosure of training datasets and ingestion logs.",
     "status": "Open/Active",
     "outcome": "Update",
     "source": "",
+    "url": "https://www.courtlistener.com/?q=Plaintiffs+v.+Anthropic&type=r&order_by=score%20desc",
+    "case_ref": "",
+    "date": "May 18, 2026"
+  },
+  {
+    "title": "Plaintiffs v. Meta",
+    "headline": "Plaintiffs v. Meta",
+    "summary": "<b>Summaries:</b> <b>Plaintiffs v. Meta</b> — Cognella\nand associated cases related.\nAs discussed last week, Plaintiffs in\nCognella, Inc. v. Meta Platforms, Inc.\nfiled a motion to consider whether their case should be related to this one. This week, Judge Chhabria granted that motion. As a reminder,\nEntrepreneur Media, LLC v. Meta Platforms, Inc.\nwas recently related as well, meaning that the outcome of summary judgment in this case will apply to more than just the Kadrey Plaintiffs. The parties filed a joint case management statement at the end of the week as well.",
+    "takeaway": "",
+    "music_lens": "Build evidentiary files on lyric/composition market harm (lost sync, sheet music, lyric licensing) and compel disclosure of training datasets and ingestion logs.",
+    "status": "Judgment",
+    "outcome": "Summary Judgment",
+    "source": "",
     "url": "https://www.courtlistener.com/?q=Plaintiffs+v.+Meta&type=r&order_by=score%20desc",
     "case_ref": "",
-    "date": "May 5, 2026"
+    "date": "May 18, 2026"
   },
   {
     "title": "Reddit v. Anthropic",
     "headline": "Reddit v. Anthropic",
-    "summary": "<b>Summaries:</b> <b>Reddit v. Anthropic</b> — Picking back up in state court\n. Following several months of dispute, this case has been remanded to state court in San Francisco County. Not much has happened yet in state court, although the Court set a case management conference for May 20th. Additionally, the parties jointly filed a petition to designate the case as “complex” under the local rules.",
+    "summary": "<b>Summaries:</b> <b>Reddit v. Anthropic</b> — No major substantive developments this past week\n. Following several months of dispute, this case has been remanded to state court in San Francisco County. Not much has happened yet in state court, although the Court set a case management conference for July 22nd (continued from May 20th). Additionally, the parties jointly filed a petition to designate the case as “complex” under the local rules.",
     "takeaway": "",
     "music_lens": "TOS/robots-based claims highlight enforceable access controls. Harden publisher lyric-site terms and robots.txt, and preserve access logs to support contract/DMCA 1201 theories against unlicensed scrapers.",
     "status": "Open/Active",
@@ -75,12 +75,12 @@
     "source": "",
     "url": "https://www.courtlistener.com/?q=Reddit+v.+Anthropic&type=r&order_by=score%20desc",
     "case_ref": "",
-    "date": "May 5, 2026"
+    "date": "May 18, 2026"
   },
   {
     "title": "Sarah Andersen v. Stability AI",
     "headline": "Sarah Andersen v. Stability AI",
-    "summary": "<b>Summaries:</b> <b>Sarah Andersen v. Stability AI</b> — Discovery extended, hearings set\n. With the end of fact discovery fast-approaching, Plaintiffs requested an extension. Last week, the Court granted the extension in part, putting the new discovery cutoff at July 1\nst\nand the cutoff for depositions at August 15\nth\n. DeviantArt also submitted a response to Plaintiffs’ request for the issuance of letters rogatory, claiming that the testimony that Plaintiffs are seeking was not sufficiently important to justify issuance. The Court has set a hearing on the issuance of letters rogatory for April 28\nth\nand a joint discovery status conference for May 14\nth\n.",
+    "summary": "<b>Summaries:</b> <b>Sarah Andersen v. Stability AI</b> — Ongoing discovery disputes\n. Last week, the Court granted Plaintiffs’ request for the issuance of letters rogatory so that they could depose Nikolay Surovenko and Georgii Trofimov of DeviantArt. This week, the main dispute in the spotlight appears to be in relation to Midjourney’s concept of a “style reference model.” On Wednesday, the Court ordered Midjourney to produce “up to five illustrative documents that support its proposition that ‘the style reference model has nothing to do with emulating artists or their work.’”\nMidjourney complied with this order the following day, submitting five documents, one of which was filed publicly. It is a capture of a Midjourney webpage showing how the concept of a “style reference” relates to Midjourney’s ability to take a source image (the style reference) and use it to inform the style of generated output:\nThe document does not define “style reference\nmodel\n,” which may refer to a particular model responsible for processing style reference inputs and applying them to an image during generation. If that were the case, it would also not be clear how this document would illustrate that the “style reference model” had nothing to do with emulating artists or their work. Of course, an artist’s “style” isn’t copyrightable outside of limited trade-dress applications.  We’re interested in where this argument will go.",
     "takeaway": "",
     "music_lens": "Visual-art rulings on inducement and output similarity can carry over: document AI outputs that recreate lyric structure/phrases to support composition claims and push for output filtering obligations.",
     "status": "Open/Active",
@@ -88,12 +88,12 @@
     "source": "",
     "url": "https://www.courtlistener.com/?q=Sarah+Andersen+v.+Stability+AI&type=r&order_by=score%20desc",
     "case_ref": "",
-    "date": "May 5, 2026"
+    "date": "May 18, 2026"
   },
   {
     "title": "SDNY Multi-District Litigation",
     "headline": "SDNY Multi-District Litigation",
-    "summary": "<b>Summaries:</b> <b>SDNY Multi-District Litigation</b> — Discovery filings not over yet\n. Although discovery is supposed to be closed, a few straggler issues remain open. This weekend, several parties filed motions on these issues. Defendants have filed a motion to compel the New York Times to produce brand tracker information while Plaintiffs have filed motions to compel documents from Microsoft relating to their express licensing defenses and asking OpenAI to produce an additional 30(b)(6) witness.",
+    "summary": "<b>Summaries:</b> <b>SDNY Multi-District Litigation</b> — The Court rules on straggler discovery issues\n. The Court held a discovery status conference on May 12th during which it evaluated some of the issues that remain after the close of fact discovery. In a single ruling, the Court ordered the parties to continue meeting and conferring regarding “Project Giraffe” documents, ordered OpenAI to log all of the recently clawed back documents which might require\nin camera\nreview, and denied Microsoft’s motion for New York Time brand tracker survey data, directing the parties to meet and confer further before renewing the motion.",
     "takeaway": "",
     "music_lens": "Coordinate with aligned plaintiffs; file amicus on market-harm factors relevant to compositions. Track scheduling to time publisher filings with key expert discovery milestones.",
     "status": "Open/Active",
@@ -101,12 +101,12 @@
     "source": "",
     "url": "https://www.courtlistener.com/?q=SDNY+Multi-District+Litigation&type=r&order_by=score%20desc",
     "case_ref": "",
-    "date": "May 5, 2026"
+    "date": "May 18, 2026"
   },
   {
     "title": "Sony v. Uncharted Labs",
     "headline": "Sony v. Uncharted Labs",
-    "summary": "<b>Summaries:</b> <b>Sony v. Uncharted Labs</b> — No major substantive developments this past week\n. Two weeks ago, the Court denied Defendants’ motion to dismiss based on the meaning of 17 U.S.C. § 1201, finding that the factual record was too incomplete to evaluate how YouTube’s rolling cipher works. This week included no notable new filings.",
+    "summary": "<b>Summaries:</b> <b>Sony v. Uncharted Labs</b> — No major substantive developments this past week\n. About a month ago, the Court denied Defendants’ motion to dismiss based on the meaning of 17 U.S.C. § 1201, finding that the factual record was too incomplete to evaluate how YouTube’s rolling cipher works. This week included no notable new filings.",
     "takeaway": "",
     "music_lens": "Build evidentiary files on lyric/composition market harm (lost sync, sheet music, lyric licensing) and compel disclosure of training datasets and ingestion logs.",
     "status": "Open/Active",
@@ -114,12 +114,12 @@
     "source": "",
     "url": "https://www.courtlistener.com/?q=Sony+v.+Uncharted+Labs&type=r&order_by=score%20desc",
     "case_ref": "",
-    "date": "May 5, 2026"
+    "date": "May 18, 2026"
   },
   {
     "title": "UMG Recordings v. Suno",
     "headline": "UMG Recordings v. Suno",
-    "summary": "<b>Summaries:</b> <b>UMG Recordings v. Suno</b> — No major substantive developments this past week\n. This case mirrors\nSony v. Uncharted Labs\nin many respects, including claims of circumvention of technological measures based on YouTube’s rolling cipher. As such, Plaintiffs submitted a notice of supplemental authority regarding the denied motion to dismiss in\nUncharted Labs\n. Last week, Defendants submitted their own letter arguing that the\nUncharted Labs\ndecision was wrong because it allowed Plaintiffs’ claims to proceed despite finding that they had not adequately explained how the rolling cipher worked. It seems unlikely that the\nSuno\ncourt will dismiss the claim where the\nUncharted Labs\ncourt allowed it, but check back soon to find out.",
+    "summary": "<b>Summaries:</b> <b>UMG Recordings v. Suno</b> — No major substantive developments this past week\n. This case mirrors\nSony v. Uncharted Labs\nin many respects, including claims of circumvention of technological measures based on YouTube’s rolling cipher. As such, Plaintiffs submitted a notice of supplemental authority regarding the denied motion to dismiss in\nUncharted Labs\n. About a month ago, Defendants submitted their own letter arguing that the\nUncharted Labs\ndecision was wrong because it allowed Plaintiffs’ claims to proceed despite finding that they had not adequately explained how the rolling cipher worked. It seems unlikely that the\nSuno\ncourt will dismiss the claim where the\nUncharted Labs\ncourt allowed it but check back soon to find out.",
     "takeaway": "",
     "music_lens": "Label-led pleadings focus on sound recordings; monitor discovery for training-data disclosures. If lyrics or compositions appear in ingestion logs, be prepared to assert composition-specific claims and request preservation of training artifacts.",
     "status": "Open/Active",
@@ -127,6 +127,6 @@
     "source": "",
     "url": "https://www.courtlistener.com/?q=UMG+Recordings+v.+Suno&type=r&order_by=score%20desc",
     "case_ref": "",
-    "date": "May 5, 2026"
+    "date": "May 18, 2026"
   }
 ]
